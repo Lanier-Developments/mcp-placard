@@ -57,35 +57,28 @@ class ChangeKind(StrEnum):
 
 
 CHANGE_EXIT_CODES: dict[ChangeKind, int] = {
-    ChangeKind.TOOL_ADDED: EXIT_ESCALATION,
     ChangeKind.TOOL_REMOVED: EXIT_REMOVED_OR_UNREACHABLE,
-    ChangeKind.TOOL_SCHEMA_CHANGED: EXIT_ESCALATION,
     ChangeKind.TOOL_DESCRIPTION_CHANGED: EXIT_DESCRIPTION_CHANGE,
     ChangeKind.TIER_ESCALATED: EXIT_ESCALATION,
     ChangeKind.SERVER_CAPABILITIES_CHANGED: EXIT_ESCALATION,
 }
-"""Exit code each kind of change contributes.
+"""The exit code for kinds whose code never varies by context.
 
-Three readings are deliberately conservative, and all three narrow in a later phase:
-
-``TOOL_ADDED`` → 1
-    AGENTS.md reserves escalation for a new tool at R4/R5. With no classifier, no
-    added tool can be *shown* to sit below the ceiling, and AGENTS.md forbids
-    silently downgrading. An unclassified addition is therefore treated as an
-    escalation. Phase 2 narrows this to genuinely high-tier additions.
-
-``TOOL_SCHEMA_CHANGED`` → 1
-    A schema change can widen blast radius without any other visible signal — a new
-    ``force`` flag, a ``path`` that stops being constrained to a prefix. Ungraded, it
-    is treated as an escalation. Phase 2 grades the delta instead.
+``TOOL_ADDED`` and ``TOOL_SCHEMA_CHANGED`` are deliberately absent: since Phase 2's
+diff narrowing, their code depends on where the tool's tier sits relative to the
+configured ceiling and on whether the schema change actually moved the tier — see
+``diff/engine.py``, which sets :attr:`Finding.exit_code` explicitly for those two
+kinds rather than looking it up here. A ``Finding`` of any other kind always takes
+its code from this table; ``diff/engine.py`` still passes it explicitly (every
+``Finding`` sets its own ``exit_code`` at construction), but the value it passes is
+always exactly the one recorded here.
 
 ``SERVER_CAPABILITIES_CHANGED`` → 1
     A capability delta can be entirely benign (an SDK-derived flag shifting on a
     client upgrade) or can mean the server started advertising something new to
-    subscribe to or be notified through. Nothing in Phase 1 can tell those apart, so
-    an ungraded delta is treated as an escalation rather than silently passed —
-    exactly the same reasoning as the two rows above it. Note that this exit code
-    only says *something in the capabilities block moved*; unlike the two rows above,
+    subscribe to or be notified through. Nothing in this build can tell those apart,
+    so an ungraded delta is treated as an escalation rather than silently passed.
+    Note that this exit code only says *something in the capabilities block moved*;
     it does not mean any tool's surface changed at all.
 """
 
@@ -104,10 +97,14 @@ class Finding(BaseModel):
     """One line, safe to print. Scanned content is never interpolated raw — see
     ``diff.engine``, which reports hashes rather than description text."""
 
-    @property
-    def exit_code(self) -> int:
-        """The exit code this finding on its own would produce."""
-        return CHANGE_EXIT_CODES[self.kind]
+    exit_code: int
+    """The exit code this finding on its own would produce. A real field, not a
+    kind-keyed lookup: ``TOOL_ADDED``'s code depends on the added tool's tier
+    against the configured ceiling, and ``TOOL_SCHEMA_CHANGED``'s depends on
+    whether the change actually moved the tier — both are context ``diff/engine.py``
+    has and this model does not. Every other kind's code is still exactly what
+    :data:`CHANGE_EXIT_CODES` records for it; the field exists so all kinds share
+    one mechanism rather than some being looked up and others computed."""
 
 
 class DiffResult(BaseModel):

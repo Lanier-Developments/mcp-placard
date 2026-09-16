@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from mcp_placard.classify import classify_manifest
 from mcp_placard.cli import main
 from mcp_placard.diff import ChangeKind, diff_manifests
 from mcp_placard.errors import (
@@ -38,8 +39,9 @@ pytestmark = pytest.mark.slow
 
 
 def scan(*args: str):  # type: ignore[no-untyped-def]
-    """Scan the mock server, optionally with mutation flags, and build a manifest."""
-    return build_manifest(scan_target(mock_server_target(*args), timeout=60))
+    """Scan the mock server, optionally with mutation flags, and build a classified
+    manifest — the same two-step pipeline the real ``placard scan`` runs."""
+    return classify_manifest(build_manifest(scan_target(mock_server_target(*args), timeout=60)))
 
 
 @pytest.fixture(scope="module")
@@ -68,9 +70,20 @@ def test_the_full_surface_is_enumerated(baseline) -> None:  # type: ignore[no-un
     assert baseline.surface.instructions
 
 
-def test_every_tool_is_unclassified(baseline) -> None:  # type: ignore[no-untyped-def]
-    """Phase 1 does not classify. This fails the moment that stops being true."""
-    assert {tool.tier for tool in baseline.surface.tools} == {"unclassified"}
+def test_every_tool_is_classified_against_a_live_server(baseline) -> None:  # type: ignore[no-untyped-def]
+    """Asserted against a live server response, not a synthetic fixture — proves
+    the classifier pipeline actually runs end to end through ``scan``."""
+    tiers = {entry.tool: entry.tier for entry in baseline.classification}
+    assert tiers == {
+        "send_email": "R4",
+        "search_documents": "R1",
+        "describe_server": "R0",
+        "fetch_url": "R4",
+        "write_note": "R3",
+        "delete_workspace": "R5",
+        "ping": "R0",
+    }
+    assert baseline.classification_hash
 
 
 def test_all_four_declared_annotations_reach_the_manifest(baseline) -> None:  # type: ignore[no-untyped-def]

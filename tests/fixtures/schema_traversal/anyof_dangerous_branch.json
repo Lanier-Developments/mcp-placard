@@ -1,0 +1,23 @@
+{
+  "name": "resolve_reference",
+  "description": "Resolve a reference either by its local ID or by an external URL.",
+  "inputSchema": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "local_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" }
+        },
+        "required": ["local_id"]
+      },
+      {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "format": "uri" }
+        },
+        "required": ["url"]
+      }
+    ]
+  },
+  "expected_tier": "R4"
+}

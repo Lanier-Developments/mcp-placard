@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pytest
 
+from mcp_placard.classify import classify_manifest
 from mcp_placard.diff import diff_manifests
 from mcp_placard.errors import EXIT_OK
 from mcp_placard.manifest import build_manifest, hash_mismatches, load_manifest, render_manifest
@@ -25,6 +26,12 @@ from mcp_placard.transport import scan_target
 from .conftest import MOCK_MANIFEST_FIXTURE, mock_server_target
 
 pytestmark = pytest.mark.slow
+
+
+def _fresh_scan():  # type: ignore[no-untyped-def]
+    """The same two-step pipeline ``placard scan`` runs — build, then classify —
+    since that is the command the fixture-regeneration instructions below use."""
+    return classify_manifest(build_manifest(scan_target(mock_server_target(), timeout=60)))
 
 
 def test_the_checked_in_fixture_exists() -> None:
@@ -39,7 +46,7 @@ def test_the_checked_in_fixture_verifies() -> None:
 
 
 def test_a_fresh_scan_does_not_drift_from_the_fixture() -> None:
-    fresh = build_manifest(scan_target(mock_server_target(), timeout=60))
+    fresh = _fresh_scan()
     recorded = load_manifest(MOCK_MANIFEST_FIXTURE)
 
     result = diff_manifests(recorded, fresh)
@@ -50,5 +57,5 @@ def test_a_fresh_scan_does_not_drift_from_the_fixture() -> None:
 def test_a_fresh_scan_is_byte_identical_to_the_fixture_file() -> None:
     """Stronger than the diff: the rendered bytes match too, which is what proves
     the checked-in file is reproducible rather than merely equivalent."""
-    fresh = build_manifest(scan_target(mock_server_target(), timeout=60))
+    fresh = _fresh_scan()
     assert render_manifest(fresh) == MOCK_MANIFEST_FIXTURE.read_text(encoding="utf-8")

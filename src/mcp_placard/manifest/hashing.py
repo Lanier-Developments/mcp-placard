@@ -71,3 +71,14 @@ def hash_capabilities(capabilities: dict[str, JsonValue]) -> str:
     drift produces its own finding instead of masquerading as a surface change.
     """
     return hash_value(capabilities)
+
+
+def hash_classification(classification: list[JsonValue]) -> str:
+    """Hash Placard's own per-tool classification — split out of ``surface_hash``.
+
+    ``classification`` is a list of plain dicts (already rendered via
+    ``model_dump``), one per tool. Independent of ``surface_hash`` so that a
+    classifier rule change — a Rule A regex tweak, a new Rule D evidence idiom —
+    never moves ``surface_hash`` for a server that did not change.
+    """
+    return hash_value(classification)

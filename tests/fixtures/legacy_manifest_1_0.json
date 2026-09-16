@@ -1,0 +1,56 @@
+{
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "59bb371ffee5d4d65405a3ca79103f886881dba33946165a2bc7200951d5ca19",
+  "environment": {},
+  "manifest_version": "1.0",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "legacy-fixture-server",
+      "version": "0.0.1"
+    },
+    "tools": [
+      {
+        "description": "Search workspace documents.",
+        "description_hash": "7aefbfcdeae4b3fe08681941be2cd1164c3805cb593057bddde2949a9c8f7b58",
+        "inputSchema": {
+          "properties": {
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "search_documents",
+        "schema_hash": "1dc63095e8672403bbe40fa26719d175e695c0167f6daad6b9655f6506491f01"
+      },
+      {
+        "description": "Send an email.",
+        "description_hash": "8bcce062bef4b7aa5cef30224ce4feae78ad46f7d3df0be0f5c847646dbc015d",
+        "inputSchema": {
+          "properties": {
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "to"
+          ],
+          "type": "object"
+        },
+        "name": "send_email",
+        "schema_hash": "7a634a239584843d67f7800d06e802f873c650992ba0e6cb7f0a79933b852626"
+      }
+    ]
+  },
+  "surface_hash": "2b67f241b2cda2c1fd250e53cfce3da2e647899537935e1e71b09a82ce4d6c27"
+}

@@ -4,8 +4,8 @@
 
 Turn a raw enumeration capture into a manifest that is **identical for an identical
 surface and different for a different one** — on any machine, in any order, at any
-time. Define the pydantic models for that manifest, compute its three hashes, and
-read and write it as JSON.
+time. Define the pydantic models for that manifest, compute its hashes, and read
+and write it as JSON.
 
 ## Boundary
 
@@ -13,8 +13,10 @@ No network, no subprocess, no MCP SDK. This package is importable by anything, w
 is why `diff` and `verify` can operate on files without any transport machinery
 being present.
 
-It does not classify risk (`classify/`, Phase 2), does not score injection
-(`inject/`, Phase 3), and does not render reports (`report/`, Phase 4).
+It does not classify risk (`classify/`) — `build_manifest` always produces an
+unclassified manifest with `classification: []`; a caller runs
+`classify.classify_manifest` on the result to get real tiers. It does not score
+injection (`inject/`, Phase 3), and does not render reports (`report/`, Phase 4).
 
 ## Layout
 
@@ -38,9 +40,14 @@ All are required, and AGENTS.md forbids collapsing them.
 | `schema_hash` (per tool) | that tool's input schema | did the callable API change? |
 | `description_hash` (per tool) | that tool's description text | **did the prompt change?** |
 | `capabilities_hash` | the server's declared `capabilities` block | did the protocol-level capability surface change? |
+| `classification_hash` | Placard's own `classification` — tiers, citations, reversibility | did *our judgment* of the surface change? |
 
-`capabilities` is not part of `surface_hash`'s body — see "What is deliberately *not*
-recorded" below for why it was split out.
+`capabilities` and `classification` are both outside `surface_hash`'s body — see
+"What is deliberately *not* recorded" below for why. `classification_hash` is
+computed by `build.compute_classification_hash`, over an empty list for a manifest
+`build_manifest` alone produced and over the real entries once
+`classify.classify_manifest` has run — either way `build_manifest` itself always
+stamps a `classification_hash` matching whatever `classification` it wrote (empty).
 
 The split is the product. A server that rewrites a description while leaving the API
 byte-identical has injected new instructions into every agent that connects to it. A
@@ -90,14 +97,24 @@ avoid that. Dropping `capabilities` entirely would hide a server that starts or 
 advertising a whole capability class, which is the trade this split avoids having to
 make.
 
+**`classification` follows the identical reasoning one layer up.** A tool's tier is
+Placard's own judgment about the surface, not a property of the surface itself — a
+classifier rule fix (a Rule A regex tweak, a new Rule D evidence idiom) must never
+move `surface_hash` for a server that did not change. `tier` therefore does not live
+on `ToolEntry` at all; it lives in a separate `ToolClassification` entry under
+`Manifest.classification`, hashed independently as `classification_hash`. `diff`
+still compares tiers directly (`tier_escalated`), just by reading `classification`
+rather than a field on the tool.
+
 ## Naming convention in the serialized manifest
 
 - **MCP-owned fields keep their wire spelling**: `inputSchema`, `outputSchema`,
   `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`, `uriTemplate`,
   `mimeType`, `_meta`.
 - **Placard-owned fields are `snake_case`**: `manifest_version`, `surface_hash`,
-  `capabilities_hash`, `environment`, `schema_hash`, `description_hash`,
-  `resource_templates`, `tier`.
+  `capabilities_hash`, `classification_hash`, `environment`, `schema_hash`,
+  `description_hash`, `resource_templates`, `tier` (inside a `classification` entry,
+  never on the tool itself).
 
 The casing tells a reader who asserted a given field.
 
@@ -106,10 +123,13 @@ The casing tells a reader who asserted a given field.
 Every model sets `extra="allow"`. A server field this build has never heard of
 survives validation, serialization, and hashing intact. Dropping unknown fields would
 mean `surface_hash` did not actually cover the surface — the one thing it claims to
-do. `tests/test_manifest_fidelity.py` asserts the round trip against a live capture.
+do.
 
-## Phase 1 scope
+## Scope
 
-Every tool carries `tier: "unclassified"`. Declared annotations are recorded verbatim
-and are not interpreted: AGENTS.md treats server self-declaration as evidence, not
-truth, and Phase 2's declared-vs-inferred reconciliation needs them unmodified.
+This package never interprets what it records. Declared annotations
+(`ToolAnnotations`) are carried verbatim and are not evaluated here — AGENTS.md
+treats server self-declaration as evidence, not truth, and `classify/`'s
+declared-vs-inferred reconciliation needs them unmodified. `build_manifest` always
+produces `classification: []`; a manifest only carries real tiers once a caller
+explicitly runs `classify.classify_manifest` on the result.

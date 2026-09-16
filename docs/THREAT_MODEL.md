@@ -67,13 +67,18 @@ which is why collapsing the two hashes is prohibited rather than discouraged.
 A server that annotates a dangerous tool as safe: `readOnlyHint: true` on a tool
 whose schema takes an arbitrary `url`; `destructiveHint: false` on `purge_records`.
 
-**Partially covered — Phase 2.** Phase 1 records declared annotations verbatim and
-interprets nothing, which is the necessary groundwork: the raw declarations reach the
-manifest intact. Phase 2 infers a tier independently and reports disagreement as a
-finding. Until then, a declared annotation is recorded, not believed.
+**Covered.** Phase 2's classifier infers a tier independently of every declared
+annotation and reports disagreement as a finding
+(`ToolClassification.disagreements`) — `readOnlyHint: true` on a tool whose schema
+takes an unconstrained `url` is exactly the canonical disagreement case
+(`docs/TAXONOMY.md`, R4 example 2). A declared annotation is recorded, never
+believed: it can never raise or lower an inferred tier, only be reported as
+consistent or contradicting it.
 
-The governing rule, fixed now: **server self-declaration is evidence, not truth**,
-and a declared tier never downgrades an inferred one.
+The governing rule: **server self-declaration is evidence, not truth**, and a
+declared tier never downgrades an inferred one. The only thing that ever lowers a
+tier is an explicit, attributable entry in the operator's own override allowlist
+(`classify/overrides.py`), and the manifest records that one applied.
 
 ### A4 — The injection-carrying description
 
@@ -128,6 +133,13 @@ Named explicitly, because an unstated limit reads as a covered case.
 - **Non-MCP capability.** Tools an agent has outside MCP are not enumerated.
 - **Denial of service.** A server that hangs or floods is a failed scan, not a
   finding. Timeouts and the page budget keep the failure bounded, that is all.
+- **A chain whose read half is a resource.** `CHAIN_EXFIL` evaluates tools only.
+  Resources and prompts are enumerated but unclassified in Phase 2, so a server
+  exposing mail or file contents as a *resource* alongside an R4 egress *tool* is
+  not detected — the chain exists, `CHAIN_EXFIL` does not see it. This is a known
+  gap, not an assertion of safety, and the finding's own output states this
+  tools-only scope so a reader learns the boundary from the report. It closes when
+  resource classification lands.
 
 ## Constraints on Placard itself
 
@@ -221,10 +233,21 @@ Accepted, and worth stating.
    clients, or on different days. Placard sees one enumeration per scan.
 6. **Time-of-check / time-of-use.** The surface is read at scan time; the agent
    connects later. Nothing guarantees they match.
-7. **Phase 1 grades nothing.** Every tool is `unclassified`, so "escalation" in
-   Phase 1 means "a tool was added or a schema changed", not "risk rose". This is
-   deliberately conservative: it over-reports rather than under-reports, and Phase 2
-   replaces the conservatism with judgement.
+7. **A tool with no classification still falls back to the Phase 1 default.** An
+   old `"1.0"` manifest, or a manifest nothing has run the classifier against,
+   carries no `classification` entries — `diff` cannot grade those tools and, per
+   AGENTS.md, treats "cannot be graded" as "escalate," not "safe." A `tool_added`
+   or `tool_schema_changed` finding on an ungraded tool is conservative by
+   construction, the same trade Phase 1 made for every tool before a classifier
+   existed at all.
+8. **The classifier is heuristic, not exhaustive.** Rules A-E cover the field
+   shapes `docs/TAXONOMY.md` names explicitly; a genuinely novel dangerous field
+   name or verb the taxonomy has not yet encountered is invisible until the
+   taxonomy is amended to name it. Rule G's fail-closed treatment bounds the
+   *unknown-schema-shape* case; it does not bound the *unknown-dangerous-name*
+   case. The taxonomy's own "Flag back to Chief" triggers exist for exactly this:
+   a rule proving ambiguous against a real server is reported, not silently
+   patched over.
 
 ## Mapping adversaries to signals
 
@@ -237,7 +260,10 @@ Accepted, and worth stating.
 | A1 resource/prompt drift | `surface_hash` | 0 (reported, not failed) | 1 |
 | A1 capabilities drift | `capabilities_hash` — `server_capabilities_changed` | 1 | 1 |
 | A1 server unreachable | transport | 3 | 1 |
+| A1 tool tier increased | `classification` — `tier_escalated` | 1 | **2** |
+| A1 exfiltration chain composed | `classify.chain` — `CHAIN_EXFIL` | — (scan-time finding, not a diff) | **2** |
 | A3 declared-vs-inferred conflict | classifier reconciliation | 1 | **2** |
 | A4 injection-shaped description | injection heuristics | 1 | **3** |
 | Manifest tampering | `verify` | 1 | 1 |
+| Classification tampering | `verify` — `classification_hash` | 1 | **2** |
 | Manifest forgery | signing | — | **5** |

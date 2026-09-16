@@ -15,5 +15,8 @@ __all__ = ["MANIFEST_VERSION", "__version__"]
 __version__ = "0.1.0"
 
 #: Schema version stamped into every manifest this build writes. Bumped when the
-#: manifest layout changes in a way older readers cannot handle. Phase 1 writes "1.0".
-MANIFEST_VERSION = "1.0"
+#: manifest layout changes in a way older readers cannot handle. Phase 1 wrote
+#: "1.0"; Phase 2 bumps to "2.0" for the ``classification`` / ``classification_hash``
+#: / ``findings`` fields — see ``manifest/io.py`` for how a "1.0" manifest still
+#: reads under this build.
+MANIFEST_VERSION = "2.0"

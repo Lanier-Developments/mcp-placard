@@ -19,12 +19,37 @@ from pydantic import ValidationError
 
 from .. import MANIFEST_VERSION
 from ..errors import ManifestValidationError, ManifestVersionError, UsageError
+from .build import compute_classification_hash
 from .canonical import render_json
 from .models import Manifest
 
-SUPPORTED_MANIFEST_VERSIONS = frozenset({MANIFEST_VERSION})
-"""Versions this build can read. Phase 2 adds its version here rather than
-rewriting old manifests in place."""
+SUPPORTED_MANIFEST_VERSIONS = frozenset({"1.0", MANIFEST_VERSION})
+"""Versions this build can read. "1.0" is Phase 1's format, added here rather than
+rewritten in place — deliverable 10's backward-compatibility requirement."""
+
+_EMPTY_CLASSIFICATION_HASH = compute_classification_hash([])
+
+
+def _upgrade_legacy_document(document: dict[str, Any], version: str) -> dict[str, Any]:
+    """Fill in fields a "1.0" document never had, so it validates against the
+    current :class:`~mcp_placard.manifest.models.Manifest`.
+
+    "1.0" manifests predate ``classification`` entirely — every tool in one was
+    Phase 1's literal ``unclassified``, carried on the tool itself rather than as a
+    separate structure. Reading one back gets an *empty* classification, not a
+    reconstructed one: this build does not retroactively classify a manifest it did
+    not produce. ``diff`` already treats a tool absent from ``classification`` as
+    "cannot be graded" and falls back to its Phase 1 conservative default, so an old
+    manifest diffed against a new one still behaves exactly as it did before this
+    field existed.
+    """
+    if version != "1.0" or "classification_hash" in document:
+        return document
+    upgraded = dict(document)
+    upgraded.setdefault("classification", [])
+    upgraded.setdefault("classification_hash", _EMPTY_CLASSIFICATION_HASH)
+    upgraded.setdefault("findings", [])
+    return upgraded
 
 
 def manifest_document(manifest: Manifest) -> dict[str, Any]:
@@ -56,6 +81,7 @@ def parse_manifest(text: str, *, source: str) -> Manifest:
         raise ManifestVersionError(
             f"{source}: unsupported manifest_version {version!r} (this build reads: {supported})"
         )
+    document = _upgrade_legacy_document(document, version)
 
     try:
         return Manifest.model_validate(document)

@@ -29,15 +29,21 @@ from pydantic import ValidationError
 from .. import MANIFEST_VERSION
 from ..errors import ManifestValidationError
 from .canonical import canonical_text
-from .hashing import hash_capabilities, hash_description, hash_schema, hash_value
+from .hashing import (
+    hash_capabilities,
+    hash_classification,
+    hash_description,
+    hash_schema,
+    hash_value,
+)
 from .models import (
-    UNCLASSIFIED,
     Manifest,
     PromptEntry,
     ResourceEntry,
     ResourceTemplateEntry,
     ServerInfo,
     ServerSurface,
+    ToolClassification,
     ToolEntry,
 )
 from .raw import RawSurface
@@ -64,12 +70,12 @@ def _build_tool(raw_tool: WireDict) -> ToolEntry:
 
     ``schema_hash`` and ``description_hash`` are computed from separate inputs and
     stay separate forever. Collapsing them would hide a description-only rewrite,
-    which is the single event Placard exists to surface.
+    which is the single event Placard exists to surface. No tier is assigned here —
+    classification is a separate pass; see ``classify.classify_manifest``.
     """
     payload = dict(raw_tool)
     payload["schema_hash"] = hash_schema(payload.get("inputSchema", {}))
     payload["description_hash"] = hash_description(payload.get("description"))
-    payload["tier"] = UNCLASSIFIED
     return ToolEntry.model_validate(payload)
 
 
@@ -91,6 +97,21 @@ def compute_surface_hash(surface: ServerSurface) -> str:
 def compute_capabilities_hash(capabilities: WireDict) -> str:
     """SHA-256 over the server's ``capabilities`` block alone."""
     return hash_capabilities(capabilities)
+
+
+def classification_document(classification: list[ToolClassification]) -> list[WireDict]:
+    """Render classification entries to the plain-JSON list ``classification_hash``
+    is taken over, sorted by tool name so tampering with entry order is caught too."""
+    return [
+        entry.model_dump(by_alias=True, exclude_none=True, mode="json")
+        for entry in sorted(classification, key=lambda entry: entry.tool)
+    ]
+
+
+def compute_classification_hash(classification: list[ToolClassification]) -> str:
+    """SHA-256 over Placard's own per-tool classification, independent of every
+    other hash in the manifest."""
+    return hash_classification(classification_document(classification))
 
 
 def build_surface(raw: RawSurface) -> ServerSurface:
@@ -119,12 +140,19 @@ def build_surface(raw: RawSurface) -> ServerSurface:
 
 
 def build_manifest(raw: RawSurface) -> Manifest:
-    """Build a complete manifest, including every hash, from a raw capture."""
+    """Build a complete, structural manifest from a raw capture.
+
+    No classification happens here — ``manifest/`` does not classify risk (see the
+    package boundary in ``manifest/README.md``). Every tool's ``classification`` is
+    empty and ``classification_hash`` is the hash of that empty list; a build that
+    wants real tiers runs ``classify.classify_manifest`` on the result.
+    """
     surface = build_surface(raw)
     return Manifest(
         manifest_version=MANIFEST_VERSION,
         surface_hash=compute_surface_hash(surface),
         capabilities_hash=compute_capabilities_hash(raw.capabilities),
+        classification_hash=compute_classification_hash([]),
         surface=surface,
         capabilities=raw.capabilities,
         environment=raw.environment,

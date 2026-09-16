@@ -49,7 +49,10 @@ from typing import Annotated
 import typer
 
 from . import MANIFEST_VERSION, __version__
+from .classify import classify_manifest
+from .classify.overrides import load_overrides
 from .diff import diff_manifests
+from .diff.engine import DEFAULT_CEILING
 from .errors import (
     EXIT_OK,
     EXIT_USAGE,
@@ -58,6 +61,7 @@ from .errors import (
 )
 from .manifest import (
     Manifest,
+    Tier,
     build_manifest,
     load_manifest,
     render_manifest,
@@ -116,14 +120,26 @@ def scan(
         float,
         typer.Option("--timeout", min=0.1, help="Seconds allowed for connect and enumeration."),
     ] = DEFAULT_TIMEOUT_SECONDS,
+    override: Annotated[
+        Path | None,
+        typer.Option(
+            "--override",
+            help="A JSON override allowlist. The only way a tier is ever downgraded.",
+        ),
+    ] = None,
 ) -> None:
-    """Connect to a server, enumerate its surface, and emit a manifest to stdout.
+    """Connect to a server, enumerate its surface, classify it, and emit a
+    manifest to stdout.
 
     Enumeration only: initialize, then list tools, resources, resource templates, and
-    prompts. No tool is ever invoked and no resource is ever read.
+    prompts. No tool is ever invoked and no resource is ever read. Classification is
+    a separate, pure pass over the enumerated surface — it reads the schema and
+    declared annotations already captured, and never re-contacts the server.
     """
     raw = scan_target(target, transport=transport, timeout=timeout)
     manifest = build_manifest(raw)
+    overrides = load_overrides(override) if override is not None else []
+    manifest = classify_manifest(manifest, overrides=overrides)
     _emit_manifest(manifest, out)
 
 
@@ -131,6 +147,21 @@ def scan(
 def diff_command(
     old: Annotated[Path, typer.Argument(help="The baseline manifest.")],
     new: Annotated[Path, typer.Argument(help="The manifest to compare against it.")],
+    ceiling: Annotated[
+        Tier,
+        typer.Option(
+            "--ceiling",
+            help="A tool added at or above this tier escalates; below it, exit 0.",
+        ),
+    ] = DEFAULT_CEILING,
+    escalate_schema_changes: Annotated[
+        bool,
+        typer.Option(
+            "--escalate-schema-changes",
+            help="Escalate on every input-schema change, even one that leaves the tier "
+            "unchanged (the Phase 1 default, before a classifier existed to grade the delta).",
+        ),
+    ] = False,
 ) -> None:
     """Compare two manifests. The exit code is the result.
 
@@ -138,7 +169,12 @@ def diff_command(
     3 = tool removed. When several apply, the highest precedence (3 > 1 > 2) is
     reported; every finding is still listed on stderr.
     """
-    result = diff_manifests(load_manifest(old), load_manifest(new))
+    result = diff_manifests(
+        load_manifest(old),
+        load_manifest(new),
+        ceiling=ceiling,
+        escalate_schema_changes=escalate_schema_changes,
+    )
 
     for finding in result.findings:
         _err(f"[{finding.kind.value}] {finding.summary}")

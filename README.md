@@ -13,14 +13,16 @@ manifest, and fails CI when the next scan disagrees with the last one.
 **Placard never invokes a tool.** Enumeration and static analysis only. No code path may
 call `tools/call`; `scripts/check_no_tool_invocation.py` enforces that mechanically.
 
-## Status: Phase 1 complete, Phase 2 in progress
+## Status: Phase 1 and Phase 2 complete
 
-Phase 1 delivers transport, enumeration, the canonical manifest, and `scan` / `diff` / `verify`
-with exit codes. **Every tool currently returns tier `unclassified`, by design** — Phase 1
-performs no risk classification. If you scan a server and every tool comes back
-`unclassified`, that is the scaffold working as intended, not a missing feature. The R0-R5
-ladder and its worked examples are specified in [`docs/TAXONOMY.md`](docs/TAXONOMY.md); Phase 2
-implements the classifier against them.
+`scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, and description
+signals combine as a monotonic maximum (never a weighted score), reconciled against what the
+server declared about itself. The full ladder, its worked examples, and the rules the
+classifier implements are in [`docs/TAXONOMY.md`](docs/TAXONOMY.md). `diff` grades tier
+increases and gates new-tool escalation on a configurable ceiling; a per-tool `classification`
+entry never enters `surface_hash` — a classifier fix must never move that hash for a server
+that did not change. Injection heuristics (Phase 3), SARIF/GitHub Action packaging (Phase 4),
+and manifest signing (Phase 5) are not yet built.
 
 ## Install
 
@@ -35,19 +37,27 @@ Requires Python 3.11+. The test suite needs no network access.
 ## Use
 
 ```bash
-# Enumerate a server and print its manifest
+# Enumerate a server, classify every tool, and print the manifest
 placard scan "python -m tests.mock_server"
 placard scan https://mcp.example.com/mcp --out manifest.json
 
+# Downgrade a tier only through an explicit, attributable allowlist entry
+placard scan "python -m tests.mock_server" --override overrides.json
+
 # Compare two manifests; the exit code is the finding
 placard diff baseline.json current.json
+placard diff baseline.json current.json --ceiling R5   # only R5 additions escalate
 
-# Confirm a manifest's hashes still describe its own content
+# Confirm a manifest's hashes — including its classification — still describe its own content
 placard verify manifest.json
 ```
 
 `<target>` is a stdio command line or an HTTP(S) URL. The transport is inferred from the target;
-`--transport stdio|http` overrides.
+`--transport stdio|http` overrides. `--override` points at a JSON array of
+`{"entry_id", "tool", "tier", "reason"}` objects — the only way a tier is ever downgraded.
+`--ceiling` (default `R4`) sets the tier a new tool must reach before `diff` escalates on it;
+`--escalate-schema-changes` reverts to escalating on every input-schema change, even one that
+leaves the tier unchanged.
 
 ### Exit codes
 
@@ -59,7 +69,7 @@ different things for different commands.
 | Code | `scan` | `diff` | `verify` |
 | --- | --- | --- | --- |
 | 0 | enumerated successfully | no change / below ceiling | every hash matches |
-| 1 | — | escalation — new tool, schema change, capabilities change | a hash does not match its content |
+| 1 | — | escalation — new tool at/above ceiling, tier increase, capabilities change | a hash does not match its content |
 | 2 | — | description change on an existing tool (always reviewable, never silenceable) | — |
 | 3 | server unreachable | tool removed | — |
 | 10 | usage/configuration error | usage/configuration error | usage/configuration error |
@@ -81,12 +91,14 @@ Independent SHA-256 hashes, all required, never collapsed:
 - per-tool `schema_hash` — the input schema only
 - per-tool `description_hash` — the description text only
 - `capabilities_hash` — the server's declared MCP capabilities block only
+- `classification_hash` — Placard's own tier judgment (`classification`) only
 
 Splitting schema from description is what makes *"the server rewrote its prompt but kept the API
-identical"* a visible event rather than a silent one. `capabilities` is split out of
-`surface_hash` for the same reason in the other direction: some capability flags are SDK-derived
-and can drift on a client SDK upgrade with no server-side change, so that drift gets its own
-`server_capabilities_changed` finding instead of moving `surface_hash`.
+identical"* a visible event rather than a silent one. `capabilities` and `classification` are
+both split out of `surface_hash` for the same reason in the other direction: some capability
+flags are SDK-derived and can drift on a client SDK upgrade, and a classifier rule fix can
+change a tier, neither with any server-side change at all — each gets its own finding
+(`server_capabilities_changed`, `tier_escalated`) instead of moving `surface_hash`.
 
 ## Development
 

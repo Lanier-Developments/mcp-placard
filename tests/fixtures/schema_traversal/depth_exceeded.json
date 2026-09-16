@@ -1,0 +1,109 @@
+{
+  "name": "deeply_nested_config",
+  "description": "Accept a deeply nested configuration object.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "nested": {
+        "type": "object",
+        "properties": {
+          "nested": {
+            "type": "object",
+            "properties": {
+              "nested": {
+                "type": "object",
+                "properties": {
+                  "nested": {
+                    "type": "object",
+                    "properties": {
+                      "nested": {
+                        "type": "object",
+                        "properties": {
+                          "nested": {
+                            "type": "object",
+                            "properties": {
+                              "nested": {
+                                "type": "object",
+                                "properties": {
+                                  "nested": {
+                                    "type": "object",
+                                    "properties": {
+                                      "nested": {
+                                        "type": "object",
+                                        "properties": {
+                                          "nested": {
+                                            "type": "object",
+                                            "properties": {
+                                              "nested": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "nested": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "nested": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "nested": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "nested": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                  "nested": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                      "nested": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                          "nested": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                              "nested": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                  "nested": {
+                                                                                    "type": "string"
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "expected_tier": "R4",
+  "expected_status": "depth_exceeded"
+}

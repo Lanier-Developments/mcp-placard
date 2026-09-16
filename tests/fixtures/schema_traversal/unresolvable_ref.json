@@ -1,0 +1,12 @@
+{
+  "name": "apply_template",
+  "description": "Apply a named template to the target document.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "template": { "$ref": "#/$defs/Template" }
+    }
+  },
+  "expected_tier": "R4",
+  "expected_status": "unresolvable_ref"
+}

@@ -1,51 +1,88 @@
-"""The tier-escalation branch is wired in, and inert until Phase 2.
+"""Tier escalation is now live (Phase 2 deliverable 9).
 
-The Phase 1 brief requires the branch to exist in the code path rather than being
-added later, and requires a test asserting it produces nothing. That is this module.
-
-**If you are implementing Phase 2, this file is the thing you rewrite on purpose.**
-These assertions are meant to fail the moment classification starts, so that turning
-the branch on is a deliberate act with a visible diff, not a side effect.
+This file used to assert the branch was reachable but inert, by construction,
+because Phase 1 had exactly one tier. Phase 2 replaces those assertions with real
+ones — this is the file that predicted its own rewrite, and this is that rewrite.
 """
 
 from __future__ import annotations
 
-from mcp_placard.diff import ChangeKind, diff_manifests
+from mcp_placard.diff import CHANGE_EXIT_CODES, ChangeKind, diff_manifests
 from mcp_placard.diff.engine import tier_escalation_findings
-from mcp_placard.manifest import UNCLASSIFIED
-from mcp_placard.manifest.models import ToolEntry
+from mcp_placard.errors import EXIT_ESCALATION, EXIT_OK
+from mcp_placard.manifest import Manifest, build_manifest
 
-from .conftest import make_manifest, tool_wire
+from .conftest import make_manifest, make_raw, tool_wire
 
 
-def _entry(name: str, schema_hash: str, description_hash: str) -> ToolEntry:
-    return ToolEntry(
-        name=name,
-        input_schema={"type": "object"},
-        schema_hash=schema_hash,
-        description_hash=description_hash,
+def test_no_tier_data_on_either_side_produces_no_escalation_finding() -> None:
+    """A tool this build cannot grade produces no ``tier_escalated`` finding — it
+    is not silently treated as unchanged; ``diff/engine.py``'s other conservative
+    defaults (escalating ``tool_added``/``tool_schema_changed``) carry that weight
+    instead."""
+    assert tier_escalation_findings("t", None, None) == []
+    assert tier_escalation_findings("t", "R1", None) == []
+    assert tier_escalation_findings("t", None, "R4") == []
+
+
+def test_an_unchanged_tier_produces_no_finding() -> None:
+    assert tier_escalation_findings("t", "R2", "R2") == []
+
+
+def test_a_tier_decrease_produces_no_finding() -> None:
+    """Only an increase escalates — a tool getting *less* dangerous is not news."""
+    assert tier_escalation_findings("t", "R4", "R1") == []
+
+
+def test_a_tier_increase_is_an_escalation() -> None:
+    findings = tier_escalation_findings("t", "R1", "R4")
+    assert len(findings) == 1
+    assert findings[0].kind is ChangeKind.TIER_ESCALATED
+    assert findings[0].exit_code == EXIT_ESCALATION
+    assert "R1" in findings[0].summary and "R4" in findings[0].summary
+
+
+def _classified(tools: list[dict], classification: list[dict]) -> Manifest:
+    """Build a manifest and stamp classification entries onto it directly — a
+    lighter-weight path than running the real classifier, for tests that only
+    care about the diff/tier-comparison mechanics."""
+    from mcp_placard.manifest.build import compute_classification_hash
+    from mcp_placard.manifest.models import ToolClassification
+
+    manifest = build_manifest(make_raw(tools))
+    entries = [ToolClassification(tool=c["tool"], tier=c["tier"]) for c in classification]
+    return manifest.model_copy(
+        update={
+            "classification": entries,
+            "classification_hash": compute_classification_hash(entries),
+        }
     )
 
 
-def test_the_stub_is_reachable_and_returns_nothing() -> None:
-    before = _entry("t", "a" * 64, "b" * 64)
-    after = _entry("t", "c" * 64, "d" * 64)
-    assert tier_escalation_findings(before, after) == []
+def test_a_real_tier_increase_escalates_through_diff_manifests() -> None:
+    old = _classified([tool_wire("t")], [{"tool": "t", "tier": "R1"}])
+    new = _classified([tool_wire("t")], [{"tool": "t", "tier": "R4"}])
+
+    result = diff_manifests(old, new)
+    assert result.exit_code == EXIT_ESCALATION
+    findings = result.findings_of(ChangeKind.TIER_ESCALATED)
+    assert len(findings) == 1
+    assert findings[0].tool == "t"
 
 
-def test_the_stub_returns_nothing_even_for_identical_tools() -> None:
-    tool = _entry("t", "a" * 64, "b" * 64)
-    assert tier_escalation_findings(tool, tool) == []
+def test_a_real_tier_decrease_does_not_escalate() -> None:
+    old = _classified([tool_wire("t")], [{"tool": "t", "tier": "R4"}])
+    new = _classified([tool_wire("t")], [{"tool": "t", "tier": "R1"}])
+
+    result = diff_manifests(old, new)
+    assert result.findings_of(ChangeKind.TIER_ESCALATED) == []
+    assert result.exit_code == EXIT_OK
 
 
-def test_phase_one_has_no_tier_ordering_to_escalate_along() -> None:
-    """The stub is inert *by construction*, not by an early return: there is exactly
-    one tier in Phase 1, so no pair of tools can differ in tier."""
-    manifest = make_manifest([tool_wire("a"), tool_wire("b")])
-    assert {tool.tier for tool in manifest.surface.tools} == {UNCLASSIFIED}
-
-
-def test_no_diff_of_any_shape_produces_a_tier_escalation_finding() -> None:
+def test_no_diff_of_any_shape_produces_a_tier_escalation_finding_when_unclassified() -> None:
+    """The Phase 1 baseline behaviour, still true for manifests nothing has
+    classified: with no tier data, ``tier_escalated`` cannot fire, no matter what
+    else changed."""
     old = make_manifest(
         [
             tool_wire("stays", description="unchanged"),
@@ -70,10 +107,5 @@ def test_no_diff_of_any_shape_produces_a_tier_escalation_finding() -> None:
     assert result.findings_of(ChangeKind.TIER_ESCALATED) == []
 
 
-def test_the_tier_escalated_kind_is_defined_for_phase_two() -> None:
-    """Defined and mapped now so Phase 2 changes one function body, not the shape of
-    the diff."""
-    from mcp_placard.diff import CHANGE_EXIT_CODES
-    from mcp_placard.errors import EXIT_ESCALATION
-
+def test_the_tier_escalated_kind_still_maps_to_escalation() -> None:
     assert CHANGE_EXIT_CODES[ChangeKind.TIER_ESCALATED] == EXIT_ESCALATION

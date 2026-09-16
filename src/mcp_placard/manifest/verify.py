@@ -15,6 +15,9 @@ only one level:
 3. ``capabilities_hash`` is recomputed over ``capabilities`` independently — it does
    not feed ``surface_hash`` and ``surface_hash`` does not feed it, so this layer
    catches a capabilities tamper that layer 2 cannot see.
+4. ``classification_hash`` is recomputed over ``classification`` independently, for
+   the identical reason: a hand-edited tier must not pass just because the surface
+   underneath it is untouched.
 
 Editing a schema breaks layers 1 and 2. Editing a schema *and* its ``schema_hash``
 still breaks layer 2. Every mismatch is collected rather than raised on first sight,
@@ -23,7 +26,7 @@ so one run reports the full extent of the damage.
 
 from __future__ import annotations
 
-from .build import compute_capabilities_hash, compute_surface_hash
+from .build import compute_capabilities_hash, compute_classification_hash, compute_surface_hash
 from .hashing import hash_description, hash_schema
 from .models import Manifest
 
@@ -62,6 +65,13 @@ def hash_mismatches(manifest: Manifest) -> list[str]:
         mismatches.append(
             f"capabilities_hash recorded {manifest.capabilities_hash} "
             f"but capabilities hashes to {expected_capabilities}"
+        )
+
+    expected_classification = compute_classification_hash(manifest.classification)
+    if manifest.classification_hash != expected_classification:
+        mismatches.append(
+            f"classification_hash recorded {manifest.classification_hash} "
+            f"but classification hashes to {expected_classification}"
         )
 
     return mismatches

@@ -12,9 +12,11 @@ sits one tier away.
 
 ## Status
 
-Phase 1 assigns **no tiers**. Every tool in a Phase 1 manifest carries the literal
-tier `unclassified`, and the declared annotations are recorded verbatim without being
-interpreted. This document is the specification the Phase 2 classifier implements.
+Implemented in `classify/`. Phase 1 assigned **no tiers** — every tool carried the
+literal tier `unclassified`, and a `"1.0"` manifest still reads that way (see
+`manifest/io.py`'s backward-compatibility note). `classify.classify_manifest` now
+assigns every tool a real R0-R5 tier against this specification;
+`tests/test_classify_fixture_matrix.py` is the fixture matrix below, as code.
 
 `TAXONOMY-amendment-1.md` and Part 1 of the 2026-09-16 addendum are folded into this
 document (Rules A-G below, the revised fixture matrix, and `CHAIN_EXFIL`). Both

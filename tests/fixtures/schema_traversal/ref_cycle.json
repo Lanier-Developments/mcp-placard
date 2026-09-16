@@ -1,0 +1,20 @@
+{
+  "name": "traverse_tree",
+  "description": "Operate on a self-referencing tree structure.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "root": { "$ref": "#/$defs/Node" }
+    },
+    "$defs": {
+      "Node": {
+        "type": "object",
+        "properties": {
+          "child": { "$ref": "#/$defs/Node" }
+        }
+      }
+    }
+  },
+  "expected_tier": "R4",
+  "expected_status": "cycle_detected"
+}

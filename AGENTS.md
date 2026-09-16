@@ -136,7 +136,7 @@ before changing one (`tests/test_exit_code_contract.py`, `tests/test_diff_table.
 | Code | Condition |
 | --- | --- |
 | 0 | No change, or changes entirely below the configured ceiling |
-| 1 | Escalation — new tool at R4/R5, tier increase, capabilities changed, or (Phase 3) a new injection finding |
+| 1 | Escalation — new tool at or above `--ceiling` (default R4), a tier increase, capabilities changed, or (Phase 3) a new injection finding |
 | 2 | Description change on any existing tool (prompt change, requires review) |
 | 3 | Tool removed |
 | 10 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
@@ -144,6 +144,12 @@ before changing one (`tests/test_exit_code_contract.py`, `tests/test_diff_table.
 When several conditions apply at once, the reported code is the highest-precedence one:
 `3 > 1 > 2 > 0`. Every finding is still listed on stderr regardless of which code wins. Exit
 code 2 is deliberately never silenceable by tier config — a prompt change is always reviewable.
+
+A tool absent from a manifest's `classification` — an old `"1.0"` manifest, or one nothing has
+classified — falls back to the Phase 1 conservative default (escalate) for both `tool_added` and
+`tool_schema_changed`: AGENTS.md forbids treating "we cannot grade this" as "this is safe." A
+schema change on a tool that *can* be graded escalates only if it moved the tier (already caught
+separately as a tier increase) or if `--escalate-schema-changes` is set.
 
 ### `verify`
 
@@ -209,7 +215,12 @@ own mock server and diffs the result against a checked-in manifest — the tool 
 
 - **Phase 1** — stdio and HTTP transport, enumeration, canonical manifest with three hash levels,
   `scan` and `diff` with exit codes. No classification yet; every tool lands at `unclassified`.
-- **Phase 2** — classifier, declared-vs-inferred reconciliation, disagreement findings.
+- **Phase 2** — done. Schema walker (Rule G), signal extractors, the Rule F combiner, Rules A-E
+  with fixtures, reversibility (Rule D), declared-vs-inferred reconciliation, the override
+  allowlist, `CHAIN_EXFIL`, live diff narrowing, and the `manifest_version` bump to `"2.0"` with
+  `"1.0"` backward compatibility. `classification` / `classification_hash` sit outside
+  `surface_hash`, split out for the same reason `capabilities` was in Pre-work 1: a classifier
+  rule fix must never move `surface_hash` for a server that did not change.
 - **Phase 3** — injection surface heuristics with a tracked false-positive rate.
 - **Phase 4** — GitHub Action wrapper, SARIF output, ceiling configuration.
 - **Phase 5** — manifest signing, and a published index of blast radii for widely used public MCP

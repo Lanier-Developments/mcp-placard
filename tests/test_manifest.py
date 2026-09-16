@@ -10,7 +10,6 @@ import pytest
 from mcp_placard import MANIFEST_VERSION
 from mcp_placard.errors import ManifestValidationError, ManifestVersionError, UsageError
 from mcp_placard.manifest import (
-    UNCLASSIFIED,
     build_manifest,
     load_manifest,
     manifest_document,
@@ -23,10 +22,13 @@ from mcp_placard.manifest.models import ToolEntry
 from .conftest import make_manifest, make_raw, tool_wire
 
 
-def test_every_phase_one_tool_is_unclassified() -> None:
-    """Phase 1 performs no classification. This test fails the moment it starts."""
+def test_build_manifest_alone_never_classifies() -> None:
+    """``build_manifest`` is structural only — ``manifest/`` does not classify risk
+    (see the package boundary note). Classification is ``classify.classify_manifest``,
+    a deliberate separate pass."""
     manifest = make_manifest([tool_wire("a"), tool_wire("b")])
-    assert {tool.tier for tool in manifest.surface.tools} == {UNCLASSIFIED}
+    assert manifest.classification == []
+    assert manifest.classification_hash
 
 
 def test_manifest_version_is_stamped() -> None:
@@ -86,7 +88,7 @@ def test_wire_spellings_survive_into_the_document() -> None:
     assert set(tool["annotations"]) == {"readOnlyHint", "openWorldHint"}
     assert "inputSchema" in tool
     assert "outputSchema" in tool
-    assert {"schema_hash", "description_hash", "tier"} <= set(tool)
+    assert {"schema_hash", "description_hash"} <= set(tool)
 
 
 def test_all_four_annotation_hints_round_trip() -> None:

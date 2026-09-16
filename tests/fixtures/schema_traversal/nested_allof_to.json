@@ -1,0 +1,26 @@
+{
+  "name": "dispatch_update",
+  "description": "Dispatch a status update to a configured notification target.",
+  "inputSchema": {
+    "allOf": [
+      {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "object",
+            "properties": {
+              "notification": {
+                "type": "object",
+                "properties": {
+                  "to": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "expected_tier": "R4",
+  "expected_pointer": "/allOf/0/properties/status/properties/notification/properties/to"
+}
