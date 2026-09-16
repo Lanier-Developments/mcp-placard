@@ -1,0 +1,43 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  # Keep these revs in step with the versions pyproject's [dev] extra resolves to.
+  # A hook pinned to an older ruff enforces rules the local ruff has since removed,
+  # and the two then disagree about what "clean" means.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.7
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.1
+    hooks:
+      - id: mypy
+        files: ^src/
+        additional_dependencies:
+          - pydantic>=2.7
+          - typer>=0.12
+          - anyio>=4.4
+
+  - repo: local
+    hooks:
+      - id: no-tools-call
+        name: no tools/call in library code
+        description: >
+          Placard is an enumeration-only scanner. Invoking a tool is a hard
+          non-goal (AGENTS.md, "Security Posture"). This hook fails the commit if
+          library code gains a tool-invocation call site.
+        entry: python scripts/check_no_tool_invocation.py
+        language: system
+        pass_filenames: false
+        always_run: true

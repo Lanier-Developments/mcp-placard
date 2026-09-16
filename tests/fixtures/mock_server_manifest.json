@@ -1,0 +1,345 @@
+{
+  "capabilities": {
+    "prompts": {
+      "listChanged": false
+    },
+    "resources": {
+      "listChanged": false,
+      "subscribe": false
+    },
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "8a180b4934ffbe3e88a01b1e1c9786601f8e336989e4f893a32fc36dc86e70c9",
+  "environment": {
+    "protocol_version": "2026-07-28",
+    "sdk_version": "2.2.0"
+  },
+  "manifest_version": "1.0",
+  "surface": {
+    "instructions": "Workspace assistant. Use search_documents before answering questions about project files. Prefer write_note over delete_workspace when unsure.",
+    "prompts": [
+      {
+        "arguments": [
+          {
+            "description": "Thread identifier.",
+            "name": "thread_id",
+            "required": true
+          }
+        ],
+        "description": "Summarize a document discussion thread for a reader who missed it.",
+        "name": "summarize_thread",
+        "title": "Summarize thread"
+      },
+      {
+        "arguments": [
+          {
+            "description": "Incident identifier.",
+            "name": "incident_id",
+            "required": true
+          },
+          {
+            "description": "Reported severity.",
+            "name": "severity",
+            "required": false
+          }
+        ],
+        "description": "Draft a triage summary for an incident from its timeline.",
+        "name": "triage_incident",
+        "title": "Triage incident"
+      }
+    ],
+    "resource_templates": [
+      {
+        "description": "Any file beneath the configured workspace root.",
+        "mimeType": "text/plain",
+        "name": "workspace_file",
+        "title": "Workspace file",
+        "uriTemplate": "file:///workspace/{path}"
+      }
+    ],
+    "resources": [
+      {
+        "description": "Column definitions for the customers table.",
+        "mimeType": "application/json",
+        "name": "customer_schema",
+        "title": "Customer table schema",
+        "uri": "db://workspace/customers/schema"
+      },
+      {
+        "description": "Top-level workspace readme.",
+        "mimeType": "text/markdown",
+        "name": "workspace_readme",
+        "size": 2048,
+        "title": "Workspace README",
+        "uri": "file:///workspace/README.md"
+      }
+    ],
+    "server": {
+      "name": "placard-mock",
+      "title": "Placard Mock Workspace Server",
+      "version": "1.4.2"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Permanently delete a workspace and every document in it. This cannot be undone.",
+        "description_hash": "816fc844422c2102373e76bd22bbcb902c78e12a59a8f5e7ed679cabb5c20c2d",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "confirm_phrase": {
+              "const": "DELETE",
+              "type": "string"
+            },
+            "force": {
+              "default": false,
+              "type": "boolean"
+            },
+            "workspace_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "workspace_id",
+            "confirm_phrase"
+          ],
+          "type": "object"
+        },
+        "name": "delete_workspace",
+        "schema_hash": "872dd17dda1b4d4c2e943d52731ac0d342fc4e530a1c951e37bdbd364e8bb746",
+        "tier": "unclassified",
+        "title": "Delete workspace"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Return this server's name, version, and configured workspace root.",
+        "description_hash": "570318fc82eadc6b94742a2e27661fb994af1b98e2c153ec18a8f0ac9e393149",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "name": "describe_server",
+        "schema_hash": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+        "tier": "unclassified",
+        "title": "Describe server"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": true
+        },
+        "description": "Fetch an arbitrary HTTP(S) URL and return the response body as text.",
+        "description_hash": "d1eb9798da7654dc2f8b327738be8ed97f80b3a324450caba6f931218ea5ba12",
+        "inputSchema": {
+          "properties": {
+            "timeout_seconds": {
+              "maximum": 60,
+              "minimum": 0.1,
+              "type": "number"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
+        "name": "fetch_url",
+        "schema_hash": "e4e462a493e9b4a380e7ee28ae5a8548e78d0e5a735d80b3a7a5d9f8710e48b5",
+        "tier": "unclassified",
+        "title": "Fetch URL"
+      },
+      {
+        "description_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+        "inputSchema": {
+          "properties": {},
+          "type": "object"
+        },
+        "name": "ping",
+        "schema_hash": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49",
+        "tier": "unclassified"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Search indexed workspace documents and return matching excerpts. Results are ranked by relevance.",
+        "description_hash": "865e2c5f94b315d98b29981526992464c8a663f7054845353f749f8e117cebcd",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "include_archived": {
+              "default": false,
+              "type": "boolean"
+            },
+            "limit": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "query": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "search_documents",
+        "outputSchema": {
+          "properties": {
+            "matches": {
+              "items": {
+                "properties": {
+                  "excerpt": {
+                    "type": "string"
+                  },
+                  "uri": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "schema_hash": "5f239c536a3b93c94abaf73184d7d6955ea3060f74cdb641d8788d8624e064c6",
+        "tier": "unclassified",
+        "title": "Search documents"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": false
+        },
+        "description": "Send an email on the user's behalf to one or more recipients, optionally with attachments.",
+        "description_hash": "1e8f851438450aaa2ee9de6ad5b34f5dfbdea86215afb029d3fb1defd0889480",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "attachments": {
+              "items": {
+                "properties": {
+                  "content_base64": {
+                    "type": "string"
+                  },
+                  "filename": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "filename",
+                  "content_base64"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "body": {
+              "type": "string"
+            },
+            "cc": {
+              "items": {
+                "format": "email",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "subject": {
+              "maxLength": 998,
+              "type": "string"
+            },
+            "to": {
+              "items": {
+                "format": "email",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "type": "object"
+        },
+        "name": "send_email",
+        "schema_hash": "d7b198ae27b8cd1e25ca5f9e33e4f944f437b7e1ad693f6bb929637df37d0b30",
+        "tier": "unclassified",
+        "title": "Send email"
+      },
+      {
+        "_meta": {
+          "placard.test/note": "carries a _meta block to prove it round-trips"
+        },
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Create or update a note inside the workspace — revisions are retained, so an overwrite can be rolled back. Café notes welcome.",
+        "description_hash": "d11bc961ba2b5fc88b0cfe02a3767f81e40563bb90e40db92cb232ce09b908e0",
+        "inputSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "append",
+                "overwrite"
+              ],
+              "type": "string"
+            },
+            "path": {
+              "pattern": "^notes/[A-Za-z0-9_./-]+$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "type": "object"
+        },
+        "name": "write_note",
+        "schema_hash": "7e5175afb797b11d682580244da81edc6bee47811c9ea1dd4c028b570635d663",
+        "tier": "unclassified",
+        "title": "Write note"
+      }
+    ]
+  },
+  "surface_hash": "b6aad9938b98cbad108209e827151d220041dca14b471ee499dc28f93981b9d5"
+}
