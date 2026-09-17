@@ -1,0 +1,88 @@
+name: Release
+
+# Publishes to PyPI via trusted publishing (OIDC). No API token is stored
+# anywhere; PyPI trusts this repo + workflow + environment combination directly.
+#
+# Triggers:
+#   - a GitHub Release being published (the normal path for v0.2.0 onward)
+#   - manual dispatch against a tag ref (used for v0.1.0, whose Release predates
+#     this workflow)
+#
+# PyPI never lets a version number be reused. The version-matches-tag step exists
+# so a mistyped tag cannot burn a number.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Tag must match the package version
+        run: |
+          ref="${GITHUB_REF_NAME}"
+          case "$ref" in
+            v*) tag_version="${ref#v}" ;;
+            *)  echo "::error::Release must run against a v* tag, got '$ref'"; exit 1 ;;
+          esac
+          pkg_version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          test "$tag_version" = "$pkg_version" || {
+            echo "::error::tag v$tag_version does not match pyproject version $pkg_version"; exit 1; }
+          init_version=$(python -c "import re; print(re.search(r'__version__ = \"([^\"]+)\"', open('src/mcp_placard/__init__.py').read()).group(1))")
+          test "$init_version" = "$pkg_version" || {
+            echo "::error::__init__.__version__ $init_version does not match pyproject version $pkg_version"; exit 1; }
+
+      - name: Build sdist and wheel
+        run: |
+          pip install --no-cache-dir build twine
+          python -m build
+          twine check dist/*
+
+      - name: Smoke-test the wheel in a clean interpreter
+        # The wheel, not the checkout, must be able to scan and verify. The
+        # mock server comes from the checkout only because it lives in tests/.
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --no-cache-dir dist/*.whl
+          /tmp/smoke/bin/placard scan "/tmp/smoke/bin/python -m tests.mock_server" --out /tmp/smoke.json
+          /tmp/smoke/bin/placard verify /tmp/smoke.json
+          diff -u tests/fixtures/mock_server_manifest.json /tmp/smoke.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mcp-placard/
+    permissions:
+      id-token: write  # PyPI trusted publishing
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          print-hash: true
