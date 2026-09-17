@@ -38,6 +38,6 @@ repos:
           non-goal (AGENTS.md, "Security Posture"). This hook fails the commit if
           library code gains a tool-invocation call site.
         entry: python scripts/check_no_tool_invocation.py
-        language: system
+        language: python
         pass_filenames: false
         always_run: true
