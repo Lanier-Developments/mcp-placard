@@ -5,8 +5,9 @@ name: Release
 #
 # Triggers:
 #   - a GitHub Release being published (the normal path for v0.2.0 onward)
-#   - manual dispatch against a tag ref (used for v0.1.0, whose Release predates
-#     this workflow)
+#   - manual dispatch with the tag name as input. The dispatched ref (normally
+#     main) is what gets built; the input only names the version being published
+#     and must match pyproject. Used for v0.1.0, whose tag predates this file.
 #
 # PyPI never lets a version number be reused. The version-matches-tag step exists
 # so a mistyped tag cannot burn a number.
@@ -15,6 +16,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag being published, e.g. v0.1.0"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -32,7 +38,7 @@ jobs:
 
       - name: Tag must match the package version
         run: |
-          ref="${GITHUB_REF_NAME}"
+          ref="${{ inputs.tag || github.ref_name }}"
           case "$ref" in
             v*) tag_version="${ref#v}" ;;
             *)  echo "::error::Release must run against a v* tag, got '$ref'"; exit 1 ;;
