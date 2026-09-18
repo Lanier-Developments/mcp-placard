@@ -1,10 +1,10 @@
 # `classify/` — risk tier inference and declared-vs-inferred reconciliation
 
-## Status: implemented (Phase 2)
+## Status: implemented (Phase 2, corrected in Phase 2.1)
 
-Every tool `classify_manifest` runs against gets a real R0-R5 tier, citations, and
-(at R3+) a reversibility confidence state. Server-level `CHAIN_EXFIL` is computed
-alongside. `build_manifest` alone still never classifies — this package's job
+Every tool `classify_manifest` runs against gets a real R0-R5 tier, a `kinds` set,
+citations, and (at R3+) a reversibility confidence state. Server-level `CHAIN_EXFIL`
+is computed alongside, over kinds. `build_manifest` alone still never classifies — this package's job
 starts only once a caller runs `classify_manifest` on a manifest it already built.
 
 ## Responsibility
@@ -29,11 +29,12 @@ input, the same discipline `build_manifest` holds for `RawSurface -> Manifest`.
 | `schema_walk.py` | Rule G — the shared schema-traversal utility every schema-shape signal uses |
 | `patterns.py` | Rule E — the closed allowlist of recognized host-pinning pattern forms |
 | `candidates.py` | `Candidate` — the shape every signal extractor returns |
-| `signals/schema_shape.py` | Rules A, B, C, D (tier-forcing clause), E — the strongest signal |
-| `signals/verb.py` | Tool-name-verb — deliberately weak; a verb alone never claims R5 |
+| `signals/schema_shape.py` | Rules A, B, C, D (tier-forcing clauses), E — the strongest signal; also `deferred_destination_clause` for Rule D's cross-signal condition |
+| `signals/verb.py` | Tool-name-verb — deliberately weak; whole-token match; a verb alone never claims R5 |
 | `signals/description.py` | Description text — scoped to the one R0/R1/R2 boundary schema shape cannot resolve alone |
-| `signals/annotations.py` | Declared-vs-inferred reconciliation — never a tier candidate, only disagreement findings |
-| `combine.py` | Rule F — the monotonic maximum over every candidate |
+| `signals/annotations.py` | Declared annotations — `destructiveHint: true` escalates (floor R3); safety claims only ever produce disagreement findings |
+| `signals/code_exec.py` | Rule H — caller-supplied code execution; R5 with every kind; the taxonomy's one deliberate fail-open (`query`) |
+| `combine.py` | Rule F — the monotonic maximum over every candidate, and the union of their kinds |
 | `reversibility.py` | Rule D's `verified` / `asserted` / `unverifiable` confidence state |
 | `overrides.py` | The allowlist — the only mechanism that may ever lower a tier |
 | `chain.py` | `CHAIN_EXFIL` — the one server-level finding Phase 2 implements |
@@ -49,8 +50,14 @@ input, the same discipline `build_manifest` holds for `RawSurface -> Manifest`.
   description text. Schema-shape signals traverse the full schema — nested objects,
   arrays, and `$ref`/`allOf`/`anyOf`/`oneOf` composition — via the shared walker in
   `classify/schema_walk.py` (Rule G); a schema too complex or indirect to traverse is
-  treated as unconstrained, not as a pass. Declared annotations never independently
-  vote for a tier (see `signals/annotations.py`) — they feed reconciliation only.
+  treated as unconstrained, not as a pass. Declared annotations vote in one direction
+  only: a claim against interest (`destructiveHint: true`) is a floor of R3; a claim
+  of safety feeds reconciliation and never moves a tier (`signals/annotations.py`).
+- **Kinds ride on citations.** Each candidate carries the kinds its own evidence
+  establishes; `combine.py` unions them. There is no second pass that re-inspects the
+  schema to guess kinds — that would reintroduce exactly the drift the shared walker
+  exists to prevent. Asserted globally in `tests/test_classify_kinds.py` and
+  `tests/test_classify_real_servers.py`.
 - **Every tier must cite the signals that produced it**, so findings are auditable.
   A tier with no stated reasoning is not a finding, it is an opinion. Asserted
   globally in `tests/test_classify_fixture_matrix.py`.
@@ -84,4 +91,14 @@ both documented in the relevant module:
 - **Rule D's "destination path parameter with no concurrency token" R5-forcing
   clause applies only to an *unconstrained* path.** A prefix-pinned path with no
   concurrency token (the standing `write_note` R3 example) is not this clause —
-  see `signals/schema_shape.py`'s `DESTINATION_PATH_FIELDS` note.
+  see `signals/schema_shape.py`'s `PATH_LIKE_FIELDS` note.
+- **Rule D's condition 1 ("an independent signal places the tool at R3 or above")
+  is resolved by the orchestrator, not the extractor.** Extractors do not see each
+  other's output, so `schema_shape.deferred_destination_clause` returns the
+  would-be R5 candidate and `classify_tool` appends it only once another candidate
+  has reached R3. Two walks of the same schema, both through the shared walker.
+- **Description-derived `read_sensitive` is withheld when the description opens
+  with an action verb.** Amendment 2 §3 says "sensitivity-description evidence";
+  read literally, `send_email` would carry both halves of `CHAIN_EXFIL` on its own
+  through the weakest signal in the taxonomy. The R2 tier floor still applies.
+  Flagged in the Phase 2.1 report for confirmation.

@@ -29,9 +29,10 @@ def test_combine_keeps_every_candidate_as_a_citation_not_only_the_winner() -> No
         Candidate(signal="schema_shape", tier="R1", evidence="a", rule="Rule B"),
         Candidate(signal="tool_name_verb", tier="R3", evidence="b", rule=None),
     ]
-    tier, citations = combine(candidates)
+    tier, citations, kinds = combine(candidates)
     assert tier == "R3"
     assert {c.tier for c in citations} == {"R1", "R3"}
+    assert kinds == []
 
 
 # ---------------------------------------------------------------- annotations
@@ -73,13 +74,16 @@ def test_no_annotations_at_all_produces_no_disagreements() -> None:
     assert find_disagreements(None, "R5") == []
 
 
-def test_the_annotations_extract_stub_is_always_empty() -> None:
-    """Declared annotations never independently vote for a tier — see the module
-    docstring. This is the one-line proof the stub stays a stub."""
-    assert description.extract(None) == []  # sanity: description's own empty case
+def test_a_declared_safety_claim_never_becomes_a_candidate() -> None:
+    """Amendment 2 §7 is one-directional: ``readOnlyHint: true`` is a claim the
+    declarer benefits from and never enters Rule F's maximum. Only a claim
+    *against* interest (``destructiveHint: true``) does — see
+    ``tests/test_classify_kinds.py``."""
     from mcp_placard.classify.signals import annotations as annotations_module
 
     assert annotations_module.extract(ToolAnnotations(read_only_hint=True)) == []
+    assert annotations_module.extract(ToolAnnotations(destructive_hint=False)) == []
+    assert annotations_module.extract(None) == []
 
 
 # ----------------------------------------------------------------------- verb

@@ -13,6 +13,8 @@ for the same handful of domain nouns a human reviewer would skim for.
 
 from __future__ import annotations
 
+import re
+
 from ..candidates import Candidate
 
 TENANT_DATA_KEYWORDS = (
@@ -36,14 +38,63 @@ SENSITIVE_DOMAIN_KEYWORDS = (
     "email",
     "calendar",
     "correspondence",
-    "directory",
     "contact",
     "employee",
     "roster",
 )
-"""R2's archetype domains — mail, calendar, directory — per the R2 worked examples.
+"""R2's archetype domains — mail, calendar, people — per the R2 worked examples.
 A read whose description names one of these is read-*sensitive*, not merely
-read-scoped, independent of what its schema alone would suggest."""
+read-scoped, independent of what its schema alone would suggest.
+
+``directory`` was removed by Amendment 2 §8: it came from the `list_directory_users`
+example, where the sensitive term is really `users`, and on filesystem and git
+servers it means a folder — it alone was pushing `move_file` and `git_diff_unstaged`
+to R2."""
+
+
+ACTION_LEADING_VERBS = frozenset(
+    {
+        "send",
+        "post",
+        "publish",
+        "create",
+        "update",
+        "delete",
+        "write",
+        "notify",
+        "invite",
+        "forward",
+        "share",
+        "submit",
+        "dispatch",
+        "remove",
+        "move",
+        "rename",
+        "upload",
+        "set",
+        "add",
+        "put",
+        "push",
+        "compose",
+        "reply",
+    }
+)
+"""Kind gate for the sensitive-domain match. `docs/TAXONOMY.md` defines this
+signal's R2 as "*a read* whose description names one of these" — the tier floor
+still applies to `send_email` (it touches mail), but kind ``read_sensitive`` is a
+claim that the tool *reads*, and a description opening with one of these verbs
+presents the tool as acting on the domain, not reading it. Without this gate every
+``send_email`` would carry both halves of ``CHAIN_EXFIL`` on its own through the
+weakest signal in the taxonomy. Closed list; first word of the description only.
+Flagged to Chief in the Phase 2.1 report as an implementation choice over
+Amendment 2 §3's "sensitivity-description evidence" wording."""
+
+_LEADING_WORD = re.compile(r"^[^a-z]*([a-z]+)")
+
+
+def _opens_with_action_verb(lowered: str) -> bool:
+    match = _LEADING_WORD.match(lowered)
+    return match is not None and match.group(1) in ACTION_LEADING_VERBS
 
 
 def extract(description: str | None) -> list[Candidate]:
@@ -59,12 +110,25 @@ def extract(description: str | None) -> list[Candidate]:
 
     for keyword in SENSITIVE_DOMAIN_KEYWORDS:
         if keyword in lowered:
+            if _opens_with_action_verb(lowered):
+                return [
+                    Candidate(
+                        signal="description_text",
+                        tier="R2",
+                        evidence=(
+                            f"description names a sensitive domain ({keyword!r}) but opens "
+                            "with an action verb — domain floor only, not a sensitive read"
+                        ),
+                        rule=None,
+                    )
+                ]
             return [
                 Candidate(
                     signal="description_text",
                     tier="R2",
                     evidence=f"description names a sensitive domain ({keyword!r})",
                     rule=None,
+                    kinds=frozenset({"read_sensitive"}),
                 )
             ]
 
