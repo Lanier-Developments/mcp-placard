@@ -11,15 +11,20 @@ The pipeline per tool, in order:
 
 1. Every signal extractor in :mod:`classify.signals` runs independently and
    produces zero or more :class:`~classify.candidates.Candidate` objects — they do
-   not see each other's output.
-2. :func:`classify.combine.combine` takes the monotonic maximum over every
-   candidate (Rule F) and turns each into a
+   not see each other's output. Each candidate carries the kinds its own evidence
+   establishes (Amendment 2 §3).
+2. Rule D's cross-signal condition is resolved: an unguarded path that is neither
+   destination-named nor next to content forces R5 only if some other candidate
+   already put the tool at R3 or above
+   (:func:`classify.signals.schema_shape.deferred_destination_clause`).
+3. :func:`classify.combine.combine` takes the monotonic maximum over every
+   candidate (Rule F), the union of their kinds, and turns each into a
    :class:`~mcp_placard.manifest.models.Citation`.
-3. :func:`classify.overrides.apply` applies the operator's allowlist, if the tier
-   it produced is above R3 and reversibility is meaningful.
-4. :func:`classify.reversibility.compute` runs for any tool at R3 or above.
-5. :func:`classify.signals.annotations.find_disagreements` compares the declared
-   annotations against the final tier.
+4. :func:`classify.overrides.apply` applies the operator's allowlist. Kinds are
+   untouched — an override lowers a tier, it does not change what a tool does.
+5. :func:`classify.reversibility.compute` runs for any tool at R3 or above.
+6. :func:`classify.signals.annotations.find_disagreements` compares the declared
+   annotations against the final tier and kinds.
 
 Then, once every tool has a :class:`~mcp_placard.manifest.models.ToolClassification`,
 :func:`classify.chain.find` looks for ``CHAIN_EXFIL`` across the whole surface.
@@ -34,7 +39,8 @@ from .combine import combine
 from .overrides import OverrideEntry
 from .overrides import apply as apply_overrides
 from .reversibility import compute as compute_reversibility
-from .signals import description, schema_shape, verb
+from .signals import code_exec, description, schema_shape, verb
+from .signals.annotations import extract as extract_declared_annotations
 from .signals.annotations import find_disagreements
 
 __all__ = ["OverrideEntry", "classify_manifest", "classify_tool"]
@@ -50,21 +56,32 @@ def classify_tool(tool: ToolEntry, overrides: list[OverrideEntry]) -> ToolClassi
         *schema_candidates,
         *verb.extract(tool.name),
         *description.extract(tool.description),
+        *extract_declared_annotations(tool.annotations),
+        *code_exec.extract(tool.name, tool.input_schema, tool.description),
     ]
 
-    inferred_tier, citations = combine(candidates)
+    # Rule D, condition 1: the destination clause fires on a bare path only once an
+    # independent signal has established the tool as writing (Amendment 2 §1).
+    deferred = schema_shape.deferred_destination_clause(tool.input_schema)
+    if deferred is not None and any(
+        TIER_ORDER.index(candidate.tier) >= _R3_INDEX for candidate in candidates
+    ):
+        candidates.append(deferred)
+
+    inferred_tier, citations, kinds = combine(candidates)
     final_tier, override_applied = apply_overrides(tool.name, inferred_tier, overrides)
 
     reversibility = None
     if TIER_ORDER.index(final_tier) >= _R3_INDEX:
-        reversibility = compute_reversibility(tool.input_schema, tool.annotations)
+        reversibility = compute_reversibility(tool.input_schema, tool.description)
 
-    disagreements = find_disagreements(tool.annotations, final_tier)
+    disagreements = find_disagreements(tool.annotations, final_tier, kinds)
 
     return ToolClassification(
         tool=tool.name,
         tier=final_tier,
         citations=citations,
+        kinds=kinds,
         reversibility=reversibility,
         disagreements=disagreements,
         override=override_applied,

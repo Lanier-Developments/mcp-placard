@@ -23,9 +23,12 @@ from .build import compute_classification_hash
 from .canonical import render_json
 from .models import Manifest
 
-SUPPORTED_MANIFEST_VERSIONS = frozenset({"1.0", MANIFEST_VERSION})
+SUPPORTED_MANIFEST_VERSIONS = frozenset({"1.0", "2.0", MANIFEST_VERSION})
 """Versions this build can read. "1.0" is Phase 1's format, added here rather than
-rewritten in place — deliverable 10's backward-compatibility requirement."""
+rewritten in place — deliverable 10's backward-compatibility requirement. "2.0" is
+Phase 2's; it differs from "2.1" only by the absence of per-tool ``kinds``, which
+the models default to empty and serialize as absent, so a "2.0" document needs no
+upgrade step and still verifies (see ``models._drop_empty_kinds``)."""
 
 _EMPTY_CLASSIFICATION_HASH = compute_classification_hash([])
 

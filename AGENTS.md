@@ -100,6 +100,14 @@ Rules A-G); the classifier must cite which signals produced a tier so findings a
 
 Never silently downgrade a tier because a server declares it safe. Downgrades require an explicit
 allowlist entry in the consuming repo's config, and the manifest records that an override applied.
+A declaration *against* interest is different: `destructiveHint: true` is a floor of R3 (Amendment
+2 §7). Declared values may raise a tier, never lower one.
+
+Alongside its tier every tool carries a `kinds` set — `read_sensitive`, `egress`, `write`,
+`destructive`, `code_exec` — derived inside the signal extractors from the same evidence that
+produced the tier, never from the tier itself (Amendment 2 §3). Kinds never affect tier and tier
+never affects kinds; `CHAIN_EXFIL` is a predicate over kinds. A tool that executes caller-supplied
+code is R5 with every kind (Rule H). Every kind, like every tier, must cite the evidence behind it.
 
 ## Manifest Format
 
@@ -136,7 +144,7 @@ before changing one (`tests/test_exit_code_contract.py`, `tests/test_diff_table.
 | Code | Condition |
 | --- | --- |
 | 0 | No change, or changes entirely below the configured ceiling |
-| 1 | Escalation — new tool at or above `--ceiling` (default R4), a tier increase, capabilities changed, or (Phase 3) a new injection finding |
+| 1 | Escalation — new tool at or above `--ceiling` (default R4), a tier increase, capabilities changed, or (Phase 3) a new injection finding. A change in `kinds` alone is not a diff finding (not yet — see Phase 6) |
 | 2 | Description change on any existing tool (prompt change, requires review) |
 | 3 | Tool removed |
 | 10 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
@@ -221,10 +229,20 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   `"1.0"` backward compatibility. `classification` / `classification_hash` sit outside
   `surface_hash`, split out for the same reason `capabilities` was in Pre-work 1: a classifier
   rule fix must never move `surface_hash` for a server that did not change.
+- **Phase 2.1** — done. Corrections from the first real-server batch, per Amendment 2: Rule D's
+  destination clause (a `path` on a read is a source), Rule C's `to`/`from` exemption, the `kinds`
+  axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
+  annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
+  baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
 - **Phase 3** — injection surface heuristics with a tracked false-positive rate.
 - **Phase 4** — GitHub Action wrapper, SARIF output, ceiling configuration.
 - **Phase 5** — manifest signing, and a published index of blast radii for widely used public MCP
   servers.
+- **Phase 6** (proposed, Amendment 2 §9) — scan a client configuration (`mcp.json`,
+  `claude_desktop_config.json`) as a unit and report the blast radius of the *agent*. Across 11
+  real servers the true single-server chain count was 0; the nearest real chain was filesystem
+  reads plus `fetch` — two servers, one agent. Recorded so it is not lost; not to be built
+  speculatively.
 
 Phases ship as separate branches and separate releases. Do not begin a phase before the prior
 phase's fixtures are green.

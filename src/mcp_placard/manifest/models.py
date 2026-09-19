@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer
 
 RiskTier = Literal["unclassified", "R0", "R1", "R2", "R3", "R4", "R5"]
 """Every tier a manifest's ``classification`` entries may carry. ``unclassified`` is
@@ -50,6 +50,32 @@ build; recognized only when reading an old manifest."""
 
 Reversibility = Literal["verified", "asserted", "unverifiable"]
 """Rule D's confidence state for a tool at R3 or above. See :class:`ToolClassification`."""
+
+Kind = Literal["read_sensitive", "egress", "write", "destructive", "code_exec"]
+"""The second axis Amendment 2 adds, orthogonal to :data:`Tier`. ``docs/TAXONOMY.md``,
+"Kinds": the tier ladder must stay totally ordered to function as a CI ceiling, so
+*what a tool does* — reads sensitive data, moves data outward, writes, destroys,
+executes caller-supplied code — lives here instead. A tool may carry several kinds
+or none. Kinds never affect tier and tier never affects kinds."""
+
+KIND_ORDER: tuple[Kind, ...] = ("read_sensitive", "egress", "write", "destructive", "code_exec")
+"""Canonical serialization order for a tool's ``kinds`` list. Not a severity order —
+kinds are unordered by meaning; this exists only so two scans agree byte for byte."""
+
+
+def _drop_empty_kinds(data: dict[str, Any]) -> dict[str, Any]:
+    """Omit ``kinds`` from a serialized body when it is empty.
+
+    A ``"2.0"`` manifest predates ``kinds`` entirely, and its recorded
+    ``classification_hash`` was computed over bodies with no such key. Serializing
+    an absent-or-empty ``kinds`` as *nothing* keeps that hash reproducible under this
+    build, so ``verify`` on a stored ``"2.0"`` baseline still passes, and a ``"2.1"``
+    entry for a tool with no kind-bearing evidence is byte-identical to what ``"2.0"``
+    wrote for it. Absent and empty are the same statement: no kind evidence found.
+    """
+    if not data.get("kinds"):
+        data.pop("kinds", None)
+    return data
 
 
 class SurfaceModel(BaseModel):
@@ -111,14 +137,20 @@ class Citation(SurfaceModel):
     it. A tier without stated reasoning is an opinion, not a finding.* This is that
     citation, structured rather than left as prose.
 
-    Declared annotations are deliberately absent from ``signal``'s allowed values.
-    They never independently vote for a tier — the "declared vs inferred" table's
-    ``destructiveHint: true`` / inferred R1 row is explicitly "not a finding," which
-    is only possible if annotations never enter Rule F's monotonic maximum. Their
-    role is comparative evidence for :class:`Disagreement`, not a tier candidate.
+    ``declared_annotations`` is a signal since Amendment 2 §7, in one direction only:
+    a server declaring *more* danger than the schema shows (``destructiveHint:
+    true``) is a claim against interest and escalates to a floor of R3. A server
+    declaring *less* never enters Rule F's maximum; that direction is
+    :class:`Disagreement`'s job.
     """
 
-    signal: Literal["schema_shape", "tool_name_verb", "description_text"]
+    signal: Literal[
+        "schema_shape",
+        "tool_name_verb",
+        "description_text",
+        "declared_annotations",
+        "code_execution",
+    ]
     tier: Tier
     """The tier this signal *alone* supports — not necessarily the tool's final
     tier, which is the monotonic maximum over every citation (Rule F)."""
@@ -131,6 +163,15 @@ class Citation(SurfaceModel):
     rule: str | None = None
     """Which named rule this citation applies, e.g. ``"Rule A"`` — absent for a
     plain tier-table match that cites no amendment rule by name."""
+
+    kinds: list[Kind] = Field(default_factory=list)
+    """The kinds this evidence establishes (Amendment 2 §3). A kind on a
+    :class:`ToolClassification` always traces back to at least one citation
+    carrying it — a kind with no citation is as much a bug as a tier with none."""
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        return _drop_empty_kinds(handler(self))
 
 
 class Disagreement(SurfaceModel):
@@ -180,12 +221,21 @@ class ToolClassification(SurfaceModel):
     R1 candidate sits alongside the R4 candidate that decided the tier, because
     ordering governs citation, not exclusion (Rule F)."""
 
+    kinds: list[Kind] = Field(default_factory=list)
+    """What this tool does, orthogonal to how far it reaches (Amendment 2 §3).
+    The union of every citation's ``kinds``, in :data:`KIND_ORDER`. Empty means no
+    kind-bearing evidence was found — legal, and serialized as absent."""
+
     reversibility: Reversibility | None = None
     """Set only when :attr:`tier` is R3 or above (Rule D). ``None`` below R3, where
     reversibility is not a meaningful question."""
 
     disagreements: list[Disagreement] = Field(default_factory=list)
     override: OverrideApplied | None = None
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        return _drop_empty_kinds(handler(self))
 
 
 class ResourceEntry(SurfaceModel):
@@ -279,7 +329,8 @@ class ServerFinding(SurfaceModel):
     """A server-level finding — a property of the whole surface's *composition*,
     not of any single tool. ``docs/TAXONOMY.md``, "Server-level findings":
     ``CHAIN_EXFIL`` is the one Phase 2 implements, raised when the surface exposes
-    at least one R2-or-above read alongside at least one R4 egress tool.
+    at least one tool of kind ``read_sensitive`` and at least one of kind ``egress``
+    (Amendment 2 §4 — tier is not consulted; one tool carrying both kinds suffices).
 
     Carried on the manifest itself (produced at scan time), unlike a diff
     :class:`~mcp_placard.diff.models.Finding`, which only exists when comparing two

@@ -16,7 +16,8 @@ __version__ = "0.1.0"
 
 #: Schema version stamped into every manifest this build writes. Bumped when the
 #: manifest layout changes in a way older readers cannot handle. Phase 1 wrote
-#: "1.0"; Phase 2 bumps to "2.0" for the ``classification`` / ``classification_hash``
-#: / ``findings`` fields — see ``manifest/io.py`` for how a "1.0" manifest still
-#: reads under this build.
-MANIFEST_VERSION = "2.0"
+#: "1.0"; Phase 2 bumped to "2.0" for the ``classification`` / ``classification_hash``
+#: / ``findings`` fields; Phase 2.1 bumps to "2.1" for the per-tool ``kinds`` axis —
+#: see ``manifest/io.py`` for how "1.0" and "2.0" manifests still read under this
+#: build.
+MANIFEST_VERSION = "2.1"

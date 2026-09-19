@@ -68,12 +68,15 @@ A server that annotates a dangerous tool as safe: `readOnlyHint: true` on a tool
 whose schema takes an arbitrary `url`; `destructiveHint: false` on `purge_records`.
 
 **Covered.** Phase 2's classifier infers a tier independently of every declared
-annotation and reports disagreement as a finding
+*safety* claim and reports disagreement as a finding
 (`ToolClassification.disagreements`) — `readOnlyHint: true` on a tool whose schema
 takes an unconstrained `url` is exactly the canonical disagreement case
-(`docs/TAXONOMY.md`, R4 example 2). A declared annotation is recorded, never
-believed: it can never raise or lower an inferred tier, only be reported as
-consistent or contradicting it.
+(`docs/TAXONOMY.md`, R4 example 2), and `readOnlyHint: true` on a tool that executes
+caller-supplied code is the severest one (Rule H). A declared safety claim is
+recorded, never believed: it can never lower an inferred tier, only be reported as
+consistent or contradicting it. The one direction a declaration *is* believed is
+against the server's own interest: `destructiveHint: true` floors the tool at R3
+(Amendment 2 §7). An adversary gains nothing by over-declaring danger.
 
 The governing rule: **server self-declaration is evidence, not truth**, and a
 declared tier never downgrades an inferred one. The only thing that ever lowers a

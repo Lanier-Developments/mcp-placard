@@ -13,16 +13,61 @@ manifest, and fails CI when the next scan disagrees with the last one.
 **Placard never invokes a tool.** Enumeration and static analysis only. No code path may
 call `tools/call`; `scripts/check_no_tool_invocation.py` enforces that mechanically.
 
-## Status: Phase 1 and Phase 2 complete
+## Status: Phases 1, 2, and 2.1 complete
 
-`scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, and description
-signals combine as a monotonic maximum (never a weighted score), reconciled against what the
-server declared about itself. The full ladder, its worked examples, and the rules the
-classifier implements are in [`docs/TAXONOMY.md`](docs/TAXONOMY.md). `diff` grades tier
-increases and gates new-tool escalation on a configurable ceiling; a per-tool `classification`
-entry never enters `surface_hash` — a classifier fix must never move that hash for a server
-that did not change. Injection heuristics (Phase 3), SARIF/GitHub Action packaging (Phase 4),
-and manifest signing (Phase 5) are not yet built.
+`scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, description, and
+declared-annotation signals combine as a monotonic maximum (never a weighted score), reconciled
+against what the server declared about itself. Alongside the tier every tool carries a `kinds`
+set (`read_sensitive`, `egress`, `write`, `destructive`, `code_exec`) derived from the same
+evidence, and `CHAIN_EXFIL` is a predicate over kinds. The full ladder, its worked examples, and
+the rules the classifier implements are in [`docs/TAXONOMY.md`](docs/TAXONOMY.md). `diff` grades
+tier increases and gates new-tool escalation on a configurable ceiling; a per-tool
+`classification` entry never enters `surface_hash` — a classifier fix must never move that hash
+for a server that did not change. Injection heuristics (Phase 3), SARIF/GitHub Action packaging
+(Phase 4), and manifest signing (Phase 5) are not yet built.
+
+### Against real servers
+
+Phase 2.1 corrected the classifier against 11 public MCP servers (109 tools) after the first
+real-server batch found three compounding rule ambiguities. The before/after, same servers,
+same day-old surfaces (every `surface_hash` unchanged — the classifier moved, the servers did
+not):
+
+| Server | Tools | Phase 2 | Phase 2.1 | `CHAIN_EXFIL` |
+| --- | --- | --- | --- | --- |
+| filesystem | 14 | R0:1 R1:1 R2:1 **R5:11** | R0:1 R1:9 R5:4 | spurious → none |
+| memory | 9 | R0:1 R1:2 R3:4 R4:2 | R0:1 R1:2 R3:6 | spurious → none |
+| github | 26 | R1:15 R3:7 R5:4 | R1:14 R3:10 R5:2 | spurious → none |
+| playwright | 26 | R0:3 R1:21 R4:2 | R0:1 R1:7 R3:14 R4:2 **R5:2** | none → `code_exec` |
+| git | 12 | R1:11 R2:1 | R1:7 R3:5 | — |
+| everything, fetch, time, sequential-thinking, deepwiki, context7 | 22 | unchanged | unchanged | — |
+
+**The tool caught its first real drift.** Between two of these runs the Playwright `@latest`
+package shipped a release. Nobody was watching it; the diff named every change and returned
+the documented code:
+
+```
+$ placard diff playwright-before.json playwright-after.json
+[tool_added] tool 'browser_emulate_media' added (tier R3; schema 3b4bcf539a7e)
+[tool_removed] tool 'browser_webmcp_call' removed (was tier R3)
+[tool_removed] tool 'browser_webmcp_list' removed (was tier R0)
+[server_capabilities_changed] server capabilities changed (ba8e230d1afc -> 46f63fd549bb)
+exit=3
+```
+
+The last line is the one worth noticing. The `capabilities` block used to sit inside the hashed
+body; it was split out precisely so that a change to it would surface as a named finding
+instead of as `surface_hash` moving for no stated reason. That design decision paid for itself
+here, in public, on a target nobody prompted.
+
+What moved, and why: eight filesystem *reads* left R5 (a `path` on `read_file` is a source, not
+a destination); `move_file` reached R5 on `destination`; GitHub's `create_or_update_file` became
+R3 `verified` on its `sha`; every git and GitHub mutation verb (`add`, `commit`, `checkout`,
+`merge`, `fork`, `reset`) reached R3; the memory server's graph edges (`from`/`to`) stopped
+reading as email; Playwright's `browser_evaluate` and `browser_run_code_unsafe` went from R1 to R5
+with every kind, and the server's only `CHAIN_EXFIL` is now the one it should have — code
+execution carries both halves alone. The full delta and the flag-backs are in
+`2026-09-18_from-jr_to-chief_phase2.1-report.md`.
 
 ## Install
 
@@ -85,6 +130,10 @@ body. No timestamp, no scan target — two scans of an unchanged server are byte
 negotiated protocol version and SDK version *are* recorded, but only inside `environment`, which
 no hash ever covers.
 
+Manifest format `2.1`; `2.0` and `1.0` documents still load, verify, and diff — a stored `2.0`
+baseline's `classification_hash` reproduces under this build because an empty `kinds` list is
+serialized as absent.
+
 Independent SHA-256 hashes, all required, never collapsed:
 
 - `surface_hash` — tools, resources, prompts, instructions
@@ -123,7 +172,7 @@ placard scan "python -m tests.mock_server" --out tests/fixtures/mock_server_mani
 
 - [`AGENTS.md`](AGENTS.md) — the operating spec
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — what Placard does and does not defend against
-- [`docs/TAXONOMY.md`](docs/TAXONOMY.md) — the R0-R5 risk ladder with worked examples
+- [`docs/TAXONOMY.md`](docs/TAXONOMY.md) — the R0-R5 risk ladder, the kind axis, Rules A-H, worked examples
 
 ## License
 

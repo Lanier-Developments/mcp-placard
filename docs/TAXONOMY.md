@@ -19,9 +19,16 @@ assigns every tool a real R0-R5 tier against this specification;
 `tests/test_classify_fixture_matrix.py` is the fixture matrix below, as code.
 
 `TAXONOMY-amendment-1.md` and Part 1 of the 2026-09-16 addendum are folded into this
-document (Rules A-G below, the revised fixture matrix, and `CHAIN_EXFIL`). Both
-source documents are retained as the original review record; this document is
-authoritative wherever the two would otherwise be consulted separately.
+document (Rules A-G below, the revised fixture matrix, and `CHAIN_EXFIL`).
+`TAXONOMY-amendment-2.md` (2026-09-18, adjudicating the first real-server batch) is
+folded in as well: the Rule D destination clause, the Rule C `to` exemption, the
+kind axis, `CHAIN_EXFIL` over kinds, Rule H, the revised reversibility evidence,
+annotation escalation, and the sensitivity vocabulary. Amendment 3 (2026-09-18,
+`2026-09-18_from-chief_to-jr_phase2.2-decisions.md`, adjudicating the Phase 2.1
+flag-backs) is folded in: `body` leaves Rule D's content list, `read_sensitive`
+means *returns*, and `asserted` requires a phrase. All source documents are retained
+as the original review record; this document is authoritative wherever they would
+otherwise be consulted separately.
 
 ## The tiers
 
@@ -53,12 +60,19 @@ hard each one is to fake.
    complete schema — nested objects, arrays, and `$ref`/`allOf`/`anyOf`/`oneOf`
    composition — per Rule G below, never just the top level.
 2. **Declared annotations.** `readOnlyHint`, `destructiveHint`, `idempotentHint`,
-   `openWorldHint` — supplied by the party being audited. Evidence, never truth.
+   `openWorldHint` — supplied by the party being audited. Evidence, never truth. A
+   declaration *against* interest (`destructiveHint: true`) is a floor of R3 and kind
+   `destructive` (Amendment 2 §7); a declaration of safety never moves a tier.
 3. **Tool name verb.** `get_`, `list_`, `search_` versus `send_`, `post_`, `delete_`,
    `revoke_`, `transfer_`. Cheap and usually honest, trivially renameable.
 4. **Description text.** The weakest signal for tiering, and the *only* thing that
    Phase 3's injection heuristics care about. A description is prose written by the
-   audited party; it is the last thing that should move a tier.
+   audited party; it is the last thing that should move a tier. The sensitive-domain
+   vocabulary is `mail`, `inbox`, `email`, `calendar`, `correspondence`, `contact`,
+   `employee`, `roster`; `directory` was removed by Amendment 2 §8 (on filesystem and
+   git servers it means a folder). A match floors the tool at R2; it establishes kind
+   `read_sensitive` only where the tool returns rather than acts — see the Kinds
+   section (Amendment 3 §3.2).
 
 Every assigned tier must cite the signals that produced it. A tier without stated
 reasoning is an opinion, not a finding.
@@ -73,12 +87,20 @@ Disagreement is itself a finding, and the interesting direction is one-way:
 | `readOnlyHint: true` | R3+ | **Finding.** The server claims safety its schema does not support. |
 | `destructiveHint: false` | R5 | **Finding.** Same shape, stated more specifically. |
 | `openWorldHint: false` | R4 | **Finding.** A closed world does not take a `url`. |
+| `readOnlyHint: true` | R5 with kind `code_exec` | **Finding, highest severity.** A read-only tool that executes caller-supplied code (Rule H). |
 | (absent) | R5 | Not a disagreement, but worth surfacing: high tier, no declaration. |
-| `destructiveHint: true` | R1 | Not a finding. A server over-declaring its own risk costs nothing. |
+| `destructiveHint: true` | R1 | Not a finding — it **escalates** (Amendment 2 §7): floor R3, kind `destructive`. |
 
 **Never silently downgrade a tier because a server declares itself safe.** A
 downgrade requires an explicit allowlist entry in the consuming repo's config, and
 the manifest records that an override applied.
+
+> A server annotation may raise a tier and may contribute a kind. It may never reduce
+> a tier. `destructiveHint: true` establishes kind `destructive` and a floor of R3.
+
+Self-declared safety is a claim the declarer benefits from, and is treated as
+evidence to be checked. Self-declared danger is a claim against interest, and is the
+most trustworthy signal a server gives us.
 
 ## Amendment 1 — adopted rules (A-G)
 
@@ -128,6 +150,18 @@ someone" pulls `assignee`, `owner`, `reviewer`, and `mentions` into R4 and empti
 tier of meaning. Additions to this list are a deliberate change, made by editing this
 rule.
 
+> **Rule C — exemption (Amendment 2 §2).** `to` is not a communication target when a
+> sibling `from` exists in the same object **and** no content-carrying sibling is
+> present (`body`, `message`, `text`, `subject`, `content`, `html`). Messages carry
+> bodies; edges and ranges do not.
+
+The `from`/`to` pair is a common idiom for edges, ranges, diffs, intervals, and
+internal transfers — the memory server's `create_relations(relations[].{from, to,
+relationType})` is a graph edge, not a recipient. The obvious exemption — a sibling
+`from` alone — would release `send_email(from, to, subject, body)`, the exact tool
+this rule exists to catch; content is the better discriminator. The exemption applies
+to `to` only.
+
 ### Rule D — Reversibility carries a confidence state
 
 A scanner that never invokes a tool cannot verify at scan time whether revision
@@ -142,22 +176,96 @@ evidence breaks the tie.
 > Every tool at R3 or above carries a `reversibility` field with one of three values:
 >
 > - `verified` — the input schema itself evidences a guarded write
-> - `asserted` — the server declares or implies reversibility, unconfirmed
+> - `asserted` — the server's description claims it retains recoverable state, unconfirmed
 > - `unverifiable` — no evidence either way
 >
 > Schema evidence for `verified`: presence of an optimistic-concurrency parameter —
 > `if_match`, `etag`, `version`, `expected_revision`, `if_unmodified_since`, or an
-> equivalent.
+> equivalent — anywhere in the schema; or a `sha` parameter accompanied by a
+> content-carrying sibling in the same object (Amendment 2 §6 — GitHub's Contents API
+> idiom; `sha` alone is a plain commit reference on read tools).
+>
+> Description evidence for `asserted` (Amendment 3 §3.3): a phrase from a closed
+> list — `version history`, `revision history`, `previous version`, `restore`,
+> `undo`, `trash`, `recycle bin`, `soft delete`, `recoverable`. Bare `history` and
+> bare `version` are not evidence: one matches browser history, the other a server
+> version string. A phrase directly preceded — within two words — by a negator from
+> a closed list (`cannot be`, `can't be`, `can not be`, `not`, `no`, `without`,
+> `never`, `irreversibly`) is a claim *against* recoverability and is not evidence:
+> "this cannot be undone" is the signal with its sign inverted. This is a guard
+> against the obvious inversion, not a negation parser, and it is not to be extended
+> — window, negator list, or matching — without a real false positive from a real
+> server to point at; `unverifiable` is the fail-closed value and already the common
+> case. Absent evidence, the value is `unverifiable`.
+>
+> Standing decision: if `asserted` is still empty after a document-management server
+> (Drive, Notion, Confluence, a versioned object store) has been scanned, the state
+> is deleted then, in one manifest version bump alongside whatever else is changing.
+> Until that scan happens the question is not ripe.
 >
 > Schema evidence forcing R5 regardless of other signals: presence of `force`,
 > `overwrite`, `recursive`, `permanent`, `purge`, or `skip_trash` as a boolean the
-> caller can set true; or a destination path parameter with no concurrency token
-> present.
+> caller can set true.
+>
+> **Destination clause (Amendment 2 §1).** A path-like parameter with no concurrency
+> token present forces R5 only when the tool is already established as writing, by
+> at least one of:
+>
+> - an independent signal placing the tool at R3 or above;
+> - a content-carrying sibling in the same object — `content`, `contents`, `data`,
+>   `text`, `edits` (Amendment 3 §3.1: `body` is *not* on this list — it names a
+>   message or comment body far more often than a file body, and stays in Rule C's
+>   list only; GitHub's `create_pull_request_review` has `comments[].{path, body}`
+>   where `path` is what the comment is about);
+> - the parameter name itself denoting a destination — `destination`, `dest`,
+>   `target_path`, `output_path`, `to_path`, `new_path`.
+>
+> A read carrying a path parameter is classified by Rule B and the sensitivity
+> signals, and stops there.
+>
+> **Condition 1 — exemption (Amendment 3 §3.4).** A path-like parameter accompanied by
+> a position-like sibling in the same object — `position`, `line`, `start_line`,
+> `end_line`, `offset`, `column` — is a reference into a file rather than a
+> destination, and does not trigger condition 1. The exemption applies to condition 1
+> only. Conditions 2 and 3 are unaffected: a path with both a position sibling and a
+> content sibling is still a write, and a destination-named field is still a
+> destination whatever sits beside it.
 
 An unguarded `write_note(path, content)` therefore lands at R5 on evidence, not on
 pessimism, while `update_record(id, body, if_match)` lands at R3 `verified`. Whether
 `asserted` and `unverifiable` writes block CI is a decision for the consuming repo's
 ceiling configuration, not a decision this taxonomy makes for everyone.
+
+The position exemption is narrower than it first appears, which is why it is safe. It
+releases a tool only when a position sibling is present *and* no content sibling
+exists *and* the field is not destination-named. A genuine write that carries a line
+number almost always carries the content it is writing, and condition 2 takes it. The
+residual case — a write with a position and no content, `truncate_file(path, line)` —
+lands at R3 on its verb rather than escaping entirely. The idiom is everywhere once
+you look: review comments, diagnostics, annotations, stack frames, code-search hits.
+A path next to a line number is being pointed at. R5 on a pull-request review comment
+is precisely the finding that teaches a reviewer the top tier is noise.
+
+The destination clause originally read "a destination path parameter with no
+concurrency token present," and the first implementation dropped the word
+*destination*: any string named `path`, anywhere, forced R5, which put eight of the
+reference filesystem server's fourteen tools — all reads — at R5, each with a
+`readOnlyHint` disagreement. A `path` on `read_file` is a source; the rule was never
+about sources. The three-condition form also closes the `move_file(source,
+destination)` gap, which was landing at R2 because the clause keyed on `path` alone.
+
+Residual risk, accepted and recorded: a tool named `get_file` that in fact writes,
+carrying neither a content sibling nor a destination-named field, evades R5. It still
+classifies at R1 or above, its schema and description are still hashed, and any later
+change to either is still a diff finding. This is the same exposure every
+verb-derived signal carries.
+
+Rejected as `verified` evidence: `dryRun` (a preview flag establishes that the tool
+can be run without effect, not that the real call is reversible; no fourth state is
+created for it) and `commitId` (too weak). Removed as the source of `asserted`:
+`idempotentHint: true` — an idempotent delete is not a reversible one. `unverifiable`
+becoming the common case is the honest outcome; it is what the scanner actually
+knows.
 
 ### Rule E — Host-pinning is recognized by form, not by regex analysis
 
@@ -224,6 +332,81 @@ Every schema-shape signal — not any single rule above — is implemented again
 shared traversal utility (`classify/schema_walk.py`) rather than reimplementing field
 matching per rule; see AGENTS.md and the Phase 2 brief.
 
+## Kinds — a second axis (Amendment 2 §3)
+
+The tier ladder must stay totally ordered to function as a CI ceiling. But R3 is a
+write and R5 is not egress, and a chain finding that expresses "read" and "egress"
+as tier sets names the wrong tools. The second dimension belongs somewhere else.
+
+> **Every tool carries a `kinds` set alongside its tier.** Kinds are derived from the
+> evidence that produced the classification, not from the tier:
+>
+> | Kind | Derived from |
+> | --- | --- |
+> | `read_sensitive` | sensitivity-field or sensitivity-description evidence, where the tool *returns* (below) |
+> | `egress` | Rule A (caller-influenced outbound target) or Rule C (communication target) |
+> | `write` | write-verb, content-carrying field, or destination-path evidence |
+> | `destructive` | destructive-verb evidence, R5-forcing boolean, or `destructiveHint: true` |
+> | `code_exec` | Rule H below |
+>
+> A tool may carry several kinds. An empty set is legal and means no kind-bearing
+> evidence was found. Kinds never affect tier and tier never affects kinds.
+
+> **`read_sensitive` means *returns*** (Amendment 3 §3.2). `read_sensitive` asserts
+> that a tool hands sensitive data back to the caller. A description naming a
+> sensitive domain establishes the R2 tier floor, but confers the kind only where
+> the tool is returning rather than acting — that is, where the description does not
+> open with an action verb.
+>
+> A tool that moves sensitive data outward without returning it to the caller —
+> `send_email`, `forward_message`, `share_file` — is not `read_sensitive`. It is
+> `egress` at R4, which is already the stronger finding.
+
+`forward_email` looks like a one-tool exfiltration chain and is missed by the verb
+gate, but the agent never sees the message content, so there is no chain to catch —
+the tool is dangerous as egress and is classified as such. Losing the kind costs
+nothing, which is why the verb list stays closed and short and does not need
+`forward` or `share`.
+
+Kinds are derived inside the signal extractors, where the evidence already lives,
+and every kind on a tool traces back to at least one citation carrying it — a kind
+with no citation is as much a bug as a tier with none. Kinds are the extension point
+for the chain types deferred in Amendment 1: adding one later is a predicate over
+kinds rather than a new tier-set heuristic. An operator override lowers a tier; it
+never changes what a tool does.
+
+### Rule H — caller-supplied code execution (Amendment 2 §5)
+
+A tool that executes caller-supplied code has unbounded blast radius. It does not
+merely sit at the top of the ladder — it subsumes every other kind, because code can
+read, write, destroy, and exfiltrate by construction. The ladder describes what a
+tool *does*; this describes what a tool *permits*.
+
+> **Rule H.** A tool accepting caller-supplied code, script, shell command, or raw
+> query text classifies R5 with kind `code_exec`, and additionally carries
+> `read_sensitive`, `write`, `destructive`, and `egress`.
+>
+> Signals: parameter names `code`, `script`, `command`, `cmd`, `shell`, `expression`,
+> `eval` where the parameter is unconstrained free text; `query` where the description
+> indicates raw query text rather than a search string; tool-name tokens `eval`,
+> `exec`, `run_code`, `execute`, `shell`, `unsafe` (`eval` and `exec` matched by stem,
+> so `evaluate` and `execute` count).
+>
+> `readOnlyHint: true` on such a tool is a disagreement finding of the highest
+> severity available.
+
+Because `code_exec` carries both chain halves, any server exposing one raises
+`CHAIN_EXFIL` alone. That is correct and is the intended reading: a server with an
+eval tool is a server where the chain question is already settled.
+
+**The one deliberate fail-open in the taxonomy.** A `query` parameter on a search
+tool is ordinary free text under Rule B and must not reach R5. The discriminator is
+the description, and where the description is ambiguous the tool does *not* receive
+`code_exec`. An R5 false positive on every search tool in existence would destroy the
+tool's usefulness faster than the false negative costs us. Widening that signal is
+how every search tool in the ecosystem becomes R5; if it proves unworkable against
+real descriptions, report rather than widen.
+
 ## Server-level findings — `CHAIN_EXFIL`
 
 The taxonomy above classifies tools. Blast radius is compositional, and the property
@@ -233,9 +416,16 @@ egress tool contains a complete exfiltration chain, and neither tool alone need 
 alarming enough to cross a ceiling.
 
 > The manifest carries server-level findings alongside per-tool classification. Phase
-> 2 implements one: `CHAIN_EXFIL`, raised when the server exposes at least one
-> R2-or-above read and at least one R4 egress. The finding names the specific tools
-> that form each chain.
+> 2 implements one: `CHAIN_EXFIL`, raised when the server exposes at least one tool
+> with kind `read_sensitive` and at least one tool with kind `egress`. Tier is not
+> consulted. A single tool carrying both kinds raises the finding on its own. The
+> finding names the specific tools that form each chain.
+
+Amendment 2 §4 redefined the halves over kinds. The Phase 2 implementation had to
+express "read" as `{R2, R3}` and "egress" as `{R4, R5}` because the ladder offered no
+other axis; every chain the first real-server batch raised was spurious as a result
+(R3 writes as the "read" half, R5 path writes as the "egress" half), and the true
+count was 0 of 11.
 
 Further chains — R2 read plus R3 write to a caller-named destination, R1 enumeration
 feeding an R5 destructive operation — are deliberately deferred. One chain,
@@ -640,6 +830,11 @@ Additional fixtures required beyond this matrix:
   found only inside a nested object, a dangerous field in only one `anyOf` branch),
   kept in `tests/fixtures/schema_traversal/` — parser fixtures, separate from the
   tier matrix above.
+- Real-server regression fixtures in `tests/fixtures/real_servers/` (Phase 2.1):
+  each server's `tools/list` as captured on 2026-09-17, exercised by
+  `tests/test_classify_real_servers.py` against the Phase 2.1 acceptance criteria.
+  Amendment 2's mechanics as synthetic unit fixtures live in
+  `tests/test_classify_kinds.py`.
 
 ## Rules the examples encode
 
@@ -666,4 +861,5 @@ Extracted so Phase 2 implements them rather than rediscovering them:
 7. **Irreversible ≠ destructive.** Credential rotation destroys nothing and cannot be
    undone.
 8. **Declared risk never downgrades inferred risk.** Only an explicit operator
-   allowlist does, and the manifest records that it applied.
+   allowlist does, and the manifest records that it applied. Declared risk may
+   *raise* it (Amendment 2 §7).

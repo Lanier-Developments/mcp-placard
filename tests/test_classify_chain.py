@@ -66,11 +66,29 @@ def test_removing_the_read_tool_also_clears_the_finding() -> None:
     assert manifest.findings == []
 
 
-def test_an_r4_tool_alone_does_not_self_trigger_the_chain() -> None:
-    """A single R4 tool satisfies neither half's tier set on its own — the read
-    and egress tiers are disjoint by construction, so a chain always names at
-    least two distinct tools rather than firing on one dangerous tool alone."""
+def test_an_egress_tool_alone_does_not_self_trigger_the_chain() -> None:
+    """``send_email`` is egress and touches mail, but it does not *read* mail:
+    the description signal withholds ``read_sensitive`` from a tool described as
+    an action, so a lone sender carries one half, not both."""
     manifest = _manifest(
         [tool_wire("send_email", description="Send an email.", input_schema=EGRESS_SCHEMA)]
     )
     assert manifest.findings == []
+
+
+def test_a_code_execution_tool_alone_raises_the_chain() -> None:
+    """Amendment 2 §4-5: a single tool carrying both kinds raises the finding on
+    its own, and every Rule H tool does."""
+    manifest = _manifest(
+        [
+            tool_wire(
+                "run_script",
+                description="Run a script on the host.",
+                input_schema={"type": "object", "properties": {"script": {"type": "string"}}},
+            )
+        ]
+    )
+    findings = [f for f in manifest.findings if f.kind == "chain_exfil"]
+    assert len(findings) == 1
+    assert findings[0].tools == ["run_script"]
+    assert "carries both halves alone" in findings[0].summary

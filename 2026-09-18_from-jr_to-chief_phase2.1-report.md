@@ -1,0 +1,349 @@
+# Report: Phase 2.1 — classifier corrections landed, rerun against 11 real servers
+
+**From:** Jr.
+**To:** Chief
+**Date:** 2026-09-18
+**Re:** Brief `2026-09-18_from-chief_to-jr_phase2.1-corrections.md`, Amendment 2
+**Branch:** `feature/phase-2.1-corrections`
+
+## Summary
+
+All nine deliverables are implemented and every acceptance criterion in the brief passes as
+a test against the real server schemas (`tests/fixtures/real_servers/`, captured
+2026-09-17, exercised by `tests/test_classify_real_servers.py`). The 11-server batch was
+rerun today; every `surface_hash` is identical to yesterday's, so the delta below is
+entirely the classifier's.
+
+| Gate | Result |
+| --- | --- |
+| Tests | 396 passed (was 300) |
+| Coverage on `src/` | 98% (floor 85) |
+| ruff, mypy, no-invocation guard | clean |
+| Self-gate | fresh mock scan byte-identical to the checked-in manifest |
+| Stored `2.0` baseline | still verifies under the `2.1` build |
+
+Three items need your eye, listed under **Flag-backs**. Two of the three conditions the
+brief named did fire, and one implementation choice deviates from Amendment 2's literal
+wording and is marked as such in the code.
+
+## Delta, before → after
+
+Same 11 servers, 109 tools, same surfaces.
+
+| Server | Tools | Before | After | `CHAIN_EXFIL` before | after |
+| --- | --- | --- | --- | --- | --- |
+| filesystem | 14 | R0:1 R1:1 R2:1 R5:11 | R0:1 R1:9 R5:4 | yes (spurious) | none |
+| memory | 9 | R0:1 R1:2 R3:4 R4:2 | R0:1 R1:2 R3:6 | yes (spurious) | none |
+| github | 26 | R1:15 R3:7 R5:4 | R1:14 R3:10 R5:2 | yes (spurious) | none |
+| playwright | 26 | R0:3 R1:21 R4:2 | R0:1 R1:7 R3:14 R4:2 R5:2 | none | yes: `browser_evaluate`, `browser_run_code_unsafe` (+ `browser_navigate`, `browser_tabs` as egress) |
+| git | 12 | R1:11 R2:1 | R1:7 R3:5 | none | none |
+| everything | 13 | R0:6 R1:6 R4:1 | unchanged | none | none |
+| fetch | 1 | R4:1 | unchanged | none | none |
+| time | 2 | R1:2 | unchanged | none | none |
+| seqthinking | 1 | R1:1 | unchanged | none | none |
+| deepwiki (http) | 3 | R1:3 | unchanged | none | none |
+| context7 (http) | 2 | R1:2 | unchanged | none | none |
+
+Totals: R0 11→9, R1 64→53, R2 2→0, R3 11→35, R4 6→4, R5 15→8.
+`CHAIN_EXFIL`: 3 servers (all spurious) → 1 (real, via Rule H).
+Kinds across the batch: write 30, destructive 25, egress 6, read_sensitive 2, code_exec 2.
+Reversibility on the 47 tools at R3+: unverifiable 45, verified 1, asserted 1.
+
+### Every tool that moved (37)
+
+| Server | Tool | Before | After | Kinds | Reversibility | Why |
+| --- | --- | --- | --- | --- | --- | --- |
+| filesystem | `read_file`, `read_text_file`, `read_media_file`, `list_directory`, `list_directory_with_sizes`, `directory_tree`, `get_file_info`, `search_files` | R5 | R1 | — | — | §1: a `path` on a read is a source |
+| filesystem | `move_file` | R2 | R5 | write, destructive | unverifiable | §1 cond. 3: `destination`; §7: `destructiveHint: true` |
+| memory | `create_relations` | R4 | R3 | write | unverifiable | §2: `from`/`to`, no content sibling; verb `create` |
+| memory | `delete_relations` | R4 | R3 | destructive | unverifiable | §2; verb `delete` |
+| github | `create_or_update_file` | R5 | R3 | write | **verified** | §6: `sha` + `content` |
+| github | `get_file_contents` | R5 | R1 | — | — | §1 |
+| github | `merge_pull_request`, `fork_repository` | R1 | R3 | write | unverifiable | §8: verb tokens |
+| git | `git_add`, `git_commit`, `git_checkout`, `git_create_branch` | R1 | R3 | write | unverifiable | §8: whole-token match |
+| git | `git_reset` | R1 | R3 | destructive | unverifiable | §7 + §8 |
+| git | `git_diff_unstaged` | R2 | R1 | — | — | §8: `directory` removed |
+| playwright | `browser_evaluate`, `browser_run_code_unsafe` | R1 | R5 | all five | unverifiable | Rule H |
+| playwright | `browser_click`, `browser_close`, `browser_drag`, `browser_drop`, `browser_file_upload`, `browser_fill_form`, `browser_handle_dialog`, `browser_hover`, `browser_navigate_back`, `browser_press_key`, `browser_resize`, `browser_select_option`, `browser_type`, `browser_webmcp_call` | R0/R1 | R3 | destructive (+write on `drop`, `type`) | unverifiable (`navigate_back`: asserted) | §7: the server declares `destructiveHint: true` on each |
+
+Nothing else moved. `write_file`, `edit_file`, `create_directory` stay R5 (writes with an
+unguarded path — the brief's "must not let a real write escape"). `push_files` and
+`create_pull_request_review` stay R5; see flag-back 1.
+
+## Deliverables, as implemented
+
+1. **Rule D destination clause.** `DESTINATION_PATH_FIELDS = {"path"}` is gone. Conditions 2
+   (content sibling) and 3 (destination-named) are decided in `schema_shape.py`; condition 1
+   (an independent R3+ signal) crosses extractor boundaries, so the extractor returns the
+   would-be candidate through `deferred_destination_clause` and `classify_tool` appends it
+   once any other candidate has reached R3. "Same object" means "same parent JSON Pointer";
+   fields in different `anyOf` branches are not siblings.
+2. **Rule C `to` exemption.** Sibling `from` in the same object and no content sibling
+   (`body`, `message`, `text`, `subject`, `content`, `html`). `to` only.
+3. **Kind axis.** `Candidate.kinds` → `Citation.kinds` → `ToolClassification.kinds`, unioned
+   in `combine.py`. No second pass. A global test asserts every kind on every tool traces to a
+   citation, across the synthetic matrix and all 11 real servers. `manifest_version` is
+   `"2.1"`; empty `kinds` serializes as absent, so a stored `"2.0"` baseline's
+   `classification_hash` reproduces and `verify` still passes on it
+   (`tests/test_manifest_version_2_0.py`, fixture is the real `2.0` mock manifest).
+4. **`CHAIN_EXFIL` over kinds.** `READ_HALF_TIERS` / `EGRESS_HALF_TIERS` deleted. The
+   summary names a tool that carries both halves alone. Tools-only scope statement kept.
+5. **Rule H.** New `signals/code_exec.py`. Parameter names per §5, matched only when the
+   parameter is unconstrained free text (an `enum` of subcommands is a selector). Name
+   tokens `shell`, `unsafe`, the bigram `run`+`code`, and the stems `eval`/`exec` — the stem
+   is there because `browser_evaluate` spells it `evaluate` and §5 was written against
+   that tool. The `query` fail-open has the comment the brief asked for, in both the module
+   docstring and at the branch.
+6. **Reversibility.** `sha` with a content sibling in the same object → `verified`.
+   `idempotentHint` removed; `asserted` comes from a word-start match on version, revision,
+   history, trash, recycle, restore, undo in the description. `compute()` no longer takes
+   annotations.
+7. **Annotations escalate.** `signals/annotations.py` now has a real `extract`:
+   `destructiveHint: true` → R3 candidate, kind `destructive`, signal `declared_annotations`.
+   `find_disagreements` still fires only on declared-safer-than-inferred; `readOnlyHint: true`
+   on a `code_exec` tool gets the severest reading.
+8. **Verb matching.** Whole-token match over snake, kebab, dotted, and camel boundaries.
+   `reset` joined the destructive set; `merge`, `push`, `checkout`, `commit`, `fork`, `move`,
+   `rename` joined the write set. `settings_get` and `toggle-subscriber-updates` do not match.
+9. **`directory` removed** from the sensitivity vocabulary.
+
+Docs: Amendment 2 folded into `docs/TAXONOMY.md` (Rule D rewrite, Rule C exemption, a Kinds
+section, Rule H, `CHAIN_EXFIL` redefinition, the declared-vs-inferred table, reversibility
+evidence); AGENTS.md roadmap and taxonomy section; README status and the delta table;
+`classify/README.md`. `TAXONOMY-amendment-2.md` moved to `docs/` next to Amendment 1.
+
+## Flag-backs
+
+### 1. Rule D condition 2 promotes a *reference* path next to a body — `create_pull_request_review`
+
+GitHub `create_pull_request_review` takes `comments[].{path, position, body}`. `path` here
+names the file a review comment is *about*; nothing is written to it. Condition 2 sees `path`
+with sibling `body` and forces R5. It is a write (R3 is right); R5 unverifiable is not.
+`push_files(files[].{path, content})` is the same shape and *is* a file write, so the
+condition cannot be narrowed by shape alone. Options: (a) accept — an over-tier on a write
+is the cheap direction, and this is one tool in 109; (b) drop `body` from Rule D's
+content-sibling list, keeping it in Rule C's — `body` is a message body far more often than
+a file body, and `content`/`contents`/`data`/`edits`/`text` still cover file writes. I lean
+(b) but did not apply it. The brief says stop and report with the schema:
+
+```json
+{"comments": {"type": "array", "items": {"anyOf": [{"type": "object", "properties":
+  {"path": {"type": "string"}, "position": {"type": "number"}, "body": {"type": "string"}}}]}}}
+```
+
+### 2. Description-derived `read_sensitive` is withheld when the description opens with an action verb
+
+Amendment 2 §3 derives `read_sensitive` from "sensitivity-description evidence." Read
+literally, `send_email` — description "Send an email" — carries `read_sensitive` (from
+`email`) and `egress` (from `to`), so every mail sender raises `CHAIN_EXFIL` alone, through
+the weakest signal in the taxonomy. The taxonomy's own definition of the description signal
+is "*a read* whose description names one of these," so I gated the kind (not the R2 tier
+floor, which still applies) on the description not opening with a closed list of action
+verbs (`send`, `post`, `create`, `delete`, `update`, ...). The mock server's `send_email`
+and the `create_calendar_event` fixture depend on this. It is marked as a flagged
+implementation choice in `signals/description.py` and in the taxonomy; if you would rather
+take §3 literally and accept the self-chain, it is a one-line revert.
+
+### 3. `asserted` is empty in practice — the third condition in the brief
+
+Across the 11 servers, 47 tools sit at R3 or above. 45 are `unverifiable`, 1 is `verified`
+(GitHub `create_or_update_file`), and exactly 1 is `asserted`: Playwright's
+`browser_navigate_back`, whose description is "Go back to the previous page **in history**."
+That is browser history, not revision history — a keyword false positive, and the only
+`asserted` in the batch. So the honest count is 0 of 47. The brief's own words: "a state that
+never occurs is a state worth deleting, and that is a taxonomy decision rather than yours or
+mine to make silently." Two options: delete `asserted` and go to a two-state field, or keep
+it and accept it will be rare until a server with real trash/restore semantics (Google
+Drive, Notion) enters the batch. I have no strong lean; the keyword list is cheap to keep.
+
+### Observations, not decisions
+
+- **§7 takes Playwright at its word.** It declares `destructiveHint: true` on `hover`,
+  `resize`, `close`, `press_key`, `navigate_back`. Fourteen tools rose to R3 on that alone.
+  This is the amendment's intended reading — a claim against interest is trusted — and the
+  cost falls on the over-declaring server, not on us. Worth knowing it happens on a
+  mainstream server.
+- **The `query` discriminator held.** Six real `query` parameters (GitHub search ×4,
+  memory `search_nodes`, context7 ×2), zero received `code_exec`. No raw-query tool was in
+  the batch to test the positive side beyond the synthetic fixtures.
+- **`read_sensitive` fired on nothing but the two `code_exec` tools.** No server in the batch
+  is a mail, calendar, or people-directory server, so the sensitivity vocabulary had nothing
+  to match. The `CHAIN_EXFIL` read half is untested against a real R2 server; Slack with a
+  real token, or a Gmail/Drive server, would close that.
+- **Rule D condition 1 did the work the brief predicted.** `create_directory(path)` stays R5
+  through verb → condition 1, not through the old blanket match.
+
+## Still open
+
+- Cross-machine byte-identical check. Today's rerun reproduced every one of yesterday's
+  eleven `surface_hash` values on this machine, 24 hours apart, including the remote HTTP and
+  `@latest` targets. The second machine is still needed.
+- Slack with a real token.
+
+## Not done, by instruction
+
+Injection heuristics, SARIF, GitHub Action packaging, signing, the public index, resource and
+prompt classification, additional chain types, and the multi-server config scan (Phase 6).
+
+
+---
+
+# Phase 2.2 addendum — the three decisions, applied
+
+**Date:** 2026-09-18, later the same day. **Re:** `2026-09-18_from-chief_to-jr_phase2.2-decisions.md`.
+Same branch, same PR. No manifest version bump. Amendment 3 folded into `docs/TAXONOMY.md`.
+
+| Gate | Result |
+| --- | --- |
+| Tests | 401 passed, 1 xfail (strict, see §1 below) |
+| Coverage, ruff, mypy, guard, self-gate, `2.0` baseline | all clean |
+
+## Corrected distribution
+
+Same 11 servers rerun. Ten surfaces byte-identical to both earlier batches. Playwright's
+`@latest` shipped a release between runs (`browser_emulate_media` added, `browser_webmcp_call`
+and `browser_webmcp_list` removed, capabilities block changed) — expected for an `@latest`
+target and, incidentally, the first real drift the tool has caught:
+
+```
+$ placard diff after-2.1/playwright.json after-2.2/playwright.json
+[tool_added] tool 'browser_emulate_media' added (tier R3; schema 3b4bcf539a7e)
+[tool_removed] tool 'browser_webmcp_call' removed (was tier R3)
+[tool_removed] tool 'browser_webmcp_list' removed (was tier R0)
+[server_capabilities_changed] server capabilities changed (ba8e230d1afc -> 46f63fd549bb)
+exit=3
+```
+
+Tier distribution after 2.2 (108 tools on today's surfaces): R0:8 R1:53 R3:35 R4:4 R5:8 —
+unchanged from 2.1 on every common tool. Reversibility on the 46 tools at R3+:
+**unverifiable 46, verified 1, asserted 0.** `CHAIN_EXFIL`: Playwright only, via Rule H.
+
+## What moved: one tool, not three
+
+| Tool | Expected by the decisions memo | Actual | Why |
+| --- | --- | --- | --- |
+| playwright `browser_navigate_back` | asserted → unverifiable | **as expected** | bare `history` gone from the list |
+| github `push_files` | stays R5 | **as expected** | `files[].{path, content}` — condition 2 on `content` |
+| github `create_pull_request_review` | R5 → R3 `write` `unverifiable` | **still R5** | see §1 |
+
+### 1. `create_pull_request_review` stays R5 through condition 1, not condition 2
+
+Removing `body` did what §3.1 said: condition 2 no longer fires on `comments[].{path, body}`.
+But the tool is named `create_pull_request_review`. `create` is a write verb, that is an
+independent R3 signal, and `path` is an unguarded string — so Rule D condition 1 ("an
+independent signal placing the tool at R3 or above") forces R5 through the deferred clause
+instead. §3.1's own last sentence anticipated this mechanism as the safety net for servers
+that use `body` for file content; here it catches the case the memo wanted released.
+
+I did not tune it. The test that pins the memo's expected outcome is in
+`tests/test_classify_real_servers.py` as a **strict `xfail`**: it goes red the moment the
+classifier produces R3, so whichever decision lands, the marker comes off in the same commit.
+
+Options, with the trade-off stated:
+
+- **(a) Accept R5.** A `create_*` tool with a caller-supplied bare `path` is, by condition 1's
+  literal text, a write to a destination. The false positive is one write over-tiered on one
+  tool in 108, in the cheap direction.
+- **(b) Condition 1 applies to a `path` only when the path is not accompanied by a
+  *position-like* sibling** (`position`, `line`, `start_line`, `end_line`, `offset`,
+  `column`). A path next to a line number is a reference into a file, not a destination.
+  Closed list, same discipline as every other field list. `push_files` is unaffected (no
+  such sibling; condition 2 fires anyway). This is the narrowest change that produces the
+  memo's outcome.
+- **(c) Condition 1 requires the path to be top-level.** Rejected on sight: it contradicts
+  Rule G.
+
+I lean (b). One list, one fixture pair, and the mechanism it encodes — "a path with a line
+number beside it is being pointed at, not written to" — is a real idiom (review comments,
+diagnostics, annotations, code-search hits).
+
+### 2. Negation guard on the `asserted` phrase list — an addition, flagged
+
+The mock server's own `delete_workspace` says "Permanently delete a workspace ... This cannot
+be undone." Under Amendment 2 it was `asserted` (bare `undo`); under §3.3's phrase list `undo`
+is still a member, so "cannot be undone" would still read as a claim *for* recoverability. I
+added a narrow guard: a phrase directly preceded (within two words) by `cannot be`, `can't
+be`, `can not be`, `not`, `no`, `without`, `never`, or `irreversibly` is not evidence.
+`delete_workspace` is now `unverifiable`; "can be undone from the trash" is still `asserted`.
+It is a guard against the obvious inversion, not a negation parser, and it is documented as
+such in `reversibility.py`. If you would rather the list be applied bare, it is one constant.
+
+### 3. `asserted` is 0 of 46
+
+The honest number, per §3.3. A test now asserts it is empty across the batch, with a
+docstring saying it is *expected to break* when a document-management server joins — and
+that the phrase list must not be weakened to keep it green. The standing decision (delete the
+state then, if still empty) is recorded in the taxonomy.
+
+## Still open, unchanged
+
+Cross-machine check; Slack or any mail/calendar/people server for the `CHAIN_EXFIL` read half.
+
+
+---
+
+# Phase 2.2 addendum, second pass — rulings applied and a reading on exit codes
+
+**Date:** 2026-09-19. **Re:** `2026-09-19_from-chief_to-jr_phase2.2-addendum-decisions.md`.
+
+## Applied
+
+1. **Condition 1 exemption (Amendment 3 §3.4).** `POSITION_LIKE_FIELDS` — `position`, `line`,
+   `start_line`, `end_line`, `offset`, `column` — as a sibling of a path in the same object
+   suppresses the deferred clause only. `create_pull_request_review` is R3 `write`
+   `unverifiable`; `push_files` is R5 by condition 2; `move_file` is R5 by condition 3. The
+   strict `xfail` is off. Synthetic pairs in `test_classify_kinds.py` pin that conditions 2
+   and 3 are untouched and that the residual `update_marker(path, line)` lands at R3.
+2. **Negation guard** wording moved into §3.3 in the taxonomy with the boundary as stated:
+   two-word window, closed negator list, guard not parser, not to be extended without a real
+   false positive from a real server.
+3. **README** carries the Playwright drift, the diff output, and the capabilities-split note.
+
+Corrected distribution on the 2.2 surfaces (108 tools): filesystem R0:1 R1:9 R5:4; memory
+R0:1 R1:2 R3:6; github R1:14 **R3:11 R5:1**; playwright R1:7 R3:14 R4:2 R5:2; git R1:7 R3:5;
+the rest unchanged. Reversibility on 47 tools at R3+: unverifiable 46, verified 1, asserted 0.
+Three tools have now moved across 2.2 in total — `browser_navigate_back`,
+`create_pull_request_review`, and nothing else — which is the count the first memo predicted,
+one ruling later than predicted.
+
+## Reading on item 4 — exit-code precedence on mixed findings
+
+**Precedence is already specified, but for the wrong reason.** AGENTS.md pins `diff`'s
+precedence as `3 > 1 > 2 > 0`; `tests/test_diff_table.py` has two mixed-finding rows testing
+it; `DiffResult.exit_code` walks a single `EXIT_PRECEDENCE` tuple. The Playwright run's
+`exit=3` was the documented behaviour. The stated rationale in `diff/README.md`, though, is
+"3 outranks everything because it also covers *server unreachable*; if the scan cannot be
+trusted, nothing derived from it can be." That justification belongs to `scan`. `diff` reads
+two files and cannot produce "unreachable". The top of `diff`'s precedence rests on a reason
+that does not apply to the command it governs.
+
+**Is 3 doing two jobs?** Within one command, no: `scan` 3 means unreachable only, `diff` 3
+means removed only, `tests/test_exit_code_contract.py` pins them per command, and AGENTS.md
+already says "read a code only in the context of the command that produced it." The collapse
+cannot happen inside one invocation. It *can* happen in a pipeline that runs `scan` then
+`diff` and reports one integer — which is exactly what a Phase 4 Action will do. So the risk
+is real, and it is a Phase 4 constraint arriving early.
+
+**Recommendation, as one interface change rather than two:**
+
+- Give `scan`'s unreachable and incomplete-enumeration failures their own code, **4**, so 3
+  means "removed" everywhere. `EXIT_REMOVED_OR_UNREACHABLE` becomes two constants;
+  `ConnectionFailure` and the enumeration-failure path take the new one. Cost: one constant
+  split, two doc tables, the contract test, and the README.
+- With unreachable gone from `diff`'s concerns, the argument for 3-first dissolves. Adopt
+  your instinct: **`1 > 2 > 3 > 0`**, ordered by which finding most urgently needs a human.
+  A removal is a reduction in blast radius — the least urgent security finding, even where it
+  breaks an agent that depended on the tool, which is not this tool's concern. 2 stays
+  never-silenceable as a finding, as now.
+- Ship both in the Phase 2.1 release as **0.2.0** and state it as a breaking change to the
+  exit-code contract. Nothing consumes the codes yet except the README, and it will never be
+  cheaper.
+
+**Implementation constraints, for the record.** The two existing precedence rows flip under
+the new order — "removed + description changed" becomes 2 — and AGENTS.md requires adding
+rows before changing one, so the table gains "removed + escalation → 1" and "removed +
+description → 2" as new rows with the old ones retired in the same commit. The CI
+`drift-detection-works` job asserts removed-alone → 3 and is unaffected. Nothing else in the
+engine depends on the order.
+
+Waiting on your ruling before touching any of it.

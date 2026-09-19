@@ -6,16 +6,21 @@ the finding, and to resolve which evidence is recorded when several support the
 same tier. Ordering never reduces a tier.* This module is the one place that
 maximum is taken — extractors never see each other's output, and nothing upstream
 of here is allowed to average, weight, or otherwise blend candidates.
+
+Kinds combine as a plain union (Amendment 2 §3). There is nothing to maximise:
+kinds are unordered by meaning, and a tool that is both ``write`` and ``egress`` is
+both, not the "larger" of the two.
 """
 
 from __future__ import annotations
 
-from ..manifest.models import TIER_ORDER, Citation, Tier
+from ..manifest.models import KIND_ORDER, TIER_ORDER, Citation, Kind, Tier
 from .candidates import Candidate
 
 
-def combine(candidates: list[Candidate]) -> tuple[Tier, list[Citation]]:
-    """Combine every candidate into the tool's tier and its full citation list.
+def combine(candidates: list[Candidate]) -> tuple[Tier, list[Citation], list[Kind]]:
+    """Combine every candidate into the tool's tier, its full citation list, and
+    its kinds.
 
     Every candidate becomes a citation, not only the one that won — an R1
     candidate sits alongside the R4 candidate that decided the tier, because
@@ -35,7 +40,11 @@ def combine(candidates: list[Candidate]) -> tuple[Tier, list[Citation]]:
             tier=candidate.tier,
             evidence=candidate.evidence,
             rule=candidate.rule,
+            kinds=sorted(candidate.kinds, key=KIND_ORDER.index),
         )
         for candidate in candidates
     ]
-    return winning_tier, citations
+    union: set[Kind] = set()
+    for candidate in candidates:
+        union |= candidate.kinds
+    return winning_tier, citations, sorted(union, key=KIND_ORDER.index)

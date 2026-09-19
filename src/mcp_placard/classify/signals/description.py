@@ -13,6 +13,8 @@ for the same handful of domain nouns a human reviewer would skim for.
 
 from __future__ import annotations
 
+import re
+
 from ..candidates import Candidate
 
 TENANT_DATA_KEYWORDS = (
@@ -36,14 +38,64 @@ SENSITIVE_DOMAIN_KEYWORDS = (
     "email",
     "calendar",
     "correspondence",
-    "directory",
     "contact",
     "employee",
     "roster",
 )
-"""R2's archetype domains — mail, calendar, directory — per the R2 worked examples.
+"""R2's archetype domains — mail, calendar, people — per the R2 worked examples.
 A read whose description names one of these is read-*sensitive*, not merely
-read-scoped, independent of what its schema alone would suggest."""
+read-scoped, independent of what its schema alone would suggest.
+
+``directory`` was removed by Amendment 2 §8: it came from the `list_directory_users`
+example, where the sensitive term is really `users`, and on filesystem and git
+servers it means a folder — it alone was pushing `move_file` and `git_diff_unstaged`
+to R2."""
+
+
+ACTION_LEADING_VERBS = frozenset(
+    {
+        "send",
+        "post",
+        "publish",
+        "create",
+        "update",
+        "delete",
+        "write",
+        "notify",
+        "invite",
+        "forward",
+        "share",
+        "submit",
+        "dispatch",
+        "remove",
+        "move",
+        "rename",
+        "upload",
+        "set",
+        "add",
+        "put",
+        "push",
+        "compose",
+        "reply",
+    }
+)
+"""Amendment 3 §3.2: ``read_sensitive`` asserts that a tool *hands sensitive data
+back to the caller*. A description naming a sensitive domain establishes the R2
+tier floor, but confers the kind only where the tool is returning rather than
+acting — that is, where the description does not open with one of these verbs.
+
+A tool that moves sensitive data outward without returning it (``send_email``,
+``forward_message``, ``share_file``) is not ``read_sensitive``; it is ``egress`` at
+R4, already the stronger finding, and the agent never sees the content, so there
+is no chain to catch. That is why the list is closed and short and does not need
+``forward`` or ``share``. First word of the description only."""
+
+_LEADING_WORD = re.compile(r"^[^a-z]*([a-z]+)")
+
+
+def _opens_with_action_verb(lowered: str) -> bool:
+    match = _LEADING_WORD.match(lowered)
+    return match is not None and match.group(1) in ACTION_LEADING_VERBS
 
 
 def extract(description: str | None) -> list[Candidate]:
@@ -59,12 +111,25 @@ def extract(description: str | None) -> list[Candidate]:
 
     for keyword in SENSITIVE_DOMAIN_KEYWORDS:
         if keyword in lowered:
+            if _opens_with_action_verb(lowered):
+                return [
+                    Candidate(
+                        signal="description_text",
+                        tier="R2",
+                        evidence=(
+                            f"description names a sensitive domain ({keyword!r}) but opens "
+                            "with an action verb — domain floor only, not a sensitive read"
+                        ),
+                        rule=None,
+                    )
+                ]
             return [
                 Candidate(
                     signal="description_text",
                     tier="R2",
                     evidence=f"description names a sensitive domain ({keyword!r})",
                     rule=None,
+                    kinds=frozenset({"read_sensitive"}),
                 )
             ]
 
