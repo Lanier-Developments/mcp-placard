@@ -84,6 +84,23 @@ def test_a_content_sibling_in_a_different_object_does_not_count() -> None:
     assert result.tier == "R1"
 
 
+def test_condition_1_does_not_fire_on_a_path_beside_a_line_number() -> None:
+    """Amendment 3 §3.4: a write with a position and no content lands at R3 on its
+    verb rather than R5 — the path is being pointed at, not written to."""
+    result = classify_tool(_tool("truncate_file", _props(path=STR, line={"type": "integer"})), [])
+    assert result.tier == "R1"  # no write verb in the list; nothing establishes a write
+    result = classify_tool(_tool("update_marker", _props(path=STR, line={"type": "integer"})), [])
+    assert result.tier == "R3"
+    assert all(c.tier != "R5" for c in result.citations)
+
+
+def test_the_position_exemption_leaves_conditions_2_and_3_alone() -> None:
+    with_content = _props(path=STR, line={"type": "integer"}, content=STR)
+    assert classify_tool(_tool("annotate", with_content), []).tier == "R5"
+    named = _props(destination=STR, line={"type": "integer"})
+    assert classify_tool(_tool("relocate", named), []).tier == "R5"
+
+
 def test_a_concurrency_token_still_exempts_every_condition() -> None:
     result = classify_tool(_tool("write_record", _props(path=STR, content=STR, if_match=STR)), [])
     assert result.tier == "R3"

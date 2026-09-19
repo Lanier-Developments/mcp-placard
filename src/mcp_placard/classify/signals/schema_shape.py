@@ -100,6 +100,16 @@ PATH_LIKE_FIELDS = frozenset({"path"})
 Direction-neutral: a ``path`` is a destination only under one of Rule D's three
 conditions, never on its own."""
 
+POSITION_LIKE_FIELDS = frozenset({"position", "line", "start_line", "end_line", "offset", "column"})
+"""Rule D, condition 1 — exemption (Amendment 3 §3.4). A path-like parameter with one
+of these as a sibling in the same object is a reference *into* a file — a review
+comment, a diagnostic, an annotation, a stack frame, a code-search hit — not a
+destination, and does not trigger condition 1. Conditions 2 and 3 are unaffected: a
+path with both a position sibling and a content sibling is still a write, and a
+destination-named field is a destination whatever sits beside it. The residual case,
+a write with a position and no content (``truncate_file(path, line)``), lands at R3 on
+its verb rather than escaping entirely."""
+
 DESTINATION_NAMED_FIELDS = frozenset(
     {"destination", "dest", "target_path", "output_path", "to_path", "new_path"}
 )
@@ -338,6 +348,10 @@ def _analyze(input_schema: JsonSchema) -> _Analysis:
                             kinds=frozenset({"write"}),
                         )
                     )
+                elif own_siblings & POSITION_LIKE_FIELDS:
+                    # Amendment 3 §3.4: a path next to a line number is being
+                    # pointed at, not written to. Condition 1 does not apply.
+                    pass
                 elif deferred is None:
                     deferred = Candidate(
                         signal="schema_shape",

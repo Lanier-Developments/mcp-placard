@@ -278,3 +278,72 @@ state then, if still empty) is recorded in the taxonomy.
 ## Still open, unchanged
 
 Cross-machine check; Slack or any mail/calendar/people server for the `CHAIN_EXFIL` read half.
+
+
+---
+
+# Phase 2.2 addendum, second pass — rulings applied and a reading on exit codes
+
+**Date:** 2026-09-19. **Re:** `2026-09-19_from-chief_to-jr_phase2.2-addendum-decisions.md`.
+
+## Applied
+
+1. **Condition 1 exemption (Amendment 3 §3.4).** `POSITION_LIKE_FIELDS` — `position`, `line`,
+   `start_line`, `end_line`, `offset`, `column` — as a sibling of a path in the same object
+   suppresses the deferred clause only. `create_pull_request_review` is R3 `write`
+   `unverifiable`; `push_files` is R5 by condition 2; `move_file` is R5 by condition 3. The
+   strict `xfail` is off. Synthetic pairs in `test_classify_kinds.py` pin that conditions 2
+   and 3 are untouched and that the residual `update_marker(path, line)` lands at R3.
+2. **Negation guard** wording moved into §3.3 in the taxonomy with the boundary as stated:
+   two-word window, closed negator list, guard not parser, not to be extended without a real
+   false positive from a real server.
+3. **README** carries the Playwright drift, the diff output, and the capabilities-split note.
+
+Corrected distribution on the 2.2 surfaces (108 tools): filesystem R0:1 R1:9 R5:4; memory
+R0:1 R1:2 R3:6; github R1:14 **R3:11 R5:1**; playwright R1:7 R3:14 R4:2 R5:2; git R1:7 R3:5;
+the rest unchanged. Reversibility on 47 tools at R3+: unverifiable 46, verified 1, asserted 0.
+Three tools have now moved across 2.2 in total — `browser_navigate_back`,
+`create_pull_request_review`, and nothing else — which is the count the first memo predicted,
+one ruling later than predicted.
+
+## Reading on item 4 — exit-code precedence on mixed findings
+
+**Precedence is already specified, but for the wrong reason.** AGENTS.md pins `diff`'s
+precedence as `3 > 1 > 2 > 0`; `tests/test_diff_table.py` has two mixed-finding rows testing
+it; `DiffResult.exit_code` walks a single `EXIT_PRECEDENCE` tuple. The Playwright run's
+`exit=3` was the documented behaviour. The stated rationale in `diff/README.md`, though, is
+"3 outranks everything because it also covers *server unreachable*; if the scan cannot be
+trusted, nothing derived from it can be." That justification belongs to `scan`. `diff` reads
+two files and cannot produce "unreachable". The top of `diff`'s precedence rests on a reason
+that does not apply to the command it governs.
+
+**Is 3 doing two jobs?** Within one command, no: `scan` 3 means unreachable only, `diff` 3
+means removed only, `tests/test_exit_code_contract.py` pins them per command, and AGENTS.md
+already says "read a code only in the context of the command that produced it." The collapse
+cannot happen inside one invocation. It *can* happen in a pipeline that runs `scan` then
+`diff` and reports one integer — which is exactly what a Phase 4 Action will do. So the risk
+is real, and it is a Phase 4 constraint arriving early.
+
+**Recommendation, as one interface change rather than two:**
+
+- Give `scan`'s unreachable and incomplete-enumeration failures their own code, **4**, so 3
+  means "removed" everywhere. `EXIT_REMOVED_OR_UNREACHABLE` becomes two constants;
+  `ConnectionFailure` and the enumeration-failure path take the new one. Cost: one constant
+  split, two doc tables, the contract test, and the README.
+- With unreachable gone from `diff`'s concerns, the argument for 3-first dissolves. Adopt
+  your instinct: **`1 > 2 > 3 > 0`**, ordered by which finding most urgently needs a human.
+  A removal is a reduction in blast radius — the least urgent security finding, even where it
+  breaks an agent that depended on the tool, which is not this tool's concern. 2 stays
+  never-silenceable as a finding, as now.
+- Ship both in the Phase 2.1 release as **0.2.0** and state it as a breaking change to the
+  exit-code contract. Nothing consumes the codes yet except the README, and it will never be
+  cheaper.
+
+**Implementation constraints, for the record.** The two existing precedence rows flip under
+the new order — "removed + description changed" becomes 2 — and AGENTS.md requires adding
+rows before changing one, so the table gains "removed + escalation → 1" and "removed +
+description → 2" as new rows with the old ones retired in the same commit. The CI
+`drift-detection-works` job asserts removed-alone → 3 and is unaffected. Nothing else in the
+engine depends on the order.
+
+Waiting on your ruling before touching any of it.

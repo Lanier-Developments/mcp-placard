@@ -187,11 +187,16 @@ evidence breaks the tie.
 >
 > Description evidence for `asserted` (Amendment 3 §3.3): a phrase from a closed
 > list — `version history`, `revision history`, `previous version`, `restore`,
-> `undo`, `trash`, `recycle bin`, `soft delete`, `recoverable` — not directly
-> negated ("this cannot be undone" is a claim *against* recoverability). Bare
-> `history` and bare `version` are not evidence: one matches browser history, the
-> other a server version string. Absent that, and absent `verified` evidence, the
-> value is `unverifiable`.
+> `undo`, `trash`, `recycle bin`, `soft delete`, `recoverable`. Bare `history` and
+> bare `version` are not evidence: one matches browser history, the other a server
+> version string. A phrase directly preceded — within two words — by a negator from
+> a closed list (`cannot be`, `can't be`, `can not be`, `not`, `no`, `without`,
+> `never`, `irreversibly`) is a claim *against* recoverability and is not evidence:
+> "this cannot be undone" is the signal with its sign inverted. This is a guard
+> against the obvious inversion, not a negation parser, and it is not to be extended
+> — window, negator list, or matching — without a real false positive from a real
+> server to point at; `unverifiable` is the fail-closed value and already the common
+> case. Absent evidence, the value is `unverifiable`.
 >
 > Standing decision: if `asserted` is still empty after a document-management server
 > (Drive, Notion, Confluence, a versioned object store) has been scanned, the state
@@ -217,11 +222,29 @@ evidence breaks the tie.
 >
 > A read carrying a path parameter is classified by Rule B and the sensitivity
 > signals, and stops there.
+>
+> **Condition 1 — exemption (Amendment 3 §3.4).** A path-like parameter accompanied by
+> a position-like sibling in the same object — `position`, `line`, `start_line`,
+> `end_line`, `offset`, `column` — is a reference into a file rather than a
+> destination, and does not trigger condition 1. The exemption applies to condition 1
+> only. Conditions 2 and 3 are unaffected: a path with both a position sibling and a
+> content sibling is still a write, and a destination-named field is still a
+> destination whatever sits beside it.
 
 An unguarded `write_note(path, content)` therefore lands at R5 on evidence, not on
 pessimism, while `update_record(id, body, if_match)` lands at R3 `verified`. Whether
 `asserted` and `unverifiable` writes block CI is a decision for the consuming repo's
 ceiling configuration, not a decision this taxonomy makes for everyone.
+
+The position exemption is narrower than it first appears, which is why it is safe. It
+releases a tool only when a position sibling is present *and* no content sibling
+exists *and* the field is not destination-named. A genuine write that carries a line
+number almost always carries the content it is writing, and condition 2 takes it. The
+residual case — a write with a position and no content, `truncate_file(path, line)` —
+lands at R3 on its verb rather than escaping entirely. The idiom is everywhere once
+you look: review comments, diagnostics, annotations, stack frames, code-search hits.
+A path next to a line number is being pointed at. R5 on a pull-request review comment
+is precisely the finding that teaches a reviewer the top tier is noise.
 
 The destination clause originally read "a destination path parameter with no
 concurrency token present," and the first implementation dropped the word

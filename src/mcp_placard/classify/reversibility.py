@@ -53,10 +53,12 @@ ASSERTED_PHRASES = (
 not."""
 
 NEGATIONS = ("cannot be", "can't be", "can not be", "not", "no", "without", "never", "irreversibly")
-"""A phrase directly preceded by one of these is a claim *against* recoverability
-— "this cannot be undone" is the standing ``delete_workspace`` example — and must
-not read as evidence for it. Only the few words immediately before the phrase are
-inspected; this is a guard against the obvious inversion, not a negation parser."""
+"""Amendment 3 §3.3's negation guard, as ratified: a phrase directly preceded —
+within two words — by one of these is a claim *against* recoverability ("this
+cannot be undone", the standing ``delete_workspace`` example) and is not evidence.
+A guard against the obvious inversion, not a negation parser. Do not extend the
+window, this list, or the matching without a real false positive from a real server
+to point at; ``unverifiable`` is the fail-closed value and already the common case."""
 
 _PHRASE = re.compile(r"\b(" + "|".join(re.escape(p) for p in ASSERTED_PHRASES) + r")")
 _NEGATED = re.compile(

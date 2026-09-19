@@ -42,6 +42,24 @@ not):
 | git | 12 | R1:11 R2:1 | R1:7 R3:5 | — |
 | everything, fetch, time, sequential-thinking, deepwiki, context7 | 22 | unchanged | unchanged | — |
 
+**The tool caught its first real drift.** Between two of these runs the Playwright `@latest`
+package shipped a release. Nobody was watching it; the diff named every change and returned
+the documented code:
+
+```
+$ placard diff playwright-before.json playwright-after.json
+[tool_added] tool 'browser_emulate_media' added (tier R3; schema 3b4bcf539a7e)
+[tool_removed] tool 'browser_webmcp_call' removed (was tier R3)
+[tool_removed] tool 'browser_webmcp_list' removed (was tier R0)
+[server_capabilities_changed] server capabilities changed (ba8e230d1afc -> 46f63fd549bb)
+exit=3
+```
+
+The last line is the one worth noticing. The `capabilities` block used to sit inside the hashed
+body; it was split out precisely so that a change to it would surface as a named finding
+instead of as `surface_hash` moving for no stated reason. That design decision paid for itself
+here, in public, on a target nobody prompted.
+
 What moved, and why: eight filesystem *reads* left R5 (a `path` on `read_file` is a source, not
 a destination); `move_file` reached R5 on `destination`; GitHub's `create_or_update_file` became
 R3 `verified` on its `sha`; every git and GitHub mutation verb (`add`, `commit`, `checkout`,

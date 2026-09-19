@@ -126,21 +126,12 @@ def test_github_get_file_contents_is_a_read(surfaces: dict[str, Manifest]) -> No
     assert _tool(surfaces, "github", "get_file_contents").tier == "R1"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Amendment 3 §3.1 expected R3 once 'body' left Rule D's content list, and condition 2 "
-        "no longer fires — but condition 1 does: 'create' is a write verb and 'path' is an "
-        "unguarded string, so the deferred destination clause still forces R5. Flagged in the "
-        "Phase 2.2 section of the report; strict so this turns red the moment Chief's decision "
-        "lands and the marker must come off."
-    ),
-)
 def test_github_review_comment_path_is_a_reference_not_a_destination(
     surfaces: dict[str, Manifest],
 ) -> None:
-    """Amendment 3 §3.1: ``comments[].{path, position, body}`` — ``body`` is a
-    comment body, not file content, so condition 2 does not fire."""
+    """Amendment 3 §3.1 and §3.4: ``comments[].{path, position, body}`` — ``body`` is
+    a comment body, not file content, so condition 2 does not fire; and ``position``
+    beside ``path`` makes it a reference, so condition 1 does not either."""
     entry = _tool(surfaces, "github", "create_pull_request_review")
     assert entry.tier == "R3"
     assert entry.kinds == ["write"]
