@@ -195,7 +195,7 @@ Same branch, same PR. No manifest version bump. Amendment 3 folded into `docs/TA
 
 | Gate | Result |
 | --- | --- |
-| Tests | 404 passed, 1 xfail (strict, see §1 below) |
+| Tests | 401 passed, 1 xfail (strict, see §1 below) |
 | Coverage, ruff, mypy, guard, self-gate, `2.0` baseline | all clean |
 
 ## Corrected distribution
