@@ -1,0 +1,45 @@
+name: Bug
+description: A crash, a wrong exit code, a manifest that fails to verify, a scan that hangs.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a tool at the wrong tier, use the **Misclassification** template instead.
+        For anything that could let a malicious server influence Placard, use private
+        vulnerability reporting — see `SECURITY.md`.
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      placeholder: "placard diff baseline.json current.json --ceiling R5"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Exit code and stderr, verbatim.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A `tools/list` response, a manifest, or a way to start the server. Smaller is better.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: Placard and Python versions
+      placeholder: "placard 0.2.0 (manifest_version 2.1), Python 3.12.4, macOS 15"
+    validations:
+      required: true

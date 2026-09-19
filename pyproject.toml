@@ -46,13 +46,13 @@ placard = "mcp_placard.cli:main"
 mcp-placard = "mcp_placard.cli:main"
 
 [tool.hatch.build.targets.sdist]
-# Ship the package, its tests, and the public docs. Internal dispatch briefs
-# (dated from-chief/from-jr files and files/) are repo history, not distribution.
+# Ship the package, its tests, and the public docs. The dated dispatch memos under
+# docs/dispatches/ are repo history, not distribution.
 exclude = [
-  "/files",
-  "/20[0-9][0-9]-*.md",
+  "/docs/dispatches",
   "/.github",
   "/.pre-commit-config.yaml",
+  "/CODE_OF_CONDUCT.md",
 ]
 
 [tool.hatch.build.targets.wheel]

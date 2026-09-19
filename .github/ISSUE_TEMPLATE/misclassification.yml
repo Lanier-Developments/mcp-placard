@@ -1,0 +1,64 @@
+name: Misclassification
+description: A tool landed at the wrong tier or carries the wrong kinds. The schema is the argument.
+title: "[classify] <tool name>: got R?, expected R?"
+labels: ["classifier", "needs-fixture"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful issue Placard can receive. Paste the tool exactly as the server
+        declares it — Placard's classifier is argued against real schemas, and yours may
+        become a regression fixture in `tests/fixtures/real_servers/`.
+  - type: input
+    id: server
+    attributes:
+      label: Server
+      description: Package or URL, and version if you know it.
+      placeholder: "npx -y @modelcontextprotocol/server-filesystem 2025.8.21"
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Tool name
+    validations:
+      required: true
+  - type: input
+    id: got
+    attributes:
+      label: Tier and kinds Placard assigned
+      placeholder: "R5, kinds: write"
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: Tier and kinds you expected, and why in one line
+      placeholder: "R1 — the path is a source; nothing is written"
+    validations:
+      required: true
+  - type: textarea
+    id: schema
+    attributes:
+      label: Input schema
+      description: The tool's `inputSchema`, verbatim. Placard's output for the tool (`placard scan ... | jq '.surface.tools[] | select(.name == "...")'`) is ideal because it also carries the citations.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description and annotations
+      description: The tool's `description` and `annotations` block, verbatim.
+      render: json
+  - type: textarea
+    id: citations
+    attributes:
+      label: Placard's citations for this tool
+      description: From `classification[]` in the manifest. Tells us which rule fired.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: Placard version
+      placeholder: "placard version"

@@ -24,7 +24,7 @@ document (Rules A-G below, the revised fixture matrix, and `CHAIN_EXFIL`).
 folded in as well: the Rule D destination clause, the Rule C `to` exemption, the
 kind axis, `CHAIN_EXFIL` over kinds, Rule H, the revised reversibility evidence,
 annotation escalation, and the sensitivity vocabulary. Amendment 3 (2026-09-18,
-`2026-09-18_from-chief_to-jr_phase2.2-decisions.md`, adjudicating the Phase 2.1
+`dispatches/2026-09-18_from-chief_to-jr_phase2.2-decisions.md`, adjudicating the Phase 2.1
 flag-backs) is folded in: `body` leaves Rule D's content list, `read_sensitive`
 means *returns*, and `asserted` requires a phrase. All source documents are retained
 as the original review record; this document is authoritative wherever they would

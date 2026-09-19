@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Lanier-Developments/mcp-placard/security/advisories/new
+    about: Anything that could let a malicious MCP server influence Placard. Reported privately.
+  - name: Taxonomy question
+    url: https://github.com/Lanier-Developments/mcp-placard/blob/main/docs/TAXONOMY.md
+    about: The R0-R5 ladder, the kind axis, and Rules A-H, with worked examples. Read before proposing a rule change.

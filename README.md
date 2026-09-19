@@ -1,6 +1,20 @@
 # Placard
 
+[![PyPI](https://img.shields.io/pypi/v/mcp-placard?label=PyPI)](https://pypi.org/project/mcp-placard/)
+[![Python](https://img.shields.io/pypi/pyversions/mcp-placard)](https://pypi.org/project/mcp-placard/)
+[![CI](https://github.com/Lanier-Developments/mcp-placard/actions/workflows/ci.yml/badge.svg)](https://github.com/Lanier-Developments/mcp-placard/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Never invokes a tool](https://img.shields.io/badge/tools%2Fcall-never-critical)](AGENTS.md#security-posture)
+
 Static analysis and drift detection for the surface an MCP server exposes to an agent.
+
+```bash
+pip install mcp-placard
+placard scan "npx -y @modelcontextprotocol/server-filesystem ." --out baseline.json
+# ... a week later
+placard scan "npx -y @modelcontextprotocol/server-filesystem ." --out current.json
+placard diff baseline.json current.json     # exit 1 escalation, 2 prompt change, 3 removal
+```
 
 Teams wire agents to Model Context Protocol servers with no record of what capability they
 just granted, and no mechanism to notice when that capability changes. A server can add a
@@ -67,7 +81,7 @@ R3 `verified` on its `sha`; every git and GitHub mutation verb (`add`, `commit`,
 reading as email; Playwright's `browser_evaluate` and `browser_run_code_unsafe` went from R1 to R5
 with every kind, and the server's only `CHAIN_EXFIL` is now the one it should have — code
 execution carries both halves alone. The full delta and the flag-backs are in
-`2026-09-18_from-jr_to-chief_phase2.1-report.md`.
+[`docs/dispatches/2026-09-18_from-jr_to-chief_phase2.1-report.md`](docs/dispatches/2026-09-18_from-jr_to-chief_phase2.1-report.md).
 
 ## Install
 
