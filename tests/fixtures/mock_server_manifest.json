@@ -45,7 +45,7 @@
       "kinds": [
         "destructive"
       ],
-      "reversibility": "asserted",
+      "reversibility": "unverifiable",
       "tier": "R5",
       "tool": "delete_workspace"
     },
@@ -136,14 +136,6 @@
           "tier": "R4"
         },
         {
-          "evidence": "/properties/body: content-carrying field 'body'",
-          "kinds": [
-            "write"
-          ],
-          "signal": "schema_shape",
-          "tier": "R1"
-        },
-        {
           "evidence": "description names a sensitive domain ('mail') but opens with an action verb — domain floor only, not a sensitive read",
           "signal": "description_text",
           "tier": "R2"
@@ -151,8 +143,7 @@
       ],
       "disagreements": [],
       "kinds": [
-        "egress",
-        "write"
+        "egress"
       ],
       "reversibility": "unverifiable",
       "tier": "R4",
@@ -181,12 +172,12 @@
       "kinds": [
         "write"
       ],
-      "reversibility": "asserted",
+      "reversibility": "unverifiable",
       "tier": "R3",
       "tool": "write_note"
     }
   ],
-  "classification_hash": "b5cf00ad2504ea24ddcabf20326f2b47e692373c2b0ea0c0ad021c6c3b085396",
+  "classification_hash": "e9c9b6cccb74bcee03032ed3f6d7e112f0cd07fcd8655261e23bef4c6e970911",
   "environment": {
     "protocol_version": "2026-07-28",
     "sdk_version": "2.2.0"

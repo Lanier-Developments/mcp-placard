@@ -79,15 +79,16 @@ ACTION_LEADING_VERBS = frozenset(
         "reply",
     }
 )
-"""Kind gate for the sensitive-domain match. `docs/TAXONOMY.md` defines this
-signal's R2 as "*a read* whose description names one of these" — the tier floor
-still applies to `send_email` (it touches mail), but kind ``read_sensitive`` is a
-claim that the tool *reads*, and a description opening with one of these verbs
-presents the tool as acting on the domain, not reading it. Without this gate every
-``send_email`` would carry both halves of ``CHAIN_EXFIL`` on its own through the
-weakest signal in the taxonomy. Closed list; first word of the description only.
-Flagged to Chief in the Phase 2.1 report as an implementation choice over
-Amendment 2 §3's "sensitivity-description evidence" wording."""
+"""Amendment 3 §3.2: ``read_sensitive`` asserts that a tool *hands sensitive data
+back to the caller*. A description naming a sensitive domain establishes the R2
+tier floor, but confers the kind only where the tool is returning rather than
+acting — that is, where the description does not open with one of these verbs.
+
+A tool that moves sensitive data outward without returning it (``send_email``,
+``forward_message``, ``share_file``) is not ``read_sensitive``; it is ``egress`` at
+R4, already the stronger finding, and the agent never sees the content, so there
+is no chain to catch. That is why the list is closed and short and does not need
+``forward`` or ``share``. First word of the description only."""
 
 _LEADING_WORD = re.compile(r"^[^a-z]*([a-z]+)")
 

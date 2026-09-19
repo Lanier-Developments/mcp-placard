@@ -23,9 +23,12 @@ document (Rules A-G below, the revised fixture matrix, and `CHAIN_EXFIL`).
 `TAXONOMY-amendment-2.md` (2026-09-18, adjudicating the first real-server batch) is
 folded in as well: the Rule D destination clause, the Rule C `to` exemption, the
 kind axis, `CHAIN_EXFIL` over kinds, Rule H, the revised reversibility evidence,
-annotation escalation, and the sensitivity vocabulary. All source documents are
-retained as the original review record; this document is authoritative wherever
-they would otherwise be consulted separately.
+annotation escalation, and the sensitivity vocabulary. Amendment 3 (2026-09-18,
+`2026-09-18_from-chief_to-jr_phase2.2-decisions.md`, adjudicating the Phase 2.1
+flag-backs) is folded in: `body` leaves Rule D's content list, `read_sensitive`
+means *returns*, and `asserted` requires a phrase. All source documents are retained
+as the original review record; this document is authoritative wherever they would
+otherwise be consulted separately.
 
 ## The tiers
 
@@ -68,9 +71,8 @@ hard each one is to fake.
    vocabulary is `mail`, `inbox`, `email`, `calendar`, `correspondence`, `contact`,
    `employee`, `roster`; `directory` was removed by Amendment 2 §8 (on filesystem and
    git servers it means a folder). A match floors the tool at R2; it establishes kind
-   `read_sensitive` only when the description does not open with an action verb —
-   `send_email` touches mail but does not read it (an implementation choice, flagged
-   in the Phase 2.1 report).
+   `read_sensitive` only where the tool returns rather than acts — see the Kinds
+   section (Amendment 3 §3.2).
 
 Every assigned tier must cite the signals that produced it. A tier without stated
 reasoning is an opinion, not a finding.
@@ -183,9 +185,18 @@ evidence breaks the tie.
 > content-carrying sibling in the same object (Amendment 2 §6 — GitHub's Contents API
 > idiom; `sha` alone is a plain commit reference on read tools).
 >
-> Description evidence for `asserted`: the server states that recoverable state is
-> retained — version, revision, history, trash, recycle, restore, undo. Absent that,
-> and absent `verified` evidence, the value is `unverifiable`.
+> Description evidence for `asserted` (Amendment 3 §3.3): a phrase from a closed
+> list — `version history`, `revision history`, `previous version`, `restore`,
+> `undo`, `trash`, `recycle bin`, `soft delete`, `recoverable` — not directly
+> negated ("this cannot be undone" is a claim *against* recoverability). Bare
+> `history` and bare `version` are not evidence: one matches browser history, the
+> other a server version string. Absent that, and absent `verified` evidence, the
+> value is `unverifiable`.
+>
+> Standing decision: if `asserted` is still empty after a document-management server
+> (Drive, Notion, Confluence, a versioned object store) has been scanned, the state
+> is deleted then, in one manifest version bump alongside whatever else is changing.
+> Until that scan happens the question is not ripe.
 >
 > Schema evidence forcing R5 regardless of other signals: presence of `force`,
 > `overwrite`, `recursive`, `permanent`, `purge`, or `skip_trash` as a boolean the
@@ -196,8 +207,11 @@ evidence breaks the tie.
 > at least one of:
 >
 > - an independent signal placing the tool at R3 or above;
-> - a content-carrying sibling in the same object — `content`, `body`, `data`, `text`,
->   `edits`, `contents`;
+> - a content-carrying sibling in the same object — `content`, `contents`, `data`,
+>   `text`, `edits` (Amendment 3 §3.1: `body` is *not* on this list — it names a
+>   message or comment body far more often than a file body, and stays in Rule C's
+>   list only; GitHub's `create_pull_request_review` has `comments[].{path, body}`
+>   where `path` is what the comment is about);
 > - the parameter name itself denoting a destination — `destination`, `dest`,
 >   `target_path`, `output_path`, `to_path`, `new_path`.
 >
@@ -306,7 +320,7 @@ as tier sets names the wrong tools. The second dimension belongs somewhere else.
 >
 > | Kind | Derived from |
 > | --- | --- |
-> | `read_sensitive` | sensitivity-field or sensitivity-description evidence |
+> | `read_sensitive` | sensitivity-field or sensitivity-description evidence, where the tool *returns* (below) |
 > | `egress` | Rule A (caller-influenced outbound target) or Rule C (communication target) |
 > | `write` | write-verb, content-carrying field, or destination-path evidence |
 > | `destructive` | destructive-verb evidence, R5-forcing boolean, or `destructiveHint: true` |
@@ -314,6 +328,22 @@ as tier sets names the wrong tools. The second dimension belongs somewhere else.
 >
 > A tool may carry several kinds. An empty set is legal and means no kind-bearing
 > evidence was found. Kinds never affect tier and tier never affects kinds.
+
+> **`read_sensitive` means *returns*** (Amendment 3 §3.2). `read_sensitive` asserts
+> that a tool hands sensitive data back to the caller. A description naming a
+> sensitive domain establishes the R2 tier floor, but confers the kind only where
+> the tool is returning rather than acting — that is, where the description does not
+> open with an action verb.
+>
+> A tool that moves sensitive data outward without returning it to the caller —
+> `send_email`, `forward_message`, `share_file` — is not `read_sensitive`. It is
+> `egress` at R4, which is already the stronger finding.
+
+`forward_email` looks like a one-tool exfiltration chain and is missed by the verb
+gate, but the agent never sees the message content, so there is no chain to catch —
+the tool is dangerous as egress and is classified as such. Losing the kind costs
+nothing, which is why the verb list stays closed and short and does not need
+`forward` or `share`.
 
 Kinds are derived inside the signal extractors, where the evidence already lives,
 and every kind on a tool traces back to at least one citation carrying it — a kind

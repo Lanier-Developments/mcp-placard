@@ -33,9 +33,26 @@ def test_a_nested_concurrency_token_is_still_verified() -> None:
 
 def test_a_description_claiming_retained_state_is_asserted() -> None:
     schema = {"type": "object", "properties": {"id": {"type": "string"}}}
-    assert compute(schema, "Update the record. Previous versions are kept in history.") == (
-        "asserted"
-    )
+    assert compute(schema, "Update the record. Previous versions are kept.") == "asserted"
+    assert compute(schema, "Move the file to the trash.") == "asserted"
+    assert compute(schema, "Deletes are soft deletes and remain recoverable.") == "asserted"
+
+
+def test_bare_history_and_version_are_not_evidence() -> None:
+    """Amendment 3 §3.3: ``browser_navigate_back``'s "previous page in history" is
+    browser history, and "server version" is a version string."""
+    schema = {"type": "object", "properties": {"id": {"type": "string"}}}
+    assert compute(schema, "Go back to the previous page in history.") == "unverifiable"
+    assert compute(schema, "Bump the server version.") == "unverifiable"
+
+
+def test_a_negated_phrase_is_a_claim_against_recoverability() -> None:
+    """The standing ``delete_workspace`` text: "This cannot be undone." — a claim
+    against recoverability, not for it."""
+    schema = {"type": "object", "properties": {"id": {"type": "string"}}}
+    assert compute(schema, "Permanently delete it. This cannot be undone.") == "unverifiable"
+    assert compute(schema, "Purge the record with no trash and no restore.") == "unverifiable"
+    assert compute(schema, "Delete it. Can be undone from the trash.") == "asserted"
 
 
 def test_an_idempotent_hint_no_longer_asserts_anything() -> None:

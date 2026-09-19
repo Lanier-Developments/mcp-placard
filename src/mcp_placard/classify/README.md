@@ -98,7 +98,6 @@ both documented in the relevant module:
   would-be R5 candidate and `classify_tool` appends it only once another candidate
   has reached R3. Two walks of the same schema, both through the shared walker.
 - **Description-derived `read_sensitive` is withheld when the description opens
-  with an action verb.** Amendment 2 §3 says "sensitivity-description evidence";
-  read literally, `send_email` would carry both halves of `CHAIN_EXFIL` on its own
-  through the weakest signal in the taxonomy. The R2 tier floor still applies.
-  Flagged in the Phase 2.1 report for confirmation.
+  with an action verb.** Now a rule, not a flag: Amendment 3 §3.2 — `read_sensitive`
+  means the tool *returns* sensitive data; a sender is `egress` at R4, already the
+  stronger finding. The R2 tier floor still applies.

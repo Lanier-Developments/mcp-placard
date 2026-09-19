@@ -126,6 +126,35 @@ def test_github_get_file_contents_is_a_read(surfaces: dict[str, Manifest]) -> No
     assert _tool(surfaces, "github", "get_file_contents").tier == "R1"
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Amendment 3 §3.1 expected R3 once 'body' left Rule D's content list, and condition 2 "
+        "no longer fires — but condition 1 does: 'create' is a write verb and 'path' is an "
+        "unguarded string, so the deferred destination clause still forces R5. Flagged in the "
+        "Phase 2.2 section of the report; strict so this turns red the moment Chief's decision "
+        "lands and the marker must come off."
+    ),
+)
+def test_github_review_comment_path_is_a_reference_not_a_destination(
+    surfaces: dict[str, Manifest],
+) -> None:
+    """Amendment 3 §3.1: ``comments[].{path, position, body}`` — ``body`` is a
+    comment body, not file content, so condition 2 does not fire."""
+    entry = _tool(surfaces, "github", "create_pull_request_review")
+    assert entry.tier == "R3"
+    assert entry.kinds == ["write"]
+    assert entry.reversibility == "unverifiable"
+
+
+def test_github_push_files_is_still_a_file_write(surfaces: dict[str, Manifest]) -> None:
+    """Same shape as the review, but ``files[].{path, content}`` — ``content`` is
+    on the list and the tool must stay R5."""
+    entry = _tool(surfaces, "github", "push_files")
+    assert entry.tier == "R5"
+    assert any("content-carrying sibling 'content'" in c.evidence for c in entry.citations)
+
+
 def test_github_search_tools_are_not_code_execution(surfaces: dict[str, Manifest]) -> None:
     """The fail-open on an ambiguous ``query`` parameter, on real descriptions."""
     for name in ("search_code", "search_issues", "search_repositories", "search_users"):
@@ -179,6 +208,27 @@ def test_playwright_raises_chain_on_code_execution_alone(surfaces: dict[str, Man
     assert {"browser_run_code_unsafe", "browser_evaluate"} <= set(finding.tools)
     assert "carries both halves alone" in summary
     assert "tools only" in finding.scope.lower()
+
+
+def test_playwright_navigate_back_is_not_asserted_on_browser_history(
+    surfaces: dict[str, Manifest],
+) -> None:
+    assert _tool(surfaces, "playwright", "browser_navigate_back").reversibility == "unverifiable"
+
+
+def test_asserted_is_empty_across_the_batch_and_that_is_the_honest_number(
+    surfaces: dict[str, Manifest],
+) -> None:
+    """Amendment 3 §3.3's standing decision: this assertion is *expected to break*
+    once a document-management server (Drive, Notion, Confluence) joins the batch.
+    When it does, delete this test — do not weaken the phrase list to keep it."""
+    asserted = [
+        (server, e.tool)
+        for server, m in surfaces.items()
+        for e in m.classification
+        if e.reversibility == "asserted"
+    ]
+    assert asserted == []
 
 
 def test_playwright_navigation_is_still_egress(surfaces: dict[str, Manifest]) -> None:

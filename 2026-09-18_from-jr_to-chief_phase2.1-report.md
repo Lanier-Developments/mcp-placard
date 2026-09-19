@@ -184,3 +184,97 @@ Drive, Notion) enters the batch. I have no strong lean; the keyword list is chea
 
 Injection heuristics, SARIF, GitHub Action packaging, signing, the public index, resource and
 prompt classification, additional chain types, and the multi-server config scan (Phase 6).
+
+
+---
+
+# Phase 2.2 addendum — the three decisions, applied
+
+**Date:** 2026-09-18, later the same day. **Re:** `2026-09-18_from-chief_to-jr_phase2.2-decisions.md`.
+Same branch, same PR. No manifest version bump. Amendment 3 folded into `docs/TAXONOMY.md`.
+
+| Gate | Result |
+| --- | --- |
+| Tests | 404 passed, 1 xfail (strict, see §1 below) |
+| Coverage, ruff, mypy, guard, self-gate, `2.0` baseline | all clean |
+
+## Corrected distribution
+
+Same 11 servers rerun. Ten surfaces byte-identical to both earlier batches. Playwright's
+`@latest` shipped a release between runs (`browser_emulate_media` added, `browser_webmcp_call`
+and `browser_webmcp_list` removed, capabilities block changed) — expected for an `@latest`
+target and, incidentally, the first real drift the tool has caught:
+
+```
+$ placard diff after-2.1/playwright.json after-2.2/playwright.json
+[tool_added] tool 'browser_emulate_media' added (tier R3; schema 3b4bcf539a7e)
+[tool_removed] tool 'browser_webmcp_call' removed (was tier R3)
+[tool_removed] tool 'browser_webmcp_list' removed (was tier R0)
+[server_capabilities_changed] server capabilities changed (ba8e230d1afc -> 46f63fd549bb)
+exit=3
+```
+
+Tier distribution after 2.2 (108 tools on today's surfaces): R0:8 R1:53 R3:35 R4:4 R5:8 —
+unchanged from 2.1 on every common tool. Reversibility on the 46 tools at R3+:
+**unverifiable 46, verified 1, asserted 0.** `CHAIN_EXFIL`: Playwright only, via Rule H.
+
+## What moved: one tool, not three
+
+| Tool | Expected by the decisions memo | Actual | Why |
+| --- | --- | --- | --- |
+| playwright `browser_navigate_back` | asserted → unverifiable | **as expected** | bare `history` gone from the list |
+| github `push_files` | stays R5 | **as expected** | `files[].{path, content}` — condition 2 on `content` |
+| github `create_pull_request_review` | R5 → R3 `write` `unverifiable` | **still R5** | see §1 |
+
+### 1. `create_pull_request_review` stays R5 through condition 1, not condition 2
+
+Removing `body` did what §3.1 said: condition 2 no longer fires on `comments[].{path, body}`.
+But the tool is named `create_pull_request_review`. `create` is a write verb, that is an
+independent R3 signal, and `path` is an unguarded string — so Rule D condition 1 ("an
+independent signal placing the tool at R3 or above") forces R5 through the deferred clause
+instead. §3.1's own last sentence anticipated this mechanism as the safety net for servers
+that use `body` for file content; here it catches the case the memo wanted released.
+
+I did not tune it. The test that pins the memo's expected outcome is in
+`tests/test_classify_real_servers.py` as a **strict `xfail`**: it goes red the moment the
+classifier produces R3, so whichever decision lands, the marker comes off in the same commit.
+
+Options, with the trade-off stated:
+
+- **(a) Accept R5.** A `create_*` tool with a caller-supplied bare `path` is, by condition 1's
+  literal text, a write to a destination. The false positive is one write over-tiered on one
+  tool in 108, in the cheap direction.
+- **(b) Condition 1 applies to a `path` only when the path is not accompanied by a
+  *position-like* sibling** (`position`, `line`, `start_line`, `end_line`, `offset`,
+  `column`). A path next to a line number is a reference into a file, not a destination.
+  Closed list, same discipline as every other field list. `push_files` is unaffected (no
+  such sibling; condition 2 fires anyway). This is the narrowest change that produces the
+  memo's outcome.
+- **(c) Condition 1 requires the path to be top-level.** Rejected on sight: it contradicts
+  Rule G.
+
+I lean (b). One list, one fixture pair, and the mechanism it encodes — "a path with a line
+number beside it is being pointed at, not written to" — is a real idiom (review comments,
+diagnostics, annotations, code-search hits).
+
+### 2. Negation guard on the `asserted` phrase list — an addition, flagged
+
+The mock server's own `delete_workspace` says "Permanently delete a workspace ... This cannot
+be undone." Under Amendment 2 it was `asserted` (bare `undo`); under §3.3's phrase list `undo`
+is still a member, so "cannot be undone" would still read as a claim *for* recoverability. I
+added a narrow guard: a phrase directly preceded (within two words) by `cannot be`, `can't
+be`, `can not be`, `not`, `no`, `without`, `never`, or `irreversibly` is not evidence.
+`delete_workspace` is now `unverifiable`; "can be undone from the trash" is still `asserted`.
+It is a guard against the obvious inversion, not a negation parser, and it is documented as
+such in `reversibility.py`. If you would rather the list be applied bare, it is one constant.
+
+### 3. `asserted` is 0 of 46
+
+The honest number, per §3.3. A test now asserts it is empty across the batch, with a
+docstring saying it is *expected to break* when a document-management server joins — and
+that the phrase list must not be weakened to keep it green. The standing decision (delete the
+state then, if still empty) is recorded in the taxonomy.
+
+## Still open, unchanged
+
+Cross-machine check; Slack or any mail/calendar/people server for the `CHAIN_EXFIL` read half.

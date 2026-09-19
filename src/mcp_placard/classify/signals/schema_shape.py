@@ -85,9 +85,15 @@ GUARDED_SHA_FIELD = "sha"
 sibling sits in the same object — GitHub's Contents API idiom. ``sha`` alone is a
 plain commit reference on read tools and evidences nothing."""
 
-CONTENT_CARRYING_FIELDS = frozenset({"content", "body", "data", "text", "edits", "contents"})
-"""Rule D, condition 2 (Amendment 2 §1): a path with one of these as a sibling in the
-same object is a write destination. Also kind ``write`` evidence on its own."""
+CONTENT_CARRYING_FIELDS = frozenset({"content", "contents", "data", "text", "edits"})
+"""Rule D, condition 2 (Amendment 2 §1, list per Amendment 3 §3.1): a path with one of
+these as a sibling in the same object is a write destination. Also kind ``write``
+evidence on its own. ``body`` is deliberately absent — it names a message or comment
+body far more often than a file body (GitHub's ``create_pull_request_review`` has
+``comments[].{path, body}`` where ``path`` is what the comment is *about*), so it
+lives in :data:`COMMUNICATION_CONTENT_FIELDS` only. A server that does use ``body``
+for file content loses condition 2 alone; a write verb still reaches it through
+condition 1 and a destination-named field through condition 3."""
 
 PATH_LIKE_FIELDS = frozenset({"path"})
 """Rule D's path-like parameter, kept to the exact name the taxonomy's fixtures use.

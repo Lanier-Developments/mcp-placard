@@ -10,16 +10,20 @@ reimplemented per rule.
 
 Amendment 2 §6 revised the evidence list after the first real-server batch found 0
 of 26 tools reaching ``verified`` and 4 reaching ``asserted`` on a proxy that did not
-support the inference:
+support the inference; Amendment 3 §3.3 tightened ``asserted`` again after the only
+match in the corrected batch was ``browser_navigate_back``'s "previous page in
+history":
 
 * ``verified`` gains ``sha`` with a content-carrying sibling (GitHub's Contents API
   optimistic-concurrency idiom). ``dryRun`` and ``commitId`` were considered and
   rejected.
 * ``asserted`` no longer comes from ``idempotentHint: true`` — an idempotent delete
-  is not a reversible one. It now comes from description evidence that the server
-  retains recoverable state.
+  is not a reversible one. It comes from a closed list of *phrases* claiming
+  recoverable state; bare ``history`` and bare ``version`` are not on it.
 * ``unverifiable`` becoming the common case is the honest outcome. It is what the
-  scanner actually knows.
+  scanner actually knows. Standing decision (Amendment 3 §3.3): if ``asserted`` is
+  still empty after a document-management server has been scanned, the state is
+  deleted then — not before.
 """
 
 from __future__ import annotations
@@ -33,12 +37,40 @@ from .signals.schema_shape import has_guarded_write_token
 
 JsonSchema = dict[str, Any]
 
-ASSERTED_KEYWORDS = ("version", "revision", "history", "trash", "recycle", "restore", "undo")
-"""Amendment 2 §6: description evidence that the server retains recoverable state.
-Matched at a word start, so ``versions`` and ``restored`` count and ``diversion``
-does not."""
+ASSERTED_PHRASES = (
+    "version history",
+    "revision history",
+    "previous version",
+    "restore",
+    "undo",
+    "trash",
+    "recycle bin",
+    "soft delete",
+    "recoverable",
+)
+"""Amendment 3 §3.3: the closed phrase list. Matched at a word start, so
+``restored``, ``undoable``, and ``previous versions`` count and ``diversion`` does
+not."""
 
-_ASSERTED_PATTERN = re.compile(r"\b(" + "|".join(ASSERTED_KEYWORDS) + r")")
+NEGATIONS = ("cannot be", "can't be", "can not be", "not", "no", "without", "never", "irreversibly")
+"""A phrase directly preceded by one of these is a claim *against* recoverability
+— "this cannot be undone" is the standing ``delete_workspace`` example — and must
+not read as evidence for it. Only the few words immediately before the phrase are
+inspected; this is a guard against the obvious inversion, not a negation parser."""
+
+_PHRASE = re.compile(r"\b(" + "|".join(re.escape(p) for p in ASSERTED_PHRASES) + r")")
+_NEGATED = re.compile(
+    r"\b(?:" + "|".join(re.escape(n) for n in NEGATIONS) + r")\s+(?:\w+\s+){0,2}$"
+)
+
+
+def _claims_recoverable_state(description: str) -> bool:
+    lowered = description.lower()
+    for match in _PHRASE.finditer(lowered):
+        preceding = lowered[: match.start()]
+        if not _NEGATED.search(preceding):
+            return True
+    return False
 
 
 def compute(input_schema: JsonSchema, description: str | None) -> Reversibility:
@@ -55,7 +87,7 @@ def compute(input_schema: JsonSchema, description: str | None) -> Reversibility:
     if has_guarded_write_token(result.properties):
         return "verified"
 
-    if description and _ASSERTED_PATTERN.search(description.lower()):
+    if description and _claims_recoverable_state(description):
         return "asserted"
 
     return "unverifiable"
