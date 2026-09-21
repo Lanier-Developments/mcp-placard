@@ -81,6 +81,11 @@ class TextElement:
     handles_paths: bool = False
     handles_credentials: bool = False
 
+    server_name: str = ""
+    """The server's declared ``name`` from ``initialize``, lowercased. A server
+    referring to itself by name ("in the Playwright server process") is in scope;
+    the cross-scope service-host rule exempts exactly this name."""
+
 
 def _escape_pointer(segment: str) -> str:
     return segment.replace("~", "~0").replace("/", "~1")
@@ -119,6 +124,7 @@ class _ToolContext:
     params: frozenset[str]
     handles_paths: bool
     handles_credentials: bool
+    server_name: str
 
     def element(self, suffix: str, text: str) -> TextElement:
         return TextElement(
@@ -130,6 +136,7 @@ class _ToolContext:
             own_param_names=self.params,
             handles_paths=self.handles_paths,
             handles_credentials=self.handles_credentials,
+            server_name=self.server_name,
         )
 
 
@@ -137,6 +144,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
     """Every model-facing string in the manifest, in document order."""
     surface = manifest.surface
     own_tools = frozenset(tool.name.lower() for tool in surface.tools)
+    server_name = (surface.server.name or "").lower()
     elements: list[TextElement] = []
 
     if surface.instructions:
@@ -146,6 +154,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                 pointer="/surface/instructions",
                 text=surface.instructions,
                 own_tool_names=own_tools,
+                server_name=server_name,
             )
         )
 
@@ -158,6 +167,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
             params=params,
             handles_paths=handles_paths,
             handles_credentials=handles_credentials,
+            server_name=server_name,
         )
         if tool.description:
             elements.append(context.element("description", tool.description))
@@ -175,6 +185,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     pointer=f"{base}/description",
                     text=prompt.description,
                     own_tool_names=own_tools,
+                    server_name=server_name,
                 )
             )
         for arg_index, argument in enumerate(prompt.arguments or []):
@@ -185,6 +196,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                         pointer=f"{base}/arguments/{arg_index}/description",
                         text=argument.description,
                         own_tool_names=own_tools,
+                        server_name=server_name,
                     )
                 )
 
@@ -196,6 +208,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     pointer=f"/surface/resources/{index}/description",
                     text=resource.description,
                     own_tool_names=own_tools,
+                    server_name=server_name,
                 )
             )
 
@@ -209,6 +222,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     pointer=f"/surface/resource_templates/{index}/description",
                     text=template.description,
                     own_tool_names=own_tools,
+                    server_name=server_name,
                 )
             )
 

@@ -32,19 +32,51 @@ ladder, and 0.3.0 removed the last one from the exit codes.
 
 | Class | What it detects | Rules (`inject/patterns.py`) |
 | --- | --- | --- |
-| `override` | Attempts to supersede prior or system instructions | `ignore_previous`, `new_instructions`, `system_prompt_claim`, `persona_switch`, `supersedes` |
-| `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover` |
-| `cross_scope` | References to tools or servers outside the element's own server — tool shadowing | `other_tools`, `on_other_tool_call`, `other_server_by_name`, `parenthesised_tool_ref`, `foreign_tool_identifier` |
+| `override` | Attempts to supersede prior or system instructions | `hierarchy_invalidated` (a referent naming the instruction hierarchy plus an invalidator in the same sentence), `priority_claim`, and the earlier phrase rules `ignore_previous`, `new_instructions`, `system_prompt_claim`, `persona_switch`, `supersedes` |
+| `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `secret_from_audience`, `behind_the_scenes`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover` |
+| `cross_scope` | References to tools or servers outside the element's own server — tool shadowing | `foreign_tool_identifier` ("the X tool", "tool X", "call X" where X is not on this server), `named_service_host` ("the Jira MCP server's", "the Confluence integration's", regardless of intervening tokens), `other_tools`, `on_other_tool_call`, `other_server_by_name`, `parenthesised_tool_ref` |
 | `sensitive_target` | Credential and secret paths or names in an element whose tool does not otherwise handle them | `credential_path`, `credential_transmission` |
 | `exfil_sink` | URLs and email addresses embedded in description text rather than in schema fields | `url`, `email` |
 | `hidden_content` | Zero-width characters, bidirectional overrides, Unicode tag characters (U+E0000 block), long base64-shaped runs | `zero_width`, `bidi_override`, `unicode_tags`, `base64_run` |
-| `markup_smuggling` | HTML comments and pseudo-tags used to fence instructions | `html_comment`, `pseudo_tag`, `bracket_tag` |
+| `markup_smuggling` | HTML comments and pseudo-tags used to fence instructions | `paired_custom_tag` (any opening tag with its matching close whose name is not a common HTML formatting element; attributes permitted), `html_comment`, `pseudo_tag`, `bracket_tag` |
 
 Every rule is a closed, named pattern, and a finding cites it — the same discipline as
 a classification citation. `hidden_content` has near-zero legitimate use and is the
 most aggressive class. `sensitive_target` and `exfil_sink` are the classes most likely
 to fire on legitimate text, and each had its near-miss in the benign corpus before its
 heuristic was written.
+
+### Structural rules (Phase 3.1)
+
+Held-out v1 showed four classes had learned the synthetic corpus's phrasing rather than the
+class. Ruleset 3.1 replaced phrase matching with structure, per
+`docs/dispatches/2026-09-21_from-chief_to-jr_heldout-v1-findings.md`:
+
+- **`override` fires when a sentence contains a hierarchy referent and an invalidator.**
+  Referents: system prompt(s), system instructions, system-level rules, prior / previous /
+  earlier + instructions | constraints | rules | guidelines | directives | policy, core
+  policy, core instructions, safety filters, safety guidelines, security guidelines,
+  guardrails. Invalidators: ignore, disregard, nullify, void, discard, override, supersede,
+  replace, obsolete, subordinate, bypass, forget. Explicit priority claims over the hierarchy
+  or the user ("highest priority", "take precedence over", "over anything the user") fire on
+  their own. "Default" alone is not a referent — "overrides the default timeout" is ordinary
+  API prose.
+- **`concealment` audience:** user, end user, human, operator, human operator, person,
+  anyone. **Predicates:** tell, inform, mention, reveal, disclose, show, display, alert,
+  notify, surface, reflect, indicate, report — in negated, "without", or "secret from"
+  constructions. "Behind the scenes" and "silently" count when paired with an audience or an
+  action performed on the user's behalf.
+- **`cross_scope` is ownership, not the word "server".** In tool and property descriptions,
+  an identifier-shaped token presented as a tool ("the X tool", "tool X", "call/run/invoke X")
+  that is not in the element's own server's tool list is a cross-scope reference. Named
+  external services referenced as tool hosts ("the X server's", "X MCP server", "the X
+  integration") count regardless of intervening tokens, in every element type. The server's
+  own declared name is exempt, so "in the Playwright server process" is in scope; bare "MCP
+  server" is not a service name.
+- **`markup_smuggling` fires on any paired custom tag** — an opening tag and its matching
+  close — whose name is not a common HTML formatting element. Attributes permitted. Pairing
+  is what keeps this safe: usage placeholders such as `<file>` or `<path>` are unpaired and
+  do not fire.
 
 ### Scoping rules that keep the benign corpus clean
 
@@ -138,9 +170,13 @@ re-analysis, so an operator-downgraded tool does not reappear as an escalation. 
   a `source` citation and a `fidelity` note. Measures realism: do the heuristics catch
   what attackers actually wrote. Reported separately from synthetic so a strong
   synthetic score cannot hide a weak realistic one.
-- **`heldout/`** — a malicious set authored independently against the class table,
-  not opened during development, scored once at the end of the phase with
-  `scripts/score_heldout.py`. The number is reported as-is.
+- **`malicious/heldout_v1.json`** — held-out v1, authored independently against the class
+  table and never opened during Phase 3, scored once on ruleset 3.0, then retired into
+  regression at 35/35. Every sample is a permanent must-detect; no v1 string or fragment
+  appears in any pattern.
+- **`heldout/`** — the next independently authored set, not opened during development,
+  scored once with `scripts/score_heldout.py`. The number is reported as-is and replaces the
+  previous headline.
 
 **Handling rule.** Malicious samples are stored base64-encoded and decoded only inside
 `mcp_placard.inject.corpus`, at the moment they become data under test. They are
@@ -161,3 +197,27 @@ attached. `tests/test_inject_corpus.py` names each one.
 
 First baseline, ruleset 3.0: 0 false positives on 388 benign strings; 22 of 22
 synthetic and 2 of 2 lifted samples detected.
+
+## Held-out v1 — the first independent measurement
+
+Scored once, on ruleset 3.0, reported as-is:
+
+| Class | Held-out v1 (ruleset 3.0) |
+| --- | --- |
+| exfil_sink | 5/5 |
+| hidden_content | 5/5 |
+| sensitive_target | 5/5 |
+| concealment | 3/5 |
+| cross_scope | 3/5 |
+| markup_smuggling | 3/5 |
+| override | 0/5 |
+| **overall** | **24/35** |
+
+The three perfect classes included every double-negation credential phrasing, written by
+someone who never saw the negation guard — that guard validated on samples its author did
+not write. The four weak classes showed detectors that had learned the synthetic corpus's
+phrasing rather than the class; the structural rules above are the response. Ruleset 3.1
+baseline: 0 false positives on 388 benign strings; synthetic 34 of 34; lifted 2 of 2;
+held-out v1 35 of 35 as regression. Held-out v2 (roughly 50 samples, vocabulary variety)
+will be scored once, and the difference between v1 and v2 is the honest measure of whether
+3.1 generalised.
