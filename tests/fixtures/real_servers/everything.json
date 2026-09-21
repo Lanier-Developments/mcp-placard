@@ -1,11 +1,128 @@
 {
   "captured": "2026-09-17",
+  "instructions": "# Everything Server – Server Instructions\n\nAudience: These instructions are written for an LLM or autonomous agent integrating with the Everything MCP Server.\nFollow them to use, extend, and troubleshoot the server safely and effectively.\n\n## Cross-Feature Relationships\n\n- Use `get-roots-list` to see client workspace roots before file operations\n- `gzip-file-as-resource` creates session-scoped resources accessible only during the current session\n- Enable `toggle-simulated-logging` before debugging to see server log messages\n- Enable `toggle-subscriber-updates` to receive periodic resource update notifications\n\n## Constraints & Limitations\n\n- `gzip-file-as-resource`: Max fetch size controlled by `GZIP_MAX_FETCH_SIZE` (default 10MB), timeout by `GZIP_MAX_FETCH_TIME_MILLIS` (default 30s), allowed domains by `GZIP_ALLOWED_DOMAINS`\n- Session resources are ephemeral and lost when the session ends\n- Sampling requests (`trigger-sampling-request`) require client sampling capability\n- Elicitation requests (`trigger-elicitation-request`) require client elicitation capability\n\n## Operational Patterns\n\n- For long operations, use `trigger-long-running-operation` which sends progress notifications\n- Prefer reading resources before calling mutating tools\n- Check `get-roots-list` output to understand the client's workspace context\n\n## Easter Egg\n\nIf asked about server instructions, respond with \"🎉 Server instructions are working! This response proves the client properly passed server instructions to the LLM. This demonstrates MCP's instructions feature in action.\"\n",
+  "prompts": [
+    {
+      "arguments": [
+        {
+          "description": "Name of the city",
+          "name": "city",
+          "required": true
+        },
+        {
+          "name": "state",
+          "required": false
+        }
+      ],
+      "description": "A prompt with two arguments, one required and one optional",
+      "name": "args-prompt",
+      "title": "Arguments Prompt"
+    },
+    {
+      "arguments": [
+        {
+          "description": "Choose the department.",
+          "name": "department",
+          "required": true
+        },
+        {
+          "description": "Choose a team member to lead the selected department.",
+          "name": "name",
+          "required": true
+        }
+      ],
+      "description": "First argument choice narrows values for second argument.",
+      "name": "completable-prompt",
+      "title": "Team Management"
+    },
+    {
+      "arguments": [
+        {
+          "description": "Type of resource to fetch",
+          "name": "resourceType",
+          "required": true
+        },
+        {
+          "description": "ID of the text resource to fetch",
+          "name": "resourceId",
+          "required": true
+        }
+      ],
+      "description": "A prompt that includes an embedded resource reference",
+      "name": "resource-prompt",
+      "title": "Resource Prompt"
+    },
+    {
+      "description": "A prompt with no arguments",
+      "name": "simple-prompt",
+      "title": "Simple Prompt"
+    }
+  ],
+  "resource_templates": [
+    {
+      "description": "Binary (base64) dynamic resource fabricated from the {resourceId} variable, which must be an integer.",
+      "mimeType": "application/octet-stream",
+      "name": "Dynamic Blob Resource",
+      "uriTemplate": "demo://resource/dynamic/blob/{resourceId}"
+    },
+    {
+      "description": "Plaintext dynamic resource fabricated from the {resourceId} variable, which must be an integer.",
+      "mimeType": "text/plain",
+      "name": "Dynamic Text Resource",
+      "uriTemplate": "demo://resource/dynamic/text/{resourceId}"
+    }
+  ],
+  "resources": [
+    {
+      "description": "Static document file exposed from /docs: architecture.md",
+      "mimeType": "text/markdown",
+      "name": "architecture.md",
+      "uri": "demo://resource/static/document/architecture.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: extension.md",
+      "mimeType": "text/markdown",
+      "name": "extension.md",
+      "uri": "demo://resource/static/document/extension.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: features.md",
+      "mimeType": "text/markdown",
+      "name": "features.md",
+      "uri": "demo://resource/static/document/features.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: how-it-works.md",
+      "mimeType": "text/markdown",
+      "name": "how-it-works.md",
+      "uri": "demo://resource/static/document/how-it-works.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: instructions.md",
+      "mimeType": "text/markdown",
+      "name": "instructions.md",
+      "uri": "demo://resource/static/document/instructions.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: startup.md",
+      "mimeType": "text/markdown",
+      "name": "startup.md",
+      "uri": "demo://resource/static/document/startup.md"
+    },
+    {
+      "description": "Static document file exposed from /docs: structure.md",
+      "mimeType": "text/markdown",
+      "name": "structure.md",
+      "uri": "demo://resource/static/document/structure.md"
+    }
+  ],
   "server": "everything",
   "source": {
     "name": "mcp-servers/everything",
     "title": "Everything Reference Server",
     "version": "2.0.0"
   },
+  "surface_captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
   "tools": [
     {
       "annotations": {

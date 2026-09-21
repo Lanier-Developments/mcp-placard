@@ -3,15 +3,17 @@
 The exit code is the product of this package, so the mapping from "what changed" to
 "what number does CI see" lives in data here rather than in branching in the CLI.
 
-Precedence, when several findings apply at once: ``3 > 1 > 2 > 0``.
+**The exit status is a bitmask of finding categories** (0.3.0). Each category owns
+one bit — escalation 1, prompt change 2, removal 4, injection 8 — and the status is
+their OR. A run with an escalation and a prompt change exits ``3``; a consumer asks
+``(( rc & 2 ))`` for "does this need a prompt review" independent of everything else
+in the run. No category can mask another.
 
-* **3 first** because it also covers *server unreachable*. If the scan itself cannot
-  be trusted, no judgement made from it can be either, so it outranks everything.
-* **1 over 2** because an escalation is a capability change and a description change
-  is a prompt change; capability wins when both are present.
-* **2 never disappears.** It may be outranked in the exit code, but the finding is
-  always listed. AGENTS.md is explicit that a prompt change is always reviewable and
-  is not silenceable by tier configuration.
+That property is the one AGENTS.md's category doctrine promised and the earlier
+precedence rule (``3 > 1 > 2 > 0``) quietly withdrew: any precedence order is a
+ladder, and every ladder hides a category. A run that removed one R0 tool and added
+an R5 egress tool used to report ``3``, and a consumer gating on ``1`` missed the
+escalation. Now it reports ``5``.
 """
 
 from __future__ import annotations
@@ -21,19 +23,13 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..errors import (
+    DIFF_FINDING_BITS,
     EXIT_DESCRIPTION_CHANGE,
     EXIT_ESCALATION,
+    EXIT_INJECTION,
     EXIT_OK,
-    EXIT_REMOVED_OR_UNREACHABLE,
+    EXIT_REMOVED,
 )
-
-EXIT_PRECEDENCE: tuple[int, ...] = (
-    EXIT_REMOVED_OR_UNREACHABLE,
-    EXIT_ESCALATION,
-    EXIT_DESCRIPTION_CHANGE,
-    EXIT_OK,
-)
-"""Exit codes in descending precedence. The first one present in a run is reported."""
 
 
 class ChangeKind(StrEnum):
@@ -43,9 +39,15 @@ class ChangeKind(StrEnum):
     removed tool, schema change, and description change; resource and prompt drift is
     visible through ``surface_hash`` and is graded in a later phase.
 
-    ``SERVER_CAPABILITIES_CHANGED`` is the one server-level kind: it has no
-    associated tool (:attr:`Finding.tool` is ``None`` for it), because it describes
-    the server's declared MCP capabilities block, not any single tool.
+    ``SERVER_CAPABILITIES_CHANGED`` is a server-level kind: it has no associated
+    tool (:attr:`Finding.tool` is ``None`` for it), because it describes the server's
+    declared MCP capabilities block, not any single tool.
+
+    ``INJECTION_FINDING`` (Phase 3) is an injection heuristic match that is present
+    in the new manifest and absent from the old one, both analysed under the current
+    ruleset — see ``diff/engine.py`` on re-analysis. Its :attr:`Finding.tool` is the
+    owning tool for a tool-scoped element and ``None`` for server instructions,
+    prompts, and resources.
     """
 
     TOOL_ADDED = "tool_added"
@@ -54,32 +56,38 @@ class ChangeKind(StrEnum):
     TOOL_DESCRIPTION_CHANGED = "tool_description_changed"
     TIER_ESCALATED = "tier_escalated"
     SERVER_CAPABILITIES_CHANGED = "server_capabilities_changed"
+    INJECTION_FINDING = "injection_finding"
 
 
 CHANGE_EXIT_CODES: dict[ChangeKind, int] = {
-    ChangeKind.TOOL_REMOVED: EXIT_REMOVED_OR_UNREACHABLE,
+    ChangeKind.TOOL_REMOVED: EXIT_REMOVED,
     ChangeKind.TOOL_DESCRIPTION_CHANGED: EXIT_DESCRIPTION_CHANGE,
     ChangeKind.TIER_ESCALATED: EXIT_ESCALATION,
     ChangeKind.SERVER_CAPABILITIES_CHANGED: EXIT_ESCALATION,
+    ChangeKind.INJECTION_FINDING: EXIT_INJECTION,
 }
-"""The exit code for kinds whose code never varies by context.
+"""The finding bit for kinds whose bit never varies by context.
 
 ``TOOL_ADDED`` and ``TOOL_SCHEMA_CHANGED`` are deliberately absent: since Phase 2's
-diff narrowing, their code depends on where the tool's tier sits relative to the
+diff narrowing, their bit depends on where the tool's tier sits relative to the
 configured ceiling and on whether the schema change actually moved the tier — see
 ``diff/engine.py``, which sets :attr:`Finding.exit_code` explicitly for those two
 kinds rather than looking it up here. A ``Finding`` of any other kind always takes
-its code from this table; ``diff/engine.py`` still passes it explicitly (every
-``Finding`` sets its own ``exit_code`` at construction), but the value it passes is
-always exactly the one recorded here.
+its bit from this table.
 
 ``SERVER_CAPABILITIES_CHANGED`` → 1
     A capability delta can be entirely benign (an SDK-derived flag shifting on a
     client upgrade) or can mean the server started advertising something new to
     subscribe to or be notified through. Nothing in this build can tell those apart,
     so an ungraded delta is treated as an escalation rather than silently passed.
-    Note that this exit code only says *something in the capabilities block moved*;
-    it does not mean any tool's surface changed at all.
+    Note that this bit only says *something in the capabilities block moved*; it does
+    not mean any tool's surface changed at all.
+
+``INJECTION_FINDING`` → 8, its own bit rather than joining escalation
+    Injection findings almost always arrive alongside a prompt change, because the
+    attack lives in description text. The useful signal for a reviewer is precisely
+    the difference between "the prompt changed" (``2``) and "the prompt changed and
+    it looks hostile" (``2 | 8``). Folding injection into bit 0 would erase it.
 """
 
 
@@ -90,21 +98,21 @@ class Finding(BaseModel):
 
     kind: ChangeKind
     tool: str | None
-    """The tool this finding is about, or ``None`` for a server-level finding —
-    currently only :attr:`ChangeKind.SERVER_CAPABILITIES_CHANGED`."""
+    """The tool this finding is about, or ``None`` for a server-level finding."""
 
     summary: str
     """One line, safe to print. Scanned content is never interpolated raw — see
-    ``diff.engine``, which reports hashes rather than description text."""
+    ``diff.engine``, which reports hashes rather than description text, and
+    ``inject.render`` for the one place an excerpt is shown, escaped."""
 
     exit_code: int
-    """The exit code this finding on its own would produce. A real field, not a
-    kind-keyed lookup: ``TOOL_ADDED``'s code depends on the added tool's tier
-    against the configured ceiling, and ``TOOL_SCHEMA_CHANGED``'s depends on
+    """The finding bit this finding on its own contributes — one of
+    :data:`~mcp_placard.errors.DIFF_FINDING_BITS`, or ``0`` for a finding that is
+    reported but does not fail the build (a tool added below the ceiling). A real
+    field, not a kind-keyed lookup: ``TOOL_ADDED``'s bit depends on the added tool's
+    tier against the configured ceiling, and ``TOOL_SCHEMA_CHANGED``'s depends on
     whether the change actually moved the tier — both are context ``diff/engine.py``
-    has and this model does not. Every other kind's code is still exactly what
-    :data:`CHANGE_EXIT_CODES` records for it; the field exists so all kinds share
-    one mechanism rather than some being looked up and others computed."""
+    has and this model does not."""
 
 
 class DiffResult(BaseModel):
@@ -121,14 +129,23 @@ class DiffResult(BaseModel):
     it so the change is not invisible, and it does not affect the exit code.
     """
 
+    notes: list[str] = Field(default_factory=list)
+    """Diagnostics about how the comparison was made, for stderr — e.g. that one side
+    was re-analysed under the current ruleset before comparing (Phase 3 §4). Not
+    findings; they never affect the exit code."""
+
     @property
     def exit_code(self) -> int:
-        """The single exit code for this comparison, by documented precedence."""
-        codes = {finding.exit_code for finding in self.findings}
-        for candidate in EXIT_PRECEDENCE:
-            if candidate in codes:
-                return candidate
-        return EXIT_OK
+        """The exit status: the OR of every finding's bit.
+
+        Every value is a subset of :data:`~mcp_placard.errors.DIFF_FINDING_BITS`, so
+        the result is in ``0..15`` and each bit answers one question independently.
+        """
+        status = EXIT_OK
+        for finding in self.findings:
+            status |= finding.exit_code
+        assert status & ~sum(DIFF_FINDING_BITS) == 0, status  # noqa: S101 - invariant
+        return status
 
     def findings_of(self, kind: ChangeKind) -> list[Finding]:
         """Every finding of one kind, in report order."""

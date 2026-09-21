@@ -16,7 +16,8 @@ being present.
 It does not classify risk (`classify/`) — `build_manifest` always produces an
 unclassified manifest with `classification: []`; a caller runs
 `classify.classify_manifest` on the result to get real tiers. It does not score
-injection (`inject/`, Phase 3), and does not render reports (`report/`, Phase 4).
+injection (`inject/`), and does not render reports (`report/`, Phase 4). Format `2.2` adds
+`injection_findings` and `ruleset_version`, both covered by `classification_hash`.
 
 ## Layout
 

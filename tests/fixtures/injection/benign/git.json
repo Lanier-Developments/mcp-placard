@@ -1,0 +1,96 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "tool:git_add/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Adds file contents to the staging area"
+    },
+    {
+      "element": "tool:git_branch/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "List Git branches"
+    },
+    {
+      "element": "tool:git_branch/inputSchema/properties/branch_type/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/branch_type/description",
+      "text": "Whether to list local branches ('local'), remote branches ('remote') or all branches('all')."
+    },
+    {
+      "element": "tool:git_branch/inputSchema/properties/contains/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/contains/description",
+      "text": "The commit sha that branch should contain. Do not pass anything to this param if no commit sha is specified"
+    },
+    {
+      "element": "tool:git_branch/inputSchema/properties/not_contains/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/not_contains/description",
+      "text": "The commit sha that branch should NOT contain. Do not pass anything to this param if no commit sha is specified"
+    },
+    {
+      "element": "tool:git_branch/inputSchema/properties/repo_path/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/repo_path/description",
+      "text": "The path to the Git repository."
+    },
+    {
+      "element": "tool:git_checkout/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Switches branches"
+    },
+    {
+      "element": "tool:git_commit/description",
+      "pointer": "/surface/tools/3/description",
+      "text": "Records changes to the repository"
+    },
+    {
+      "element": "tool:git_create_branch/description",
+      "pointer": "/surface/tools/4/description",
+      "text": "Creates a new branch from an optional base branch"
+    },
+    {
+      "element": "tool:git_diff/description",
+      "pointer": "/surface/tools/5/description",
+      "text": "Shows differences between branches or commits"
+    },
+    {
+      "element": "tool:git_diff_staged/description",
+      "pointer": "/surface/tools/6/description",
+      "text": "Shows changes that are staged for commit"
+    },
+    {
+      "element": "tool:git_diff_unstaged/description",
+      "pointer": "/surface/tools/7/description",
+      "text": "Shows changes in the working directory that are not yet staged"
+    },
+    {
+      "element": "tool:git_log/description",
+      "pointer": "/surface/tools/8/description",
+      "text": "Shows the commit logs"
+    },
+    {
+      "element": "tool:git_log/inputSchema/properties/end_timestamp/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/end_timestamp/description",
+      "text": "End timestamp for filtering commits. Accepts: ISO 8601 format (e.g., '2024-01-15T14:30:25'), relative dates (e.g., '2 weeks ago', 'yesterday'), or absolute dates (e.g., '2024-01-15', 'Jan 15 2024')"
+    },
+    {
+      "element": "tool:git_log/inputSchema/properties/start_timestamp/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/start_timestamp/description",
+      "text": "Start timestamp for filtering commits. Accepts: ISO 8601 format (e.g., '2024-01-15T14:30:25'), relative dates (e.g., '2 weeks ago', 'yesterday'), or absolute dates (e.g., '2024-01-15', 'Jan 15 2024')"
+    },
+    {
+      "element": "tool:git_reset/description",
+      "pointer": "/surface/tools/9/description",
+      "text": "Unstages all staged changes"
+    },
+    {
+      "element": "tool:git_show/description",
+      "pointer": "/surface/tools/10/description",
+      "text": "Shows the contents of a commit"
+    },
+    {
+      "element": "tool:git_status/description",
+      "pointer": "/surface/tools/11/description",
+      "text": "Shows the working tree status"
+    }
+  ],
+  "server": "git"
+}

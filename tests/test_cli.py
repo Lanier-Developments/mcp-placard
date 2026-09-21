@@ -20,8 +20,10 @@ from mcp_placard.cli import main
 from mcp_placard.errors import (
     EXIT_DESCRIPTION_CHANGE,
     EXIT_ESCALATION,
+    EXIT_HASH_MISMATCH,
     EXIT_OK,
-    EXIT_REMOVED_OR_UNREACHABLE,
+    EXIT_REMOVED,
+    EXIT_UNREACHABLE,
     EXIT_USAGE,
 )
 from mcp_placard.manifest import render_manifest
@@ -57,7 +59,8 @@ def test_diff_identical_exits_zero(run, tmp_path: Path, capsys) -> None:  # type
 
 def test_diff_added_tool_exits_one(run, tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     old = _write(tmp_path / "old.json", tool_wire("a"))
-    new = _write(tmp_path / "new.json", tool_wire("a"), tool_wire("b"))
+    purge = {"type": "object", "properties": {"force": {"type": "boolean"}}}
+    new = _write(tmp_path / "new.json", tool_wire("a"), tool_wire("b", input_schema=purge))
     assert run("diff", str(old), str(new)) == EXIT_ESCALATION
     assert "tool_added" in capsys.readouterr().err
 
@@ -72,7 +75,7 @@ def test_diff_description_change_exits_two(run, tmp_path: Path, capsys) -> None:
 def test_diff_removed_tool_exits_three(run, tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     old = _write(tmp_path / "old.json", tool_wire("a"), tool_wire("b"))
     new = _write(tmp_path / "new.json", tool_wire("a"))
-    assert run("diff", str(old), str(new)) == EXIT_REMOVED_OR_UNREACHABLE
+    assert run("diff", str(old), str(new)) == EXIT_REMOVED
     assert "tool_removed" in capsys.readouterr().err
 
 
@@ -143,7 +146,7 @@ def test_verify_detects_tampering_and_exits_one(run, tmp_path: Path, capsys) -> 
     path = tmp_path / "tampered.json"
     path.write_text(json.dumps(document), encoding="utf-8")
 
-    assert run("verify", str(path)) == EXIT_ESCALATION
+    assert run("verify", str(path)) == EXIT_HASH_MISMATCH
     err = capsys.readouterr().err
     assert "hash_mismatch" in err
     assert "description_hash" in err
@@ -169,7 +172,7 @@ def test_verify_reports_every_mismatch(run, tmp_path: Path, capsys) -> None:  # 
 
 
 def test_scan_on_an_unreachable_server_exits_three(run, capsys) -> None:  # type: ignore[no-untyped-def]
-    assert run("scan", "placard-no-such-binary-xyz") == EXIT_REMOVED_OR_UNREACHABLE
+    assert run("scan", "placard-no-such-binary-xyz") == EXIT_UNREACHABLE
     assert "error:" in capsys.readouterr().err
 
 

@@ -27,7 +27,7 @@ manifest, and fails CI when the next scan disagrees with the last one.
 **Placard never invokes a tool.** Enumeration and static analysis only. No code path may
 call `tools/call`; `scripts/check_no_tool_invocation.py` enforces that mechanically.
 
-## Status: Phases 1, 2, and 2.1 complete
+## Status: Phases 1, 2, 2.1, and 3 complete
 
 `scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, description, and
 declared-annotation signals combine as a monotonic maximum (never a weighted score), reconciled
@@ -37,8 +37,13 @@ evidence, and `CHAIN_EXFIL` is a predicate over kinds. The full ladder, its work
 the rules the classifier implements are in [`docs/TAXONOMY.md`](docs/TAXONOMY.md). `diff` grades
 tier increases and gates new-tool escalation on a configurable ceiling; a per-tool
 `classification` entry never enters `surface_hash` — a classifier fix must never move that hash
-for a server that did not change. Injection heuristics (Phase 3), SARIF/GitHub Action packaging
-(Phase 4), and manifest signing (Phase 5) are not yet built.
+for a server that did not change. `scan` also runs seven deterministic **injection heuristics**
+over every model-facing string — tool and schema-property descriptions, server instructions,
+prompts, resources — flagging text that reaches outside its own scope, with a false-positive
+rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION.md)). `diff`
+re-analyses any manifest produced under an older ruleset before comparing, so a Placard upgrade
+never produces findings on a server that did not change. SARIF/GitHub Action packaging (Phase 4)
+and manifest signing (Phase 5) are not yet built.
 
 ### Against real servers
 
@@ -121,21 +126,24 @@ leaves the tier unchanged.
 ### Exit codes
 
 A per-command contract, pinned in [`AGENTS.md`](AGENTS.md) and in
-`tests/test_exit_code_contract.py`. Codes are **categories, not a severity ladder** — `2` is a
-different review path from `1`, not a worse outcome than it, and the same number can mean
-different things for different commands.
+`tests/test_exit_code_contract.py`. `diff`'s status is a **bitmask** of finding categories, OR'd
+together, so a consumer can ask about one category regardless of what else happened in the run.
 
-| Code | `scan` | `diff` | `verify` |
-| --- | --- | --- | --- |
-| 0 | enumerated successfully | no change / below ceiling | every hash matches |
-| 1 | — | escalation — new tool at/above ceiling, tier increase, capabilities change | a hash does not match its content |
-| 2 | — | description change on an existing tool (always reviewable, never silenceable) | — |
-| 3 | server unreachable | tool removed | — |
-| 10 | usage/configuration error | usage/configuration error | usage/configuration error |
+| Command | Codes |
+| --- | --- |
+| `scan` | 0 enumerated · 3 server unreachable · 64 usage error |
+| `diff` | bits: 1 escalation · 2 prompt change · 4 tool removed · 8 new injection finding · 64 usage error (exclusive) |
+| `verify` | 0 every hash matches · 1 a hash does not match · 64 usage error |
 
-`diff`'s codes precedence-order as `3 > 1 > 2 > 0` when several apply at once; every finding is
-still listed on stderr regardless of which code wins. Codes `20`-`29` are reserved for `report`
-(Phase 4, not yet implemented).
+```bash
+placard diff baseline.json current.json
+rc=$?
+(( rc & 2 )) && echo "a description changed — route to prompt review"
+(( rc & 1 )) && echo "blast radius escalated — route to security review"
+```
+
+Codes `100`-`109` are reserved for `report` (Phase 4). Read a code only in the context of the command
+that produced it: `verify`'s `1` and `diff`'s `1` share a number, not a meaning.
 
 ## The manifest
 
@@ -144,9 +152,10 @@ body. No timestamp, no scan target — two scans of an unchanged server are byte
 negotiated protocol version and SDK version *are* recorded, but only inside `environment`, which
 no hash ever covers.
 
-Manifest format `2.1`; `2.0` and `1.0` documents still load, verify, and diff — a stored `2.0`
-baseline's `classification_hash` reproduces under this build because an empty `kinds` list is
-serialized as absent.
+Manifest format `2.2`; `2.1`, `2.0`, and `1.0` documents still load, verify, and diff. A stored
+baseline's `classification_hash` reproduces under this build because absent fields serialize as
+absent and a missing `ruleset_version` selects the older hash shape; `diff` then re-analyses the
+older side under the current ruleset before comparing.
 
 Independent SHA-256 hashes, all required, never collapsed:
 
@@ -154,7 +163,7 @@ Independent SHA-256 hashes, all required, never collapsed:
 - per-tool `schema_hash` — the input schema only
 - per-tool `description_hash` — the description text only
 - `capabilities_hash` — the server's declared MCP capabilities block only
-- `classification_hash` — Placard's own tier judgment (`classification`) only
+- `classification_hash` — Placard's own analysis: `classification`, `injection_findings`, and the `ruleset_version` that produced them
 
 Splitting schema from description is what makes *"the server rewrote its prompt but kept the API
 identical"* a visible event rather than a silent one. `capabilities` and `classification` are
@@ -187,6 +196,7 @@ placard scan "python -m tests.mock_server" --out tests/fixtures/mock_server_mani
 - [`AGENTS.md`](AGENTS.md) — the operating spec
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — what Placard does and does not defend against
 - [`docs/TAXONOMY.md`](docs/TAXONOMY.md) — the R0-R5 risk ladder, the kind axis, Rules A-H, worked examples
+- [`docs/INJECTION.md`](docs/INJECTION.md) — the seven injection classes, the corpus, the ratchet
 
 ## License
 

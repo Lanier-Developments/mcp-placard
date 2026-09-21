@@ -27,17 +27,32 @@ It does not print. `cli.py` prints the findings this package returns.
 Codes 3 and 10 also arrive from outside this package: an unreachable server is a
 `ConnectionFailure` raised in `transport/`, and a bad invocation is a `UsageError`.
 
-### Precedence
+### Combination — a bitmask, not a precedence
 
-When several findings apply at once, the reported code is `3 > 1 > 2 > 0`.
+When several findings apply at once, the reported status is the **OR of their bits**:
+escalation `1`, prompt change `2`, removal `4`, injection `8`. No category masks
+another.
 
-- **3 outranks everything** because it also covers *server unreachable*. If the scan
-  cannot be trusted, nothing derived from it can be either.
-- **1 outranks 2** because a capability change outranks a prompt change when both
-  are present.
-- **2 is never suppressed.** It can be outranked in the returned code, but the
-  finding is always emitted. AGENTS.md: a prompt change is always reviewable and is
-  not silenceable by tier configuration.
+The pre-0.3.0 rule was a precedence, `3 > 1 > 2 > 0`, justified by "3 also covers
+server unreachable." That justification belonged to `scan` — `diff` reads two files
+and never meets a server — and the precedence itself was a ladder that hid
+categories: one R0 tool removed plus one R5 egress tool added reported `3`, and a
+consumer gating on `1` missed the escalation. Under the bitmask that run reports `5`.
+
+- **2 is never suppressed.** Its bit is set whatever else happened, and the finding
+  is always emitted. AGENTS.md: a prompt change is always reviewable and is not
+  silenceable by tier configuration.
+- **8 is its own bit.** Injection findings almost always arrive alongside a prompt
+  change; `2` versus `2 | 8` is the distinction a reviewer needs.
+
+## Re-analysis before comparison (Phase 3 §4)
+
+A side whose recorded `ruleset_version` is not this build's is re-analysed from its
+stored surface with the current rules before anything is compared, and the result
+says so in `DiffResult.notes`. Without this, every Placard upgrade that improved a
+rule produced findings on servers that did not change. Recorded overrides are
+re-applied. Injection findings are then paired on `(element, class, excerpt)`, never
+on list position, and only a finding with no counterpart on the old side is new.
 
 ## Detection (Phase 2 diff narrowing)
 

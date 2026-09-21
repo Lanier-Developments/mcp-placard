@@ -1,0 +1,46 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "server:instructions",
+      "pointer": "/surface/instructions",
+      "text": "DeepWiki MCP provides AI-powered documentation for GitHub repositories.\n\nAvailable tools:\n- read_wiki_structure: Get a list of documentation topics for a repository\n- read_wiki_contents: View full documentation about a repository\n- ask_question: Ask any question about a repository and get an AI-powered answer\n- list_available_repos: List your available repositories (private mode only)\n- generate_wiki: Generate a codebase wiki for a repository — only use when explicitly requested by the user (private mode only)\n- devin_automation_manage: Manage Devin automations — list, get, create, update, delete, or fetch the trigger event schemas (private mode only)\n- devin_billing_tag_manage: Manage Devin billing tags (groupings of Devin sessions for usage tracking) — list, get, create, assign sessions, look up session tags (private mode only)\n- devin_blueprint_test: Test a candidate blueprint YAML in an authoring VM: start → run initialize → fix → run initialize again (clean VM) → run maintenance → then persist with update_environment_config (private mode only)\n- devin_code_scan_manage: Manage Devin code scans, sometimes referred to as 'security scans' or 'Devin Security Swarm' — list scans, list findings, list profiles, get a profile, create a scan, remediate a finding (private mode only)\n- devin_knowledge_manage: Manage Devin knowledge notes and suggestions — list, search, get, create, update, delete notes, view folder structure, list/view/dismiss knowledge suggestions (private mode only)\n- devin_mcp_server_manage: Manage org MCP server installations — install (marketplace or custom), update, enable, disable, delete (private mode only)\n- devin_oncall_manage: Devin Oncall operations — get an Oncall report's current responder membership, page through a responder's open issues, and ingest a dashboard into Oncall knowledge (private mode only)\n- devin_playbook_manage: Manage Devin playbooks — list, get, create, update, delete (private mode only)\n- devin_review_manage: Trigger a Devin Review for a pull request, fetch the latest review status, or fetch a completed review's findings (private mode only)\n- devin_schedule_manage: Manage scheduled Devin sessions — list, get, create, update, delete (private mode only)\n- devin_session_create: Create one or more child Devin sessions (private mode only)\n- devin_session_interact: Manage a Devin session — get status, send messages, sleep/terminate/archive/unarchive, read messages & attachments, manage tags (private mode only)\n- devin_session_events: Inspect session events — list summaries, fetch full details, or search event contents (private mode only)\n- devin_session_search: Search and filter Devin sessions (private mode only)\n- devin_user_list: List the organization's users by membership kind (direct members or IdP-group members) (private mode only)\n- devin_list_integrations: List all native integrations and MCP servers with their status and settings URLs (private mode only)\n- devin_find_setting: Find Devin webapp settings pages and deep-link URLs for them (private mode only)\n"
+    },
+    {
+      "element": "tool:ask_question/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Ask any question about a GitHub repository and get an AI-powered, context-grounded response."
+    },
+    {
+      "element": "tool:ask_question/inputSchema/properties/question/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/question/description",
+      "text": "The question to ask about the repository."
+    },
+    {
+      "element": "tool:ask_question/inputSchema/properties/repoName/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/repoName/description",
+      "text": "GitHub repository or list of repositories (max 10) in owner/repo format."
+    },
+    {
+      "element": "tool:read_wiki_contents/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "View documentation about a GitHub repository."
+    },
+    {
+      "element": "tool:read_wiki_contents/inputSchema/properties/repoName/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/repoName/description",
+      "text": "GitHub repository in owner/repo format (e.g. \"facebook/react\")."
+    },
+    {
+      "element": "tool:read_wiki_structure/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Get a list of documentation topics for a GitHub repository."
+    },
+    {
+      "element": "tool:read_wiki_structure/inputSchema/properties/repoName/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/repoName/description",
+      "text": "GitHub repository in owner/repo format (e.g. \"facebook/react\")."
+    }
+  ],
+  "server": "deepwiki"
+}

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from mcp_placard.classify import classify_manifest
+from mcp_placard.analysis import analyze
 from mcp_placard.diff import diff_manifests
 from mcp_placard.errors import EXIT_OK
 from mcp_placard.manifest import build_manifest, hash_mismatches, load_manifest, render_manifest
@@ -31,7 +31,7 @@ pytestmark = pytest.mark.slow
 def _fresh_scan():  # type: ignore[no-untyped-def]
     """The same two-step pipeline ``placard scan`` runs — build, then classify —
     since that is the command the fixture-regeneration instructions below use."""
-    return classify_manifest(build_manifest(scan_target(mock_server_target(), timeout=60)))
+    return analyze(build_manifest(scan_target(mock_server_target(), timeout=60)))
 
 
 def test_the_checked_in_fixture_exists() -> None:

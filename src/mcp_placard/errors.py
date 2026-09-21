@@ -1,25 +1,63 @@
 """Typed exceptions for Placard.
 
 Library code raises these and never prints, never calls ``sys.exit``. ``cli.py`` is
-the only module allowed to translate an exception into an exit code — see
-``mcp_placard.cli.EXIT_CODES`` and the exit-code table in AGENTS.md.
+the only module allowed to translate an exception into an exit code — see the
+exit-code table in AGENTS.md.
 
 Each exception carries ``exit_code`` so the translation is a property of the error,
 not a chain of ``isinstance`` checks scattered through the CLI.
+
+Exit codes are a **per-command contract** (AGENTS.md, "Exit Codes"). ``diff``'s codes
+are a bitmask of finding categories, OR'd together, so no category can mask another;
+``scan``'s and ``verify``'s are plain values. Usage error is ``64`` on every command
+and is exclusive — a usage error means no comparison happened, so it is never OR'd
+with a finding bit.
 """
 
 from __future__ import annotations
 
 EXIT_OK = 0
-EXIT_ESCALATION = 1
-EXIT_DESCRIPTION_CHANGE = 2
-EXIT_REMOVED_OR_UNREACHABLE = 3
-EXIT_USAGE = 10
 
-# 20-29 are reserved for `report` (Phase 4, not yet implemented). AGENTS.md: exit
-# codes are a per-command interface Phase 4's GitHub Action consumes, not a
-# convention — nothing in `scan`, `diff`, or `verify` may claim a code in this range.
-EXIT_REPORT_RESERVED = range(20, 30)
+# ---- diff: finding-category bits (Phase 3 ruling, 0.3.0) -----------------------
+EXIT_ESCALATION = 1
+"""Bit 0 — tier increase, new tool at or above ``--ceiling``, capabilities changed."""
+EXIT_DESCRIPTION_CHANGE = 2
+"""Bit 1 — description changed on an existing element. A prompt change; never
+silenceable by tier configuration."""
+EXIT_REMOVED = 4
+"""Bit 2 — tool removed."""
+EXIT_INJECTION = 8
+"""Bit 3 — an injection finding new in this diff (Phase 3)."""
+
+DIFF_FINDING_BITS: tuple[int, ...] = (
+    EXIT_ESCALATION,
+    EXIT_DESCRIPTION_CHANGE,
+    EXIT_REMOVED,
+    EXIT_INJECTION,
+)
+"""Every bit ``diff`` may set. A ``diff`` exit status is the OR of a subset of these,
+so it ranges over 0-15; ``64`` is the only other value it can produce."""
+
+# ---- scan --------------------------------------------------------------------------
+EXIT_UNREACHABLE = 3
+"""``scan``: server unreachable, or enumeration failed after a successful handshake.
+``scan``'s codes are its own — 3 here has never meant a ``diff`` category."""
+
+# ---- verify ------------------------------------------------------------------------
+EXIT_HASH_MISMATCH = 1
+"""``verify``: at least one recorded hash does not match its content. Shares a number
+with ``EXIT_ESCALATION`` and nothing else — read a code only in the context of the
+command that produced it."""
+
+# ---- all commands ------------------------------------------------------------------
+EXIT_USAGE = 64
+"""Usage or configuration error, every command. Exclusive: never combined with a
+finding bit. Moved from 10 in 0.3.0 because 10 collides with ``8 | 2``."""
+
+EXIT_REPORT_RESERVED = range(100, 110)
+"""Reserved for ``report`` (Phase 4, not yet implemented). Nothing in ``scan``,
+``diff``, or ``verify`` may claim a code in this range; it sits clear of any future
+fifth finding bit (16, 32) and of ``64``."""
 
 
 class PlacardError(Exception):
@@ -41,7 +79,7 @@ class UsageError(PlacardError):
 class TransportError(PlacardError):
     """Base class for failures in reaching or speaking to a target server."""
 
-    exit_code = EXIT_REMOVED_OR_UNREACHABLE
+    exit_code = EXIT_UNREACHABLE
 
 
 class TransportResolutionError(UsageError):
@@ -55,9 +93,8 @@ class TransportResolutionError(UsageError):
 class ConnectionFailure(TransportError):
     """The target server could not be reached, spawned, or initialized.
 
-    Maps to exit code 3 — "tool removed or server unreachable". A server that has
-    become unreachable is indistinguishable, from the consumer's point of view, from
-    a server that withdrew its entire surface.
+    Maps to ``scan`` exit code 3. Nothing derived from a scan that never happened can
+    be trusted, and the code says so before any manifest is written.
     """
 
 
@@ -91,7 +128,7 @@ class HashMismatchError(ManifestError):
     field so the CLI can report all of them, not just the first.
     """
 
-    exit_code = EXIT_ESCALATION
+    exit_code = EXIT_HASH_MISMATCH
 
     def __init__(self, mismatches: list[str]) -> None:
         self.mismatches = list(mismatches)

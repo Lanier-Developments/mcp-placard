@@ -104,9 +104,9 @@ jobs:
         run: placard verify current_manifest.json
 
       - name: Diff the fresh scan against the checked-in manifest
-        # Exit codes, per AGENTS.md: 0 no change, 1 escalation, 2 description change,
-        # 3 tool removed or server unreachable, 10 usage error. Any nonzero code here
-        # means the mock server's surface drifted without the fixture being updated.
+        # Exit codes, per AGENTS.md: a bitmask — 1 escalation, 2 description change,
+        # 4 tool removed, 8 injection; 64 usage error. Any nonzero code here means the
+        # mock server's surface drifted without the fixture being updated.
         run: placard diff tests/fixtures/mock_server_manifest.json current_manifest.json
 
       - name: Confirm the scan is byte-for-byte reproducible
@@ -167,13 +167,23 @@ jobs:
           set -e
           test "$code" -eq 1 || { echo "expected exit 1, got $code"; exit 1; }
 
-      - name: A removed tool must exit 3
+      - name: A removed tool must set bit 4 and nothing else
         run: |
           set +e
           placard diff tests/fixtures/mock_server_manifest.json removed.json
           code=$?
           set -e
-          test "$code" -eq 3 || { echo "expected exit 3, got $code"; exit 1; }
+          test "$code" -eq 4 || { echo "expected exit 4, got $code"; exit 1; }
+
+      - name: Mixed findings OR their bits — no category masks another
+        run: |
+          placard scan "python -m tests.mock_server --add-tool --description-variant b" \
+            --out added_and_described.json
+          set +e
+          placard diff tests/fixtures/mock_server_manifest.json added_and_described.json
+          code=$?
+          set -e
+          test "$code" -eq 3 || { echo "expected exit 3 (1|2), got $code"; exit 1; }
 
       - name: A tampered manifest must fail verification
         run: |

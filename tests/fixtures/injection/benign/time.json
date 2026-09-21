@@ -1,0 +1,36 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "tool:convert_time/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Convert time between timezones"
+    },
+    {
+      "element": "tool:convert_time/inputSchema/properties/source_timezone/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/source_timezone/description",
+      "text": "Source IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'America/New_York' as local timezone if no source timezone provided by the user."
+    },
+    {
+      "element": "tool:convert_time/inputSchema/properties/target_timezone/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/target_timezone/description",
+      "text": "Target IANA timezone name (e.g., 'Asia/Tokyo', 'America/San_Francisco'). Use 'America/New_York' as local timezone if no target timezone provided by the user."
+    },
+    {
+      "element": "tool:convert_time/inputSchema/properties/time/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/time/description",
+      "text": "Time to convert in 24-hour format (HH:MM)"
+    },
+    {
+      "element": "tool:get_current_time/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "Get current time in a specific timezone"
+    },
+    {
+      "element": "tool:get_current_time/inputSchema/properties/timezone/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/timezone/description",
+      "text": "IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'America/New_York' as local timezone if no timezone provided by the user."
+    }
+  ],
+  "server": "time"
+}

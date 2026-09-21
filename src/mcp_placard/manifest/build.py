@@ -28,7 +28,7 @@ from pydantic import ValidationError
 
 from .. import MANIFEST_VERSION
 from ..errors import ManifestValidationError
-from .canonical import canonical_text
+from .canonical import JsonValue, canonical_text
 from .hashing import (
     hash_capabilities,
     hash_classification,
@@ -37,6 +37,7 @@ from .hashing import (
     hash_value,
 )
 from .models import (
+    InjectionFinding,
     Manifest,
     PromptEntry,
     ResourceEntry,
@@ -99,19 +100,53 @@ def compute_capabilities_hash(capabilities: WireDict) -> str:
     return hash_capabilities(capabilities)
 
 
-def classification_document(classification: list[ToolClassification]) -> list[WireDict]:
-    """Render classification entries to the plain-JSON list ``classification_hash``
-    is taken over, sorted by tool name so tampering with entry order is caught too."""
-    return [
+def classification_document(
+    classification: list[ToolClassification],
+    injection_findings: list[InjectionFinding] | None = None,
+    ruleset_version: str | None = None,
+) -> JsonValue:
+    """Render the analysis body ``classification_hash`` is taken over.
+
+    Two shapes, decided by ``ruleset_version``:
+
+    * ``None`` — the pre-2.2 shape: the classification list alone, sorted by tool
+      name so tampering with entry order is caught too. Every ``1.0``/``2.0``/``2.1``
+      document, and a manifest classified but not yet run through
+      :func:`mcp_placard.analysis.analyze`, hashes this way — which is what keeps a
+      stored older baseline verifying under this build.
+    * set — the 2.2 shape: ``{"classification": [...], "injection_findings": [...],
+      "ruleset_version": "..."}``, so the injection findings and the ruleset that
+      produced everything are tamper-evident too.
+    """
+    entries = [
         entry.model_dump(by_alias=True, exclude_none=True, mode="json")
         for entry in sorted(classification, key=lambda entry: entry.tool)
     ]
+    if ruleset_version is None:
+        return entries
+    findings = [
+        finding.model_dump(by_alias=True, exclude_none=True, mode="json")
+        for finding in sorted(
+            injection_findings or [], key=lambda f: (f.element, f.start, f.pattern_class)
+        )
+    ]
+    return {
+        "classification": entries,
+        "injection_findings": findings,
+        "ruleset_version": ruleset_version,
+    }
 
 
-def compute_classification_hash(classification: list[ToolClassification]) -> str:
-    """SHA-256 over Placard's own per-tool classification, independent of every
-    other hash in the manifest."""
-    return hash_classification(classification_document(classification))
+def compute_classification_hash(
+    classification: list[ToolClassification],
+    injection_findings: list[InjectionFinding] | None = None,
+    ruleset_version: str | None = None,
+) -> str:
+    """SHA-256 over Placard's own analysis of the surface, independent of every
+    other hash in the manifest. See :func:`classification_document` for the shape."""
+    return hash_classification(
+        classification_document(classification, injection_findings, ruleset_version)
+    )
 
 
 def build_surface(raw: RawSurface) -> ServerSurface:

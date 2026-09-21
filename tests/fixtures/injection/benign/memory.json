@@ -1,0 +1,141 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "tool:add_observations/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Add new observations to existing entities in the knowledge graph"
+    },
+    {
+      "element": "tool:add_observations/inputSchema/properties/observations/items/properties/contents/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/observations/items/properties/contents/description",
+      "text": "An array of observation contents to add"
+    },
+    {
+      "element": "tool:add_observations/inputSchema/properties/observations/items/properties/entityName/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/observations/items/properties/entityName/description",
+      "text": "The name of the entity to add the observations to"
+    },
+    {
+      "element": "tool:create_entities/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "Create multiple new entities in the knowledge graph"
+    },
+    {
+      "element": "tool:create_entities/inputSchema/properties/entities/items/properties/entityType/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/entities/items/properties/entityType/description",
+      "text": "The type of the entity"
+    },
+    {
+      "element": "tool:create_entities/inputSchema/properties/entities/items/properties/name/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/entities/items/properties/name/description",
+      "text": "The name of the entity"
+    },
+    {
+      "element": "tool:create_entities/inputSchema/properties/entities/items/properties/observations/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/entities/items/properties/observations/description",
+      "text": "An array of observation contents associated with the entity"
+    },
+    {
+      "element": "tool:create_relations/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Create multiple new relations between entities in the knowledge graph. Relations should be in active voice"
+    },
+    {
+      "element": "tool:create_relations/inputSchema/properties/relations/items/properties/from/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/relations/items/properties/from/description",
+      "text": "The name of the entity where the relation starts"
+    },
+    {
+      "element": "tool:create_relations/inputSchema/properties/relations/items/properties/relationType/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/relations/items/properties/relationType/description",
+      "text": "The type of the relation"
+    },
+    {
+      "element": "tool:create_relations/inputSchema/properties/relations/items/properties/to/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/relations/items/properties/to/description",
+      "text": "The name of the entity where the relation ends"
+    },
+    {
+      "element": "tool:delete_entities/description",
+      "pointer": "/surface/tools/3/description",
+      "text": "Delete multiple entities and their associated relations from the knowledge graph"
+    },
+    {
+      "element": "tool:delete_entities/inputSchema/properties/entityNames/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/entityNames/description",
+      "text": "An array of entity names to delete"
+    },
+    {
+      "element": "tool:delete_observations/description",
+      "pointer": "/surface/tools/4/description",
+      "text": "Delete specific observations from entities in the knowledge graph"
+    },
+    {
+      "element": "tool:delete_observations/inputSchema/properties/deletions/items/properties/entityName/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/deletions/items/properties/entityName/description",
+      "text": "The name of the entity containing the observations"
+    },
+    {
+      "element": "tool:delete_observations/inputSchema/properties/deletions/items/properties/observations/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/deletions/items/properties/observations/description",
+      "text": "An array of observations to delete"
+    },
+    {
+      "element": "tool:delete_relations/description",
+      "pointer": "/surface/tools/5/description",
+      "text": "Delete multiple relations from the knowledge graph"
+    },
+    {
+      "element": "tool:delete_relations/inputSchema/properties/relations/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/relations/description",
+      "text": "An array of relations to delete"
+    },
+    {
+      "element": "tool:delete_relations/inputSchema/properties/relations/items/properties/from/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/relations/items/properties/from/description",
+      "text": "The name of the entity where the relation starts"
+    },
+    {
+      "element": "tool:delete_relations/inputSchema/properties/relations/items/properties/relationType/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/relations/items/properties/relationType/description",
+      "text": "The type of the relation"
+    },
+    {
+      "element": "tool:delete_relations/inputSchema/properties/relations/items/properties/to/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/relations/items/properties/to/description",
+      "text": "The name of the entity where the relation ends"
+    },
+    {
+      "element": "tool:open_nodes/description",
+      "pointer": "/surface/tools/6/description",
+      "text": "Open specific nodes in the knowledge graph by their names"
+    },
+    {
+      "element": "tool:open_nodes/inputSchema/properties/names/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/names/description",
+      "text": "An array of entity names to retrieve"
+    },
+    {
+      "element": "tool:read_graph/description",
+      "pointer": "/surface/tools/7/description",
+      "text": "Read the entire knowledge graph"
+    },
+    {
+      "element": "tool:search_nodes/description",
+      "pointer": "/surface/tools/8/description",
+      "text": "Search for nodes in the knowledge graph based on a query"
+    },
+    {
+      "element": "tool:search_nodes/inputSchema/properties/query/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/query/description",
+      "text": "The search query to match against entity names, types, and observation content"
+    },
+    {
+      "element": "resource:memory:~1~1knowledge-graph/description",
+      "pointer": "/surface/resources/0/description",
+      "text": "The full knowledge graph with all entities and relations"
+    }
+  ],
+  "server": "memory"
+}

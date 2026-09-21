@@ -1,10 +1,15 @@
 {
   "captured": "2026-09-17",
+  "instructions": null,
+  "prompts": [],
+  "resource_templates": [],
+  "resources": [],
   "server": "playwright",
   "source": {
     "name": "Playwright",
     "version": "1.64.0-alpha-2026-09-14"
   },
+  "surface_captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
   "tools": [
     {
       "annotations": {

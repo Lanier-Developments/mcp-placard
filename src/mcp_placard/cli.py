@@ -17,27 +17,29 @@ runner what to do about it.
 Exit codes are a per-command contract, pinned in AGENTS.md and in
 ``tests/test_exit_code_contract.py`` — Phase 4's GitHub Action consumes them, so a
 code changing meaning for a command is a breaking change to that interface, not an
-implementation detail. They are **categories, not a severity ladder**: ``2`` is a
-different review path from ``1``, not a worse outcome than it. The same number can
-mean different things for different commands — ``verify``'s ``1`` is an integrity
-failure, ``diff``'s ``1`` is a risk escalation — so read a code only in the context
-of the command that produced it.
+implementation detail. ``diff``'s status is a **bitmask of finding categories**, OR'd
+together so no category can mask another; the same number can mean different things
+for different commands — ``verify``'s ``1`` is an integrity failure, ``diff``'s ``1``
+is the escalation bit — so read a code only in the context of the command that
+produced it.
 
 ======  ============  =================================================================
 Code    Command(s)    Condition
 ======  ============  =================================================================
-``0``   all            success / no change
-``1``   ``diff``       escalation — new tool, schema change, or capabilities change
+``0``   all            success / no findings
+``1``   ``diff``       bit 0 — escalation: tier increase, new tool at or above the
+                       ceiling, capabilities changed
+``2``   ``diff``       bit 1 — prompt change: description changed on an existing
+                       element. Never silenceable by tier configuration
+``4``   ``diff``       bit 2 — tool removed
+``8``   ``diff``       bit 3 — injection finding new in this diff
 ``1``   ``verify``     a recorded hash does not match its content
-``2``   ``diff``       description change on an existing tool — always reviewable,
-                       never silenceable by tier configuration
 ``3``   ``scan``       server unreachable, or enumeration failed after handshake
-``3``   ``diff``       tool removed
-``10``  all            usage or configuration error
+``64``  all            usage or configuration error — exclusive, never OR'd
 ======  ============  =================================================================
 
-``20``-``29`` are reserved for ``report`` (Phase 4, not yet implemented) and claimed
-by no other command.
+``100``-``109`` are reserved for ``report`` (Phase 4, not yet implemented) and
+claimed by no other command.
 """
 
 from __future__ import annotations
@@ -49,7 +51,7 @@ from typing import Annotated
 import typer
 
 from . import MANIFEST_VERSION, __version__
-from .classify import classify_manifest
+from .analysis import analyze
 from .classify.overrides import load_overrides
 from .diff import diff_manifests
 from .diff.engine import DEFAULT_CEILING
@@ -59,6 +61,7 @@ from .errors import (
     HashMismatchError,
     PlacardError,
 )
+from .inject.render import stderr_line
 from .manifest import (
     Manifest,
     Tier,
@@ -139,7 +142,9 @@ def scan(
     raw = scan_target(target, transport=transport, timeout=timeout)
     manifest = build_manifest(raw)
     overrides = load_overrides(override) if override is not None else []
-    manifest = classify_manifest(manifest, overrides=overrides)
+    manifest = analyze(manifest, overrides=overrides)
+    for finding in manifest.injection_findings:
+        _err(f"[injection] {stderr_line(finding)}")
     _emit_manifest(manifest, out)
 
 
@@ -163,11 +168,12 @@ def diff_command(
         ),
     ] = False,
 ) -> None:
-    """Compare two manifests. The exit code is the result.
+    """Compare two manifests. The exit status is a bitmask of what was found.
 
-    0 = no change, 1 = escalation, 2 = description change on an existing tool,
-    3 = tool removed. When several apply, the highest precedence (3 > 1 > 2) is
-    reported; every finding is still listed on stderr.
+    1 = escalation, 2 = description change (a prompt change), 4 = tool removed,
+    8 = new injection finding — OR'd together, so an escalation alongside a prompt
+    change exits 3 and `(( rc & 2 ))` answers "does this need a prompt review" on
+    its own. 0 = nothing above the ceiling. Every finding is listed on stderr.
     """
     result = diff_manifests(
         load_manifest(old),
@@ -176,6 +182,8 @@ def diff_command(
         escalate_schema_changes=escalate_schema_changes,
     )
 
+    for note in result.notes:
+        _err(f"note: {note}")
     for finding in result.findings:
         _err(f"[{finding.kind.value}] {finding.summary}")
 

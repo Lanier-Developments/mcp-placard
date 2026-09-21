@@ -52,6 +52,9 @@ correct tier turns the argument into a regression guard.
 - **The self-gating fixture is regenerated deliberately, never to make CI green.** If
   `tests/fixtures/mock_server_manifest.json` needs to change, say why in the PR.
 - **Coverage floor is 85% on `src/`.** Do not lower it.
+- **The injection ratchet only moves forward.** `tests/fixtures/injection/baseline.json` is
+  edited only in a commit whose message says the numbers improved, and the annotated hard
+  cases never flag. A new heuristic needs its near-miss in the benign corpus first.
 
 ## Taxonomy changes
 

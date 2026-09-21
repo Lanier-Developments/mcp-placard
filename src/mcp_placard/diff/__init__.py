@@ -15,7 +15,6 @@ from __future__ import annotations
 from .engine import diff_manifests, tier_escalation_findings
 from .models import (
     CHANGE_EXIT_CODES,
-    EXIT_PRECEDENCE,
     ChangeKind,
     DiffResult,
     Finding,
@@ -23,7 +22,6 @@ from .models import (
 
 __all__ = [
     "CHANGE_EXIT_CODES",
-    "EXIT_PRECEDENCE",
     "ChangeKind",
     "DiffResult",
     "Finding",

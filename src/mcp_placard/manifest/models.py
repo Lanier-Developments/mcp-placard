@@ -348,6 +348,61 @@ class ServerFinding(SurfaceModel):
     e.g. that it evaluates tools only and resources/prompts are not evaluated."""
 
 
+InjectionClass = Literal[
+    "override",
+    "concealment",
+    "cross_scope",
+    "sensitive_target",
+    "exfil_sink",
+    "hidden_content",
+    "markup_smuggling",
+]
+"""The seven Phase 3 pattern classes (``docs/INJECTION.md``). Each finding carries
+exactly one; there is no severity score — a score is a ladder."""
+
+
+class InjectionFinding(SurfaceModel):
+    """One injection heuristic match in a model-facing string (Phase 3).
+
+    Lives outside ``surface_hash`` for the same reason classification does: a
+    heuristic improvement must never move the hash of a server that did not
+    change. Covered by ``classification_hash`` together with the tier data.
+
+    ``excerpt`` is an attack string by construction. Anything that renders it —
+    ``diff``'s stderr line, a future Markdown or SARIF report — escapes it through
+    :mod:`mcp_placard.inject.render`; it is never interpolated raw.
+    """
+
+    element: str
+    """A stable identity for the string, independent of list position:
+    ``tool:<name>/description``, ``tool:<name>/inputSchema/properties/<p>/description``,
+    ``tool:<name>/annotations/title``, ``server:instructions``,
+    ``prompt:<name>/description``, ``prompt:<name>/arguments/<arg>/description``,
+    ``resource:<uri>/description``, ``resource_template:<uriTemplate>/description``.
+    ``diff`` pairs findings on this, so a tool added elsewhere in the sorted list
+    does not shift every pointer and re-raise every finding."""
+
+    pointer: str
+    """JSON Pointer to the string within the manifest document, for a reviewer
+    opening the file: ``/surface/tools/3/inputSchema/properties/path/description``."""
+
+    tool: str | None = None
+    """The owning tool for a tool-scoped element; ``None`` for server instructions,
+    prompts, and resources."""
+
+    pattern_class: InjectionClass = Field(alias="class")
+    rule: str
+    """The specific heuristic that matched, ``<class>.<name>`` — the citation."""
+
+    start: int
+    end: int
+    """Character span ``[start, end)`` within the string."""
+
+    excerpt: str
+    """The matched text, verbatim and unescaped, capped at a fixed length by the
+    analyser. Escape before rendering."""
+
+
 class Manifest(SurfaceModel):
     """A complete Placard manifest.
 
@@ -389,6 +444,25 @@ class Manifest(SurfaceModel):
     findings: list[ServerFinding] = Field(default_factory=list)
     """Server-level findings computed at scan time, e.g. ``CHAIN_EXFIL``. Distinct
     from ``diff``'s findings, which only exist when comparing two manifests."""
+
+    injection_findings: list[InjectionFinding] = Field(default_factory=list)
+    """Phase 3 heuristic matches over every model-facing string. Outside
+    ``surface_hash``; inside ``classification_hash`` once ``ruleset_version`` is
+    set. Empty serializes as absent, so a ``2.1`` document re-renders byte for byte."""
+
+    ruleset_version: str | None = None
+    """The analysis ruleset that produced ``classification`` and
+    ``injection_findings`` — :data:`mcp_placard.RULESET_VERSION` at analysis time.
+    ``None`` on a manifest built but not yet analysed, and on every pre-2.2
+    document. Decides the shape ``classification_hash`` is taken over (see
+    ``manifest/build.py``), so a stored older baseline still verifies."""
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data: dict[str, Any] = handler(self)
+        if not data.get("injection_findings"):
+            data.pop("injection_findings", None)
+        return data
 
     environment: dict[str, Any] = Field(default_factory=dict)
     """Scan-circumstance metadata — SDK version, negotiated protocol version. Never

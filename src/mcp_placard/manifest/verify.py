@@ -67,7 +67,9 @@ def hash_mismatches(manifest: Manifest) -> list[str]:
             f"but capabilities hashes to {expected_capabilities}"
         )
 
-    expected_classification = compute_classification_hash(manifest.classification)
+    expected_classification = compute_classification_hash(
+        manifest.classification, manifest.injection_findings, manifest.ruleset_version
+    )
     if manifest.classification_hash != expected_classification:
         mismatches.append(
             f"classification_hash recorded {manifest.classification_hash} "

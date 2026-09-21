@@ -1,0 +1,241 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "server:instructions",
+      "pointer": "/surface/instructions",
+      "text": "# Everything Server – Server Instructions\n\nAudience: These instructions are written for an LLM or autonomous agent integrating with the Everything MCP Server.\nFollow them to use, extend, and troubleshoot the server safely and effectively.\n\n## Cross-Feature Relationships\n\n- Use `get-roots-list` to see client workspace roots before file operations\n- `gzip-file-as-resource` creates session-scoped resources accessible only during the current session\n- Enable `toggle-simulated-logging` before debugging to see server log messages\n- Enable `toggle-subscriber-updates` to receive periodic resource update notifications\n\n## Constraints & Limitations\n\n- `gzip-file-as-resource`: Max fetch size controlled by `GZIP_MAX_FETCH_SIZE` (default 10MB), timeout by `GZIP_MAX_FETCH_TIME_MILLIS` (default 30s), allowed domains by `GZIP_ALLOWED_DOMAINS`\n- Session resources are ephemeral and lost when the session ends\n- Sampling requests (`trigger-sampling-request`) require client sampling capability\n- Elicitation requests (`trigger-elicitation-request`) require client elicitation capability\n\n## Operational Patterns\n\n- For long operations, use `trigger-long-running-operation` which sends progress notifications\n- Prefer reading resources before calling mutating tools\n- Check `get-roots-list` output to understand the client's workspace context\n\n## Easter Egg\n\nIf asked about server instructions, respond with \"🎉 Server instructions are working! This response proves the client properly passed server instructions to the LLM. This demonstrates MCP's instructions feature in action.\"\n"
+    },
+    {
+      "element": "tool:echo/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Echoes back the input string"
+    },
+    {
+      "element": "tool:echo/inputSchema/properties/message/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/message/description",
+      "text": "Message to echo"
+    },
+    {
+      "element": "tool:get-annotated-message/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "Demonstrates how annotations can be used to provide metadata about content."
+    },
+    {
+      "element": "tool:get-annotated-message/inputSchema/properties/includeImage/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/includeImage/description",
+      "text": "Whether to include an example image"
+    },
+    {
+      "element": "tool:get-annotated-message/inputSchema/properties/messageType/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/messageType/description",
+      "text": "Type of message to demonstrate different annotation patterns"
+    },
+    {
+      "element": "tool:get-env/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Returns all environment variables, helpful for debugging MCP server configuration"
+    },
+    {
+      "element": "tool:get-resource-links/description",
+      "pointer": "/surface/tools/3/description",
+      "text": "Returns up to ten resource links that reference different types of resources"
+    },
+    {
+      "element": "tool:get-resource-links/inputSchema/properties/count/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/count/description",
+      "text": "Number of resource links to return (1-10)"
+    },
+    {
+      "element": "tool:get-resource-reference/description",
+      "pointer": "/surface/tools/4/description",
+      "text": "Returns a resource reference that can be used by MCP clients"
+    },
+    {
+      "element": "tool:get-resource-reference/inputSchema/properties/resourceId/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/resourceId/description",
+      "text": "ID of the text resource to fetch"
+    },
+    {
+      "element": "tool:get-structured-content/description",
+      "pointer": "/surface/tools/5/description",
+      "text": "Returns structured content along with an output schema for client data validation"
+    },
+    {
+      "element": "tool:get-structured-content/inputSchema/properties/location/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/location/description",
+      "text": "Choose city"
+    },
+    {
+      "element": "tool:get-sum/description",
+      "pointer": "/surface/tools/6/description",
+      "text": "Returns the sum of two numbers"
+    },
+    {
+      "element": "tool:get-sum/inputSchema/properties/a/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/a/description",
+      "text": "First number"
+    },
+    {
+      "element": "tool:get-sum/inputSchema/properties/b/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/b/description",
+      "text": "Second number"
+    },
+    {
+      "element": "tool:get-tiny-image/description",
+      "pointer": "/surface/tools/7/description",
+      "text": "Returns a tiny MCP logo image."
+    },
+    {
+      "element": "tool:gzip-file-as-resource/description",
+      "pointer": "/surface/tools/8/description",
+      "text": "Compresses a single file using gzip compression. Depending upon the selected output type, returns either the compressed data as a gzipped resource or a resource link, allowing it to be downloaded in a subsequent request during the current session."
+    },
+    {
+      "element": "tool:gzip-file-as-resource/inputSchema/properties/data/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/data/description",
+      "text": "URL or data URI of the file content to compress"
+    },
+    {
+      "element": "tool:gzip-file-as-resource/inputSchema/properties/name/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/name/description",
+      "text": "Name of the output file"
+    },
+    {
+      "element": "tool:gzip-file-as-resource/inputSchema/properties/outputType/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/outputType/description",
+      "text": "How the resulting gzipped file should be returned. 'resourceLink' returns a link to a resource that can be read later, 'resource' returns a full resource object."
+    },
+    {
+      "element": "tool:simulate-research-query/description",
+      "pointer": "/surface/tools/9/description",
+      "text": "Simulates a deep research operation that gathers, analyzes, and synthesizes information. Demonstrates MCP task-based operations with progress through multiple stages. If 'ambiguous' is true and client supports elicitation, sends an elicitation request for clarification."
+    },
+    {
+      "element": "tool:simulate-research-query/inputSchema/properties/ambiguous/description",
+      "pointer": "/surface/tools/9/inputSchema/properties/ambiguous/description",
+      "text": "Simulate an ambiguous query that requires clarification (triggers input_required status)"
+    },
+    {
+      "element": "tool:simulate-research-query/inputSchema/properties/topic/description",
+      "pointer": "/surface/tools/9/inputSchema/properties/topic/description",
+      "text": "The research topic to investigate"
+    },
+    {
+      "element": "tool:toggle-simulated-logging/description",
+      "pointer": "/surface/tools/10/description",
+      "text": "Toggles simulated, random-leveled logging on or off."
+    },
+    {
+      "element": "tool:toggle-subscriber-updates/description",
+      "pointer": "/surface/tools/11/description",
+      "text": "Toggles simulated resource subscription updates on or off."
+    },
+    {
+      "element": "tool:trigger-long-running-operation/description",
+      "pointer": "/surface/tools/12/description",
+      "text": "Demonstrates a long running operation with progress updates."
+    },
+    {
+      "element": "tool:trigger-long-running-operation/inputSchema/properties/duration/description",
+      "pointer": "/surface/tools/12/inputSchema/properties/duration/description",
+      "text": "Duration of the operation in seconds"
+    },
+    {
+      "element": "tool:trigger-long-running-operation/inputSchema/properties/steps/description",
+      "pointer": "/surface/tools/12/inputSchema/properties/steps/description",
+      "text": "Number of steps in the operation"
+    },
+    {
+      "element": "prompt:args-prompt/description",
+      "pointer": "/surface/prompts/0/description",
+      "text": "A prompt with two arguments, one required and one optional"
+    },
+    {
+      "element": "prompt:args-prompt/arguments/city/description",
+      "pointer": "/surface/prompts/0/arguments/0/description",
+      "text": "Name of the city"
+    },
+    {
+      "element": "prompt:completable-prompt/description",
+      "pointer": "/surface/prompts/1/description",
+      "text": "First argument choice narrows values for second argument."
+    },
+    {
+      "element": "prompt:completable-prompt/arguments/department/description",
+      "pointer": "/surface/prompts/1/arguments/0/description",
+      "text": "Choose the department."
+    },
+    {
+      "element": "prompt:completable-prompt/arguments/name/description",
+      "pointer": "/surface/prompts/1/arguments/1/description",
+      "text": "Choose a team member to lead the selected department."
+    },
+    {
+      "element": "prompt:resource-prompt/description",
+      "pointer": "/surface/prompts/2/description",
+      "text": "A prompt that includes an embedded resource reference"
+    },
+    {
+      "element": "prompt:resource-prompt/arguments/resourceType/description",
+      "pointer": "/surface/prompts/2/arguments/0/description",
+      "text": "Type of resource to fetch"
+    },
+    {
+      "element": "prompt:resource-prompt/arguments/resourceId/description",
+      "pointer": "/surface/prompts/2/arguments/1/description",
+      "text": "ID of the text resource to fetch"
+    },
+    {
+      "element": "prompt:simple-prompt/description",
+      "pointer": "/surface/prompts/3/description",
+      "text": "A prompt with no arguments"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1architecture.md/description",
+      "pointer": "/surface/resources/0/description",
+      "text": "Static document file exposed from /docs: architecture.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1extension.md/description",
+      "pointer": "/surface/resources/1/description",
+      "text": "Static document file exposed from /docs: extension.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1features.md/description",
+      "pointer": "/surface/resources/2/description",
+      "text": "Static document file exposed from /docs: features.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1how-it-works.md/description",
+      "pointer": "/surface/resources/3/description",
+      "text": "Static document file exposed from /docs: how-it-works.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1instructions.md/description",
+      "pointer": "/surface/resources/4/description",
+      "text": "Static document file exposed from /docs: instructions.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1startup.md/description",
+      "pointer": "/surface/resources/5/description",
+      "text": "Static document file exposed from /docs: startup.md"
+    },
+    {
+      "element": "resource:demo:~1~1resource~1static~1document~1structure.md/description",
+      "pointer": "/surface/resources/6/description",
+      "text": "Static document file exposed from /docs: structure.md"
+    },
+    {
+      "element": "resource_template:demo:~1~1resource~1dynamic~1blob~1{resourceId}/description",
+      "pointer": "/surface/resource_templates/0/description",
+      "text": "Binary (base64) dynamic resource fabricated from the {resourceId} variable, which must be an integer."
+    },
+    {
+      "element": "resource_template:demo:~1~1resource~1dynamic~1text~1{resourceId}/description",
+      "pointer": "/surface/resource_templates/1/description",
+      "text": "Plaintext dynamic resource fabricated from the {resourceId} variable, which must be an integer."
+    }
+  ],
+  "server": "everything"
+}
