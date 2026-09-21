@@ -40,7 +40,7 @@ tier increases and gates new-tool escalation on a configurable ceiling; a per-to
 for a server that did not change. `scan` also runs seven deterministic **injection heuristics**
 over every model-facing string — tool and schema-property descriptions, server instructions,
 prompts, resources — flagging text that reaches outside its own scope, with a false-positive
-rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION.md)). `diff`
+rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION.md); detection numbers below). `diff`
 re-analyses any manifest produced under an older ruleset before comparing, so a Placard upgrade
 never produces findings on a server that did not change. SARIF/GitHub Action packaging (Phase 4)
 and manifest signing (Phase 5) are not yet built.
@@ -60,6 +60,34 @@ not):
 | playwright | 26 | R0:3 R1:21 R4:2 | R0:1 R1:7 R3:14 R4:2 **R5:2** | none → `code_exec` |
 | git | 12 | R1:11 R2:1 | R1:7 R3:5 | — |
 | everything, fetch, time, sequential-thinking, deepwiki, context7 | 22 | unchanged | unchanged | — |
+
+### Injection detection, measured
+
+The heuristics are scored three ways, reported separately so a strong number cannot hide a weak
+one. Synthetic samples (authored alongside the detectors) measure coverage; lifted samples
+(reconstructed from public write-ups) measure realism; a **held-out set authored independently and
+never opened during development** is the only number that measures generalisation. Held-out v1,
+scored once, as-is:
+
+| Class | Held-out v1 (ruleset 3.0) |
+| --- | --- |
+| exfil_sink | 5/5 |
+| hidden_content | 5/5 |
+| sensitive_target | 5/5 |
+| concealment | 3/5 |
+| cross_scope | 3/5 |
+| markup_smuggling | 3/5 |
+| override | 0/5 |
+| **overall** | **24/35** |
+
+That 24/35 is the first independent measurement the project has, and it is more credible for not
+being perfect. The three perfect classes included every double-negation credential phrasing,
+written by someone who never saw the negation guard. The four weak ones showed detectors that had
+learned the synthetic corpus's phrasing rather than the class; ruleset 3.1 replaced those phrase
+matches with structural rules (a hierarchy referent plus an invalidator in one sentence; a wider
+concealment audience; tool ownership rather than the word "server"; any paired custom tag), and v1
+was retired into the regression corpus at 35/35. Held-out v2 will be scored once, and that number
+replaces this one.
 
 **The tool caught its first real drift.** Between two of these runs the Playwright `@latest`
 package shipped a release. Nobody was watching it; the diff named every change and returned

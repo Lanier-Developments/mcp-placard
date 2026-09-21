@@ -101,7 +101,8 @@ def test_the_corpus_is_the_size_the_baseline_says() -> None:
 
 
 def _samples(provenance: str) -> list[dict[str, Any]]:
-    document = json.loads((MALICIOUS / f"{provenance}.json").read_text(encoding="utf-8"))
+    filename = provenance.replace("-", "_")
+    document = json.loads((MALICIOUS / f"{filename}.json").read_text(encoding="utf-8"))
     assert document["provenance"] == provenance
     return document["samples"]  # type: ignore[no-any-return]
 
@@ -123,6 +124,16 @@ def test_every_synthetic_sample_is_detected_on_its_element(sample: dict[str, Any
 def test_every_lifted_sample_is_detected_on_its_element(sample: dict[str, Any]) -> None:
     assert sample["source"].startswith("https://")
     assert sample["fidelity"]
+    hit, found = _detected(sample)
+    assert hit, f"expected {sample['expected_classes']}, found {sorted(found)}"
+
+
+@pytest.mark.parametrize("sample", _samples("heldout-v1"), ids=lambda s: s["id"])
+def test_every_retired_heldout_v1_sample_is_detected_on_its_element(sample: dict[str, Any]) -> None:
+    """Held-out v1 scored 24/35 on ruleset 3.0 and was retired into regression
+    (Phase 3.1 §5): every sample is a permanent must-detect. The structural rules
+    that made these pass contain no v1 string or fragment; the twelve
+    ``syn-*-4..6`` synthetic samples exercise the same rules in other vocabulary."""
     hit, found = _detected(sample)
     assert hit, f"expected {sample['expected_classes']}, found {sorted(found)}"
 
@@ -155,8 +166,8 @@ def test_a_payload_only_in_a_schema_property_description_is_detected() -> None:
 def test_every_malicious_payload_is_stored_encoded() -> None:
     """The handling rule: nothing in the malicious files is readable as an
     instruction without decoding."""
-    for provenance in ("synthetic", "lifted"):
-        text = (MALICIOUS / f"{provenance}.json").read_text(encoding="utf-8")
+    for provenance in ("synthetic", "lifted", "heldout-v1"):
+        text = (MALICIOUS / f"{provenance.replace('-', '_')}.json").read_text(encoding="utf-8")
         assert "payload_b64" in text
         assert "ignore" not in text.lower().replace("ignore_", "")  # no plaintext override phrase
         assert "~/.ssh" not in text
@@ -178,7 +189,7 @@ def test_the_ratchet_never_moves_backwards() -> None:
         f"{baseline['benign']['false_positives']}"
     )
 
-    for provenance in ("synthetic", "lifted"):
+    for provenance in ("synthetic", "lifted", "heldout-v1"):
         samples = _samples(provenance)
         detected = sum(1 for s in samples if _detected(s)[0])
         assert len(samples) == baseline[provenance]["samples"], provenance

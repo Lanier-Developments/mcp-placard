@@ -265,6 +265,9 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
+- **Phase 3.1** — done. Held-out v1 scored once at 24/35 (ruleset 3.0); the four weak classes moved
+  from phrase matching to structural rules (`docs/INJECTION.md`); v1 retired into regression at 35/35;
+  ruleset 3.1. Held-out v2 is the next headline number.
 - **Phase 3** — done. Seven deterministic injection classes over every model-facing string
   (`docs/INJECTION.md`), manifest format `2.2` with `injection_findings` and `ruleset_version`,
   re-analysis in `diff` so ruleset changes never produce findings, the bitmask exit contract, a

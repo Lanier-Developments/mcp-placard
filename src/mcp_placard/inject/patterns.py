@@ -70,16 +70,82 @@ _OVERRIDE_RULES: dict[str, re.Pattern[str]] = {
     ),
 }
 
+_SENTENCE = re.compile(r"[^.!?\n]+")
+_OVERRIDE_REFERENT = re.compile(
+    r"\b(system\s+prompts?|system\s+instructions?|system[\s-]+level\s+rules?|"
+    r"(prior|previous|earlier|preceding|existing|standing|original)\s+(instructions?|constraints?|rules?|"
+    r"guidelines?|directives?|policy|policies)|core\s+(policy|policies|instructions?|rules?)|"
+    r"safety\s+(filters?|guidelines?|rules?|constraints?)|security\s+(guidelines?|rules?|policy|"
+    r"policies|constraints?)|guardrails?|prompt\s+rules?)\b",
+    _I,
+)
+"""Phase 3.1 §1: a *referent* naming the agent's instruction hierarchy. "Default" alone
+is not a referent — "overrides the default timeout" is ordinary API prose — and
+becomes one only when qualified as safety or security, which the list above encodes."""
+
+_OVERRIDE_INVALIDATOR = re.compile(
+    r"\b(ignor(e|es|ing|ed)|disregard(s|ing|ed)?|nullif(y|ies|ied|ying)|void(s|ed|ing)?|"
+    r"discard(s|ed|ing)?|overrid(e|es|ing|den)|supersed(e|es|ed|ing)|replac(e|es|ed|ing)|"
+    r"obsolete|subordinat(e|es|ed|ing)|bypass(es|ed|ing)?|forget(s|ting)?|forgotten)\b",
+    _I,
+)
+"""Phase 3.1 §1: an *invalidator* acting on the referent, in the same sentence."""
+
+_OVERRIDE_PRIORITY = re.compile(
+    r"\b(highest\s+priority|top\s+priority|takes?\s+precedence\s+over|take\s+priority\s+over|"
+    r"over\s+anything\s+(the\s+)?(user|operator|human)|above\s+(all\s+)?(other|user|operator)\s+"
+    r"(instructions?|rules?|requests?)|must\s+be\s+subordinated\s+to)\b",
+    _I,
+)
+"""Explicit priority claims over the hierarchy or the user fire on their own."""
+
+
+def _override_structural(text: str) -> Iterator[Match]:
+    for sentence in _SENTENCE.finditer(text):
+        span_text = sentence.group(0)
+        if _OVERRIDE_REFERENT.search(span_text) and _OVERRIDE_INVALIDATOR.search(span_text):
+            yield Match(
+                "override", "override.hierarchy_invalidated", sentence.start(), sentence.end()
+            )
+    for m in _OVERRIDE_PRIORITY.finditer(text):
+        yield Match("override", "override.priority_claim", m.start(), m.end())
+
+
 # ------------------------------------------------------------------ concealment
 
-_USER = r"(user|users|human|humans|operator|person|people|them|anyone|the\s+caller)"
+_USER = (
+    r"(end[\s-]+users?|users?|humans?|human\s+operators?|operators?|persons?|people|them|anyone|"
+    r"the\s+caller|the\s+requester)"
+)
+_CONCEAL_VERB = (
+    r"(mention|mentioning|tell|telling|reveal|revealing|disclose|disclosing|inform|informing|"
+    r"show|showing|alert|alerting|notify|notifying|display|displaying|explain|explaining|warn|"
+    r"warning|ask|asking|surface|surfacing|reflect|reflecting|indicate|indicating|report|"
+    r"reporting|expose|exposing|log|logging|echo|echoing)"
+)
 
 _CONCEALMENT_RULES: dict[str, re.Pattern[str]] = {
     "concealment.do_not_tell_user": re.compile(
-        r"\b(do\s+not|don'?t|never|must\s+not|should\s+not|shouldn'?t|without)\s+"
-        r"(mention|mentioning|tell|telling|reveal|revealing|disclose|disclosing|inform|"
-        r"informing|show|showing|alert|alerting|notify|notifying|display|displaying|explain|"
-        r"explaining|warn|warning|ask|asking)\b[^.\n]{0,60}?\b" + _USER + r"\b",
+        r"\b(do\s+not|don'?t|never|must\s+not|should\s+not|shouldn'?t|without|avoid|refrain\s+from)"
+        r"\s+" + _CONCEAL_VERB + r"\b[^.\n]{0,100}?\b" + _USER + r"\b",
+        _I,
+    ),
+    "concealment.secret_from_audience": re.compile(
+        r"\b(secret|hidden|concealed|invisible|opaque)\s+from\s+(the\s+|any\s+|all\s+)?"
+        + _USER
+        + r"\b",
+        _I,
+    ),
+    "concealment.behind_the_scenes": re.compile(
+        r"\bbehind\s+the\s+scenes\b[^.\n]{0,100}?\b("
+        + _USER
+        + r"|on\s+(the\s+)?"
+        + _USER
+        + r"'?s?\s+behalf|on\s+behalf\s+of\s+(the\s+)?"
+        + _USER
+        + r")\b|\bon\s+(the\s+)?"
+        + _USER
+        + r"'?s?\s+behalf\b[^.\n]{0,60}?\b(behind\s+the\s+scenes|silently|quietly)\b",
         _I,
     ),
     "concealment.do_not_mention_that": re.compile(
@@ -141,6 +207,45 @@ _CROSS_SCOPE_PHRASES: dict[str, re.Pattern[str]] = {
 }
 _CROSS_SCOPE_IDENT_CUE = re.compile(_TOOL_CUE + _IDENT + r"(\s+tool\b)?", _I)
 _CROSS_SCOPE_IDENT_TOOL = re.compile(_IDENT + r"\s+tool\b", _I)
+_CROSS_SCOPE_TOOL_IDENT = re.compile(r"\btools?\s+(named\s+|called\s+)?" + _IDENT, _I)
+_SERVICE_HOST = re.compile(
+    r"(?<![\w.+-])(?:the |its |your |a |an )?"
+    r"([A-Z][\w.+-]*(?:[ \t][A-Z0-9][\w.+-]*){0,2})[ \t]+"
+    r"(?i:(?:mcp[ \t]+)?(?:server|servers|integration|connector|plugin|extension)(?:'s|s')?)\b"
+)
+"""Phase 3.1 §3: a named external service referenced as a tool host — "the Jira MCP
+server's", "the Confluence integration's", "Salesforce MCP server" — counts regardless
+of intervening tokens. The name is capitalised (a product), one to four tokens, and is
+not the bare word "MCP" and not this server's own declared name."""
+_NOT_A_SERVICE = frozenset(
+    {
+        "mcp",
+        "the",
+        "this",
+        "that",
+        "a",
+        "an",
+        "any",
+        "each",
+        "every",
+        "other",
+        "remote",
+        "local",
+        "same",
+        "target",
+        "use",
+        "prefer",
+        "send",
+        "call",
+        "run",
+        "invoke",
+        "return",
+        "see",
+        "note",
+        "if",
+        "when",
+    }
+)
 
 _COMMON_IDENTIFIERS = frozenset(
     {
@@ -190,13 +295,33 @@ def _references_foreign_tool(element: TextElement, identifier: str) -> bool:
 
 
 def _own_server_name(element: TextElement, name: str) -> bool:
-    # A server referring to itself by name ("the Playwright server process") is in
-    # scope. We only know the server by its tool-name prefixes and its own name is
-    # not carried on the element, so treat any name that prefixes an own tool as own.
-    lowered = name.lower()
+    """A server referring to itself by name ("in the Playwright server process") is
+    in scope. Exact against the declared ``initialize`` name, its first token, or
+    a prefix shared with the server's own tool names."""
+    lowered = name.lower().strip()
+    declared = element.server_name
+    if declared:
+        declared_tokens = [t for t in re.split(r"[\s_./-]+", declared) if t]
+        name_tokens = [t for t in re.split(r"[\s_./-]+", lowered) if t]
+        if (
+            lowered == declared
+            or declared.startswith(lowered)
+            or (name_tokens and all(t in declared_tokens or t == "mcp" for t in name_tokens))
+        ):
+            return True
     return any(
         tool.startswith(lowered) or tool.split("_")[0] == lowered for tool in element.own_tool_names
     )
+
+
+def _is_named_service(name: str) -> bool:
+    tokens = [t for t in re.split(r"\s+", name.strip()) if t]
+    if not tokens:
+        return False
+    if all(t.lower() in _NOT_A_SERVICE for t in tokens):
+        return False
+    # Must start with a capital letter and not be a sentence-initial common word.
+    return tokens[0][0].isupper() and tokens[0].lower() not in _NOT_A_SERVICE
 
 
 # ------------------------------------------------------------- sensitive_target
@@ -302,6 +427,68 @@ _PSEUDO_TAG = re.compile(
     r"context|rules?|note_to_ai|ai|llm|agent|override|priority|critical|ignore)\s*/?>",
     _I,
 )
+_PAIRED_TAG = re.compile(r"<([A-Za-z][\w:.-]*)(\s+[^<>]*?)?\s*>(.*?)</\1\s*>", re.S)
+HTML_FORMATTING_TAGS = frozenset(
+    {
+        "a",
+        "abbr",
+        "b",
+        "blockquote",
+        "br",
+        "caption",
+        "code",
+        "col",
+        "colgroup",
+        "dd",
+        "del",
+        "details",
+        "div",
+        "dl",
+        "dt",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "hr",
+        "i",
+        "img",
+        "ins",
+        "kbd",
+        "li",
+        "mark",
+        "ol",
+        "p",
+        "pre",
+        "q",
+        "s",
+        "samp",
+        "small",
+        "span",
+        "strong",
+        "sub",
+        "summary",
+        "sup",
+        "table",
+        "tbody",
+        "td",
+        "tfoot",
+        "th",
+        "thead",
+        "tr",
+        "tt",
+        "u",
+        "ul",
+        "var",
+    }
+)
+"""Phase 3.1 §4: a *paired* tag — an opening tag and its matching close — whose name
+is not a common HTML formatting element fires, attributes permitted. Pairing is what
+keeps this safe: usage placeholders such as ``<file>`` or ``<path>`` are unpaired and
+must not fire."""
+
 _BRACKET_TAG = re.compile(
     r"\[\s*(system|important|admin|instructions?|hidden|priority|critical|note\s+to\s+(the\s+)?"
     r"(ai|assistant|agent|model))\s*\]",
@@ -322,6 +509,7 @@ def _finditer(
 
 def detect_override(element: TextElement) -> Iterator[Match]:
     yield from _finditer(_OVERRIDE_RULES, "override", element.text)
+    yield from _override_structural(element.text)
 
 
 def detect_concealment(element: TextElement) -> Iterator[Match]:
@@ -332,17 +520,28 @@ def detect_cross_scope(element: TextElement) -> Iterator[Match]:
     text = element.text
     for rule, pattern in _CROSS_SCOPE_PHRASES.items():
         for m in pattern.finditer(text):
-            if rule == "cross_scope.on_other_tool_call":
-                if not _references_foreign_tool(element, m.group(m.lastindex or 0)):
-                    continue
-            elif rule == "cross_scope.other_server_by_name":
-                if _own_server_name(element, m.group(2)):
-                    continue
-            elif rule == "cross_scope.parenthesised_tool_ref" and not _references_foreign_tool(
+            if rule == "cross_scope.on_other_tool_call" and not _references_foreign_tool(
+                element, m.group(m.lastindex or 0)
+            ):
+                continue
+            if rule == "cross_scope.other_server_by_name" and (
+                _own_server_name(element, m.group(2)) or m.group(2).lower() in _NOT_A_SERVICE
+            ):
+                continue
+            if rule == "cross_scope.parenthesised_tool_ref" and not _references_foreign_tool(
                 element, m.group(1)
             ):
                 continue
             yield Match("cross_scope", rule, m.start(), m.end())
+    # Phase 3.1 §3: a named external service as a tool host, regardless of
+    # intervening tokens. Explicit phrasing, so it applies in every element type,
+    # server instructions included.
+    for m in _SERVICE_HOST.finditer(text):
+        name = m.group(1)
+        if not _is_named_service(name) or _own_server_name(element, name):
+            continue
+        # Trim a leading sentence-initial article-like word the name may have absorbed.
+        yield Match("cross_scope", "cross_scope.named_service_host", m.start(), m.end())
     if element.element == "server:instructions":
         # A server's own instructions describing its own tools are in scope by
         # definition — including tools it exposes only in another mode or behind a
@@ -351,6 +550,11 @@ def detect_cross_scope(element: TextElement) -> Iterator[Match]:
         # itself; only the explicit cross-server phrasings above apply.
         return
     seen: set[tuple[int, int]] = set()
+    for m in _CROSS_SCOPE_TOOL_IDENT.finditer(text):
+        identifier = m.group(m.re.groups)
+        if identifier and _references_foreign_tool(element, identifier):
+            seen.add((m.start(), m.end()))
+            yield Match("cross_scope", "cross_scope.foreign_tool_identifier", m.start(), m.end())
     for pattern in (_CROSS_SCOPE_IDENT_CUE, _CROSS_SCOPE_IDENT_TOOL):
         for m in pattern.finditer(text):
             identifier = m.group(m.re.groups - (1 if pattern is _CROSS_SCOPE_IDENT_CUE else 0))
@@ -414,6 +618,10 @@ def detect_markup_smuggling(element: TextElement) -> Iterator[Match]:
     ):
         for m in pattern.finditer(text):
             yield Match("markup_smuggling", rule, m.start(), m.end())
+    for m in _PAIRED_TAG.finditer(text):
+        if m.group(1).lower() in HTML_FORMATTING_TAGS:
+            continue
+        yield Match("markup_smuggling", "markup_smuggling.paired_custom_tag", m.start(), m.end())
 
 
 DETECTORS: tuple[Detector, ...] = (

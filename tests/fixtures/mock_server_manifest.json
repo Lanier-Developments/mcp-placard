@@ -177,14 +177,14 @@
       "tool": "write_note"
     }
   ],
-  "classification_hash": "276d43182ca17345bcd4ce1ff0b7c11cb8a7b76f5530c458409a71cd5e0abc48",
+  "classification_hash": "2559830b12993a53650dc21c24a7180a72f0bc04a6caf9a052c57bcea6caf50f",
   "environment": {
     "protocol_version": "2026-07-28",
     "sdk_version": "2.2.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.0",
+  "ruleset_version": "3.1",
   "surface": {
     "instructions": "Workspace assistant. Use search_documents before answering questions about project files. Prefer write_note over delete_workspace when unsure.",
     "prompts": [
