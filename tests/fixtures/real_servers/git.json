@@ -1,10 +1,15 @@
 {
   "captured": "2026-09-17",
+  "instructions": null,
+  "prompts": [],
+  "resource_templates": [],
+  "resources": [],
   "server": "git",
   "source": {
     "name": "mcp-git",
     "version": "1.30.0"
   },
+  "surface_captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
   "tools": [
     {
       "annotations": {

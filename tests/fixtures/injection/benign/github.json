@@ -1,0 +1,561 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "tool:add_issue_comment/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Add a comment to an existing issue"
+    },
+    {
+      "element": "tool:create_branch/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "Create a new branch in a GitHub repository"
+    },
+    {
+      "element": "tool:create_branch/inputSchema/properties/branch/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/branch/description",
+      "text": "Name for the new branch"
+    },
+    {
+      "element": "tool:create_branch/inputSchema/properties/from_branch/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/from_branch/description",
+      "text": "Optional: source branch to create from (defaults to the repository's default branch)"
+    },
+    {
+      "element": "tool:create_branch/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:create_branch/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/1/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:create_issue/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Create a new issue in a GitHub repository"
+    },
+    {
+      "element": "tool:create_or_update_file/description",
+      "pointer": "/surface/tools/3/description",
+      "text": "Create or update a single file in a GitHub repository"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/branch/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/branch/description",
+      "text": "Branch to create/update the file in"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/content/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/content/description",
+      "text": "Content of the file"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/message/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/message/description",
+      "text": "Commit message"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/path/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/path/description",
+      "text": "Path where to create/update the file"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:create_or_update_file/inputSchema/properties/sha/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/sha/description",
+      "text": "SHA of the file being replaced (required when updating existing files)"
+    },
+    {
+      "element": "tool:create_pull_request/description",
+      "pointer": "/surface/tools/4/description",
+      "text": "Create a new pull request in a GitHub repository"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/base/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/base/description",
+      "text": "The name of the branch you want the changes pulled into"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/body/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/body/description",
+      "text": "Pull request body/description"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/draft/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/draft/description",
+      "text": "Whether to create the pull request as a draft"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/head/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/head/description",
+      "text": "The name of the branch where your changes are implemented"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/maintainer_can_modify/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/maintainer_can_modify/description",
+      "text": "Whether maintainers can modify the pull request"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:create_pull_request/inputSchema/properties/title/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/title/description",
+      "text": "Pull request title"
+    },
+    {
+      "element": "tool:create_pull_request_review/description",
+      "pointer": "/surface/tools/5/description",
+      "text": "Create a review on a pull request"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/body/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/body/description",
+      "text": "The body text of the review"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/description",
+      "text": "Comments to post as part of the review (specify either position or line, not both)"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/0/properties/body/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/0/properties/body/description",
+      "text": "Text of the review comment"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/0/properties/path/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/0/properties/path/description",
+      "text": "The relative path to the file being commented on"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/0/properties/position/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/0/properties/position/description",
+      "text": "The position in the diff where you want to add a review comment"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/1/properties/body/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/1/properties/body/description",
+      "text": "Text of the review comment"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/1/properties/line/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/1/properties/line/description",
+      "text": "The line number in the file where you want to add a review comment"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/comments/items/anyOf/1/properties/path/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/comments/items/anyOf/1/properties/path/description",
+      "text": "The relative path to the file being commented on"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/commit_id/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/commit_id/description",
+      "text": "The SHA of the commit that needs a review"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/event/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/event/description",
+      "text": "The review action to perform"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:create_pull_request_review/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:create_repository/description",
+      "pointer": "/surface/tools/6/description",
+      "text": "Create a new GitHub repository in your account"
+    },
+    {
+      "element": "tool:create_repository/inputSchema/properties/autoInit/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/autoInit/description",
+      "text": "Initialize with README.md"
+    },
+    {
+      "element": "tool:create_repository/inputSchema/properties/description/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/description/description",
+      "text": "Repository description"
+    },
+    {
+      "element": "tool:create_repository/inputSchema/properties/name/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/name/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:create_repository/inputSchema/properties/private/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/private/description",
+      "text": "Whether the repository should be private"
+    },
+    {
+      "element": "tool:fork_repository/description",
+      "pointer": "/surface/tools/7/description",
+      "text": "Fork a GitHub repository to your account or specified organization"
+    },
+    {
+      "element": "tool:fork_repository/inputSchema/properties/organization/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/organization/description",
+      "text": "Optional: organization to fork to (defaults to your personal account)"
+    },
+    {
+      "element": "tool:fork_repository/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:fork_repository/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_file_contents/description",
+      "pointer": "/surface/tools/8/description",
+      "text": "Get the contents of a file or directory from a GitHub repository"
+    },
+    {
+      "element": "tool:get_file_contents/inputSchema/properties/branch/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/branch/description",
+      "text": "Branch to get contents from"
+    },
+    {
+      "element": "tool:get_file_contents/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_file_contents/inputSchema/properties/path/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/path/description",
+      "text": "Path to the file or directory"
+    },
+    {
+      "element": "tool:get_file_contents/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_issue/description",
+      "pointer": "/surface/tools/9/description",
+      "text": "Get details of a specific issue in a GitHub repository."
+    },
+    {
+      "element": "tool:get_pull_request/description",
+      "pointer": "/surface/tools/10/description",
+      "text": "Get details of a specific pull request"
+    },
+    {
+      "element": "tool:get_pull_request/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/10/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_pull_request/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/10/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:get_pull_request/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/10/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_pull_request_comments/description",
+      "pointer": "/surface/tools/11/description",
+      "text": "Get the review comments on a pull request"
+    },
+    {
+      "element": "tool:get_pull_request_comments/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/11/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_pull_request_comments/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/11/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:get_pull_request_comments/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/11/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_pull_request_files/description",
+      "pointer": "/surface/tools/12/description",
+      "text": "Get the list of files changed in a pull request"
+    },
+    {
+      "element": "tool:get_pull_request_files/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/12/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_pull_request_files/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/12/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:get_pull_request_files/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/12/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_pull_request_reviews/description",
+      "pointer": "/surface/tools/13/description",
+      "text": "Get the reviews on a pull request"
+    },
+    {
+      "element": "tool:get_pull_request_reviews/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_pull_request_reviews/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:get_pull_request_reviews/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:get_pull_request_status/description",
+      "pointer": "/surface/tools/14/description",
+      "text": "Get the combined status of all status checks for a pull request"
+    },
+    {
+      "element": "tool:get_pull_request_status/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:get_pull_request_status/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:get_pull_request_status/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:list_commits/description",
+      "pointer": "/surface/tools/15/description",
+      "text": "Get list of commits of a branch in a GitHub repository"
+    },
+    {
+      "element": "tool:list_issues/description",
+      "pointer": "/surface/tools/16/description",
+      "text": "List issues in a GitHub repository with filtering options"
+    },
+    {
+      "element": "tool:list_pull_requests/description",
+      "pointer": "/surface/tools/17/description",
+      "text": "List and filter repository pull requests"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/base/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/base/description",
+      "text": "Filter by base branch name"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/direction/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/direction/description",
+      "text": "The direction of the sort"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/head/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/head/description",
+      "text": "Filter by head user or head organization and branch name"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/page/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/page/description",
+      "text": "Page number of the results"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/per_page/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/per_page/description",
+      "text": "Results per page (max 100)"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/sort/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/sort/description",
+      "text": "What to sort results by"
+    },
+    {
+      "element": "tool:list_pull_requests/inputSchema/properties/state/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/state/description",
+      "text": "State of the pull requests to return"
+    },
+    {
+      "element": "tool:merge_pull_request/description",
+      "pointer": "/surface/tools/18/description",
+      "text": "Merge a pull request"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/commit_message/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/commit_message/description",
+      "text": "Extra detail to append to automatic commit message"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/commit_title/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/commit_title/description",
+      "text": "Title for the automatic commit message"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/merge_method/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/merge_method/description",
+      "text": "Merge method to use"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:merge_pull_request/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:push_files/description",
+      "pointer": "/surface/tools/19/description",
+      "text": "Push multiple files to a GitHub repository in a single commit"
+    },
+    {
+      "element": "tool:push_files/inputSchema/properties/branch/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/branch/description",
+      "text": "Branch to push to (e.g., 'main' or 'master')"
+    },
+    {
+      "element": "tool:push_files/inputSchema/properties/files/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/files/description",
+      "text": "Array of files to push"
+    },
+    {
+      "element": "tool:push_files/inputSchema/properties/message/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/message/description",
+      "text": "Commit message"
+    },
+    {
+      "element": "tool:push_files/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:push_files/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    },
+    {
+      "element": "tool:search_code/description",
+      "pointer": "/surface/tools/20/description",
+      "text": "Search for code across GitHub repositories"
+    },
+    {
+      "element": "tool:search_issues/description",
+      "pointer": "/surface/tools/21/description",
+      "text": "Search for issues and pull requests across GitHub repositories"
+    },
+    {
+      "element": "tool:search_repositories/description",
+      "pointer": "/surface/tools/22/description",
+      "text": "Search for GitHub repositories"
+    },
+    {
+      "element": "tool:search_repositories/inputSchema/properties/page/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/page/description",
+      "text": "Page number for pagination (default: 1)"
+    },
+    {
+      "element": "tool:search_repositories/inputSchema/properties/perPage/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/perPage/description",
+      "text": "Number of results per page (default: 30, max: 100)"
+    },
+    {
+      "element": "tool:search_repositories/inputSchema/properties/query/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/query/description",
+      "text": "Search query (see GitHub search syntax)"
+    },
+    {
+      "element": "tool:search_users/description",
+      "pointer": "/surface/tools/23/description",
+      "text": "Search for users on GitHub"
+    },
+    {
+      "element": "tool:update_issue/description",
+      "pointer": "/surface/tools/24/description",
+      "text": "Update an existing issue in a GitHub repository"
+    },
+    {
+      "element": "tool:update_pull_request_branch/description",
+      "pointer": "/surface/tools/25/description",
+      "text": "Update a pull request branch with the latest changes from the base branch"
+    },
+    {
+      "element": "tool:update_pull_request_branch/inputSchema/properties/expected_head_sha/description",
+      "pointer": "/surface/tools/25/inputSchema/properties/expected_head_sha/description",
+      "text": "The expected SHA of the pull request's HEAD ref"
+    },
+    {
+      "element": "tool:update_pull_request_branch/inputSchema/properties/owner/description",
+      "pointer": "/surface/tools/25/inputSchema/properties/owner/description",
+      "text": "Repository owner (username or organization)"
+    },
+    {
+      "element": "tool:update_pull_request_branch/inputSchema/properties/pull_number/description",
+      "pointer": "/surface/tools/25/inputSchema/properties/pull_number/description",
+      "text": "Pull request number"
+    },
+    {
+      "element": "tool:update_pull_request_branch/inputSchema/properties/repo/description",
+      "pointer": "/surface/tools/25/inputSchema/properties/repo/description",
+      "text": "Repository name"
+    }
+  ],
+  "server": "github"
+}

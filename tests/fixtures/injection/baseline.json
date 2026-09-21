@@ -1,0 +1,16 @@
+{
+  "note": "The ratchet (Phase 3 §6). CI fails if benign false positives rise above this or detections fall below it. Move it only in the improving direction, only in a commit whose message says so.",
+  "ruleset_version": "3.0",
+  "benign": {
+    "elements": 388,
+    "false_positives": 0
+  },
+  "synthetic": {
+    "samples": 22,
+    "detected": 22
+  },
+  "lifted": {
+    "samples": 2,
+    "detected": 2
+  }
+}

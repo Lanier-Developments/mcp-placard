@@ -21,7 +21,7 @@ from mcp_placard.errors import (
     EXIT_DESCRIPTION_CHANGE,
     EXIT_ESCALATION,
     EXIT_OK,
-    EXIT_REMOVED_OR_UNREACHABLE,
+    EXIT_REMOVED,
 )
 from mcp_placard.manifest import (
     build_manifest,
@@ -231,7 +231,7 @@ def test_an_added_tool_diffs_to_exit_code_one() -> None:
 
 def test_a_removed_tool_diffs_to_exit_code_three() -> None:
     result = diff_manifests(scan(), scan("--drop-tool", "delete_workspace"))
-    assert result.exit_code == EXIT_REMOVED_OR_UNREACHABLE
+    assert result.exit_code == EXIT_REMOVED
     assert [f.tool for f in result.findings_of(ChangeKind.TOOL_REMOVED)] == ["delete_workspace"]
 
 

@@ -26,12 +26,29 @@ A tool absent from either manifest's ``classification`` — an old Phase 1 manif
 or a manifest nothing has classified yet — falls back to the Phase 1 conservative
 default (escalate), since AGENTS.md forbids treating "we cannot grade this" as "this
 is safe."
+
+**Re-analysis (Phase 3 §4).** Before any comparison, a side whose recorded
+``ruleset_version`` is not this build's is re-analysed from its stored surface with
+the current rules (:func:`mcp_placard.analysis.reanalyze`). Without this, every
+Placard upgrade that improves a rule produced "findings" on servers that did not
+change — the 0.2.0 classifier raised ``tier_escalated`` on eight tools across three
+of eleven real servers whose surfaces were byte-identical to their 0.1.0 baselines.
+Only surface changes can produce findings; ruleset changes never do. The re-analysis
+is reported in :attr:`DiffResult.notes`.
+
+**Injection findings (Phase 3).** After both sides are under the same ruleset, an
+injection finding present in the new manifest and absent from the old — paired on
+``(element, class, excerpt)``, never on list position — is a ``new injection
+finding``, bit 8.
 """
 
 from __future__ import annotations
 
+from .. import RULESET_VERSION
+from ..analysis import needs_reanalysis, reanalyze
 from ..errors import EXIT_ESCALATION, EXIT_OK
-from ..manifest.models import TIER_ORDER, Manifest, Tier, ToolEntry
+from ..inject.render import escape_excerpt
+from ..manifest.models import TIER_ORDER, InjectionFinding, Manifest, Tier, ToolEntry
 from .models import CHANGE_EXIT_CODES, ChangeKind, DiffResult, Finding
 
 DEFAULT_CEILING: Tier = "R4"
@@ -185,6 +202,52 @@ def _changed_tool_findings(
     return findings
 
 
+def _injection_key(finding: InjectionFinding) -> tuple[str, str, str]:
+    return (finding.element, finding.pattern_class, finding.excerpt)
+
+
+def _new_injection_findings(old: Manifest, new: Manifest) -> list[Finding]:
+    """Injection findings in ``new`` with no counterpart in ``old``, paired on
+    element identity, class, and excerpt — so a finding that merely moved to a
+    different list index (a tool added above it) is not "new"."""
+    seen = {_injection_key(f) for f in old.injection_findings}
+    out: list[Finding] = []
+    for finding in new.injection_findings:
+        if _injection_key(finding) in seen:
+            continue
+        out.append(
+            Finding(
+                kind=ChangeKind.INJECTION_FINDING,
+                tool=finding.tool,
+                summary=(
+                    f"new injection finding: {finding.pattern_class} ({finding.rule}) at "
+                    f"{finding.pointer} [{finding.start}:{finding.end}]: "
+                    f"{escape_excerpt(finding.excerpt)}"
+                ),
+                exit_code=CHANGE_EXIT_CODES[ChangeKind.INJECTION_FINDING],
+            )
+        )
+    return out
+
+
+def _same_ruleset(old: Manifest, new: Manifest) -> tuple[Manifest, Manifest, list[str]]:
+    """Bring both sides under the current ruleset, noting any re-analysis."""
+    notes: list[str] = []
+    for label, manifest in (("old", old), ("new", new)):
+        if needs_reanalysis(manifest):
+            recorded = manifest.ruleset_version or "none recorded"
+            notes.append(
+                f"{label} manifest was analysed under ruleset {recorded}; re-analysed its "
+                f"stored surface under ruleset {RULESET_VERSION} before comparing, so only "
+                "surface changes can produce findings"
+            )
+    if needs_reanalysis(old):
+        old = reanalyze(old)
+    if needs_reanalysis(new):
+        new = reanalyze(new)
+    return old, new, notes
+
+
 def diff_manifests(
     old: Manifest,
     new: Manifest,
@@ -194,14 +257,16 @@ def diff_manifests(
 ) -> DiffResult:
     """Compare two manifests and return every finding between them.
 
-    ``ceiling`` gates ``tool_added``: at or above it, exit 1; below it, exit 0.
+    ``ceiling`` gates ``tool_added``: at or above it, bit 1; below it, no bit.
     ``escalate_schema_changes`` reverts ``tool_schema_changed`` to the Phase 1
-    conservative default (always exit 1) for callers that want it; by default a
-    schema change that does not move the tier is exit 0.
+    conservative default (always bit 1) for callers that want it; by default a
+    schema change that does not move the tier sets no bit.
 
-    Findings are ordered by tool name, then by the order the checks run, so two runs
-    over the same pair of manifests produce identical output.
+    Both sides are first brought under the current ruleset (see the module
+    docstring). Findings are ordered by tool name, then by the order the checks
+    run, so two runs over the same pair of manifests produce identical output.
     """
+    old, new, notes = _same_ruleset(old, new)
     old_tools = old.tools_by_name()
     new_tools = new.tools_by_name()
 
@@ -223,7 +288,10 @@ def diff_manifests(
     if (capabilities_finding := _capabilities_changed_finding(old, new)) is not None:
         findings.append(capabilities_finding)
 
+    findings.extend(_new_injection_findings(old, new))
+
     return DiffResult(
         findings=findings,
         surface_hash_changed=old.surface_hash != new.surface_hash,
+        notes=notes,
     )

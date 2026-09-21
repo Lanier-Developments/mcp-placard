@@ -50,11 +50,16 @@ def _classified(tools: list[dict], classification: list[dict]) -> Manifest:
     from mcp_placard.manifest.models import ToolClassification
 
     manifest = build_manifest(make_raw(tools))
+    from mcp_placard import RULESET_VERSION
+
     entries = [ToolClassification(tool=c["tool"], tier=c["tier"]) for c in classification]
     return manifest.model_copy(
         update={
             "classification": entries,
-            "classification_hash": compute_classification_hash(entries),
+            "classification_hash": compute_classification_hash(entries, [], RULESET_VERSION),
+            # Stamped as current so diff compares the stamped tiers as-is instead of
+            # re-analysing the surface (Phase 3 §4) and overwriting them.
+            "ruleset_version": RULESET_VERSION,
         }
     )
 
@@ -79,10 +84,12 @@ def test_a_real_tier_decrease_does_not_escalate() -> None:
     assert result.exit_code == EXIT_OK
 
 
-def test_no_diff_of_any_shape_produces_a_tier_escalation_finding_when_unclassified() -> None:
-    """The Phase 1 baseline behaviour, still true for manifests nothing has
-    classified: with no tier data, ``tier_escalated`` cannot fire, no matter what
-    else changed."""
+def test_an_unclassified_pair_is_reanalysed_so_a_real_tier_move_is_caught() -> None:
+    """Phase 1's "with no tier data, ``tier_escalated`` cannot fire" no longer holds:
+    since Phase 3 §4, ``diff`` re-analyses any side with no recorded ruleset from its
+    stored surface. The ``changes`` tool gains a Rule D ``force`` boolean here, so
+    the re-analysed pair *does* show a tier increase — on the merits, R0 to R5 —
+    and the comparison says on which side re-analysis happened."""
     old = make_manifest(
         [
             tool_wire("stays", description="unchanged"),
@@ -104,7 +111,9 @@ def test_no_diff_of_any_shape_produces_a_tier_escalation_finding_when_unclassifi
 
     result = diff_manifests(old, new)
     assert result.findings  # the comparison really did run
-    assert result.findings_of(ChangeKind.TIER_ESCALATED) == []
+    [escalation] = result.findings_of(ChangeKind.TIER_ESCALATED)
+    assert escalation.tool == "changes"
+    assert len(result.notes) == 2  # both sides carried no ruleset
 
 
 def test_the_tier_escalated_kind_still_maps_to_escalation() -> None:

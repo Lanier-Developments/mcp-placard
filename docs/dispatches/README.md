@@ -22,6 +22,8 @@ evidence attached — usually a real server's `tools/list`. The amendments thems
 | 2026-09-18 | Jr. → Chief | Phase 2.1 report with before/after delta; Phase 2.2 addenda appended |
 | 2026-09-18 | Chief → Jr. | Phase 2.2 decisions on the three flag-backs (Amendment 3) |
 | 2026-09-19 | Chief → Jr. | Phase 2.2 addendum decisions: condition 1, negation guard, exit codes |
+| 2026-09-21 | Chief → Jr. | Phase 3 brief: injection surface, and the 0.3.0 bitmask exit-code ruling |
+| 2026-09-21 | Jr. → Chief | Phase 3 report: corpus, ratchet, re-analysis, the spurious-escalation confirmation |
 
 These are kept verbatim, including the parts that turned out to be wrong. A taxonomy whose
 history is visible is easier to trust than one that only shows its current text.

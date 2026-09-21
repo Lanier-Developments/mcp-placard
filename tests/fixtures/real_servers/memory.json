@@ -1,10 +1,23 @@
 {
   "captured": "2026-09-17",
+  "instructions": null,
+  "prompts": [],
+  "resource_templates": [],
+  "resources": [
+    {
+      "description": "The full knowledge graph with all entities and relations",
+      "mimeType": "application/json",
+      "name": "knowledge-graph",
+      "title": "Knowledge Graph",
+      "uri": "memory://knowledge-graph"
+    }
+  ],
   "server": "memory",
   "source": {
     "name": "memory-server",
     "version": "0.6.3"
   },
+  "surface_captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
   "tools": [
     {
       "annotations": {

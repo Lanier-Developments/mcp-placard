@@ -10,14 +10,23 @@ a prompt injected straight into an agent's context — becomes a reviewable even
 
 from __future__ import annotations
 
-__all__ = ["MANIFEST_VERSION", "__version__"]
+__all__ = ["MANIFEST_VERSION", "RULESET_VERSION", "__version__"]
 
 __version__ = "0.2.0"
 
 #: Schema version stamped into every manifest this build writes. Bumped when the
 #: manifest layout changes in a way older readers cannot handle. Phase 1 wrote
 #: "1.0"; Phase 2 bumped to "2.0" for the ``classification`` / ``classification_hash``
-#: / ``findings`` fields; Phase 2.1 bumps to "2.1" for the per-tool ``kinds`` axis —
-#: see ``manifest/io.py`` for how "1.0" and "2.0" manifests still read under this
-#: build.
-MANIFEST_VERSION = "2.1"
+#: / ``findings`` fields; Phase 2.1 bumped to "2.1" for the per-tool ``kinds`` axis;
+#: Phase 3 bumps to "2.2" for ``injection_findings`` and ``ruleset_version`` — see
+#: ``manifest/io.py`` for how every earlier version still reads under this build.
+MANIFEST_VERSION = "2.2"
+
+#: Version of the *analysis rules* — the classifier (Rules A-H, the kind axis) and
+#: the injection heuristics together. Recorded on every manifest this build
+#: analyses. ``diff`` compares only manifests analysed under the same ruleset: when
+#: the two sides differ, the older side is re-analysed from its stored surface with
+#: the current rules before comparing, so a ruleset change can never produce a
+#: finding on a server that did not change (Phase 3 §4). Bump on any change to a
+#: rule, a field list, a pattern, or a kind derivation.
+RULESET_VERSION = "3.0"

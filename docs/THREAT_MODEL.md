@@ -93,6 +93,18 @@ judge text that was hostile on the first scan — a server that shipped maliciou
 descriptions from day one produces a clean baseline. Phase 3's heuristics address the
 first-sight case, with a tracked false-positive rate.
 
+
+**Phase 3 coverage.** `inject/` matches seven deterministic pattern classes —
+`override`, `concealment`, `cross_scope`, `sensitive_target`, `exfil_sink`,
+`hidden_content`, `markup_smuggling` — over every model-facing string, including
+schema property descriptions. It flags scope violation, not imperative voice: a
+description that governs its own tool is doing its job. The false-positive rate on 388
+real strings from eleven servers is a ratcheted metric at zero, and fourteen annotated
+hard cases never flag. What it cannot do: judge text it has no pattern for. A novel
+phrasing with no scope marker passes, which is why `description_hash` drift (A4's
+Phase 1 defence) remains the backstop — a description that changes is reviewable
+whether or not any heuristic fires. `docs/INJECTION.md`.
+
 ### A5 — The operator who stops looking
 
 Not an attacker, and the most likely cause of failure.
@@ -136,6 +148,13 @@ Named explicitly, because an unstated limit reads as a covered case.
 - **Non-MCP capability.** Tools an agent has outside MCP are not enumerated.
 - **Denial of service.** A server that hangs or floods is a failed scan, not a
   finding. Timeouts and the page budget keep the failure bounded, that is all.
+- **Resource contents.** Phase 3 scans every model-facing *description* — tool,
+  schema property, server instructions, prompt, resource — but never reads a
+  resource's *contents*. Reading them needs `resources/read`, which is not
+  `tools/call` and is not forbidden, but it fetches live and possibly sensitive data,
+  changes constantly, and turns a static scan into a data-collection step. An
+  injection carried in resource content is not detected. Known gap, not an assertion
+  of safety.
 - **A chain whose read half is a resource.** `CHAIN_EXFIL` evaluates tools only.
   Resources and prompts are enumerated but unclassified in Phase 2, so a server
   exposing mail or file contents as a *resource* alongside an R4 egress *tool* is

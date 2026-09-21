@@ -1,0 +1,626 @@
+{
+  "captured": "2026-09-19 (instructions, prompts, resources); tools 2026-09-17",
+  "elements": [
+    {
+      "element": "tool:browser_click/description",
+      "pointer": "/surface/tools/0/description",
+      "text": "Perform click on a web page"
+    },
+    {
+      "element": "tool:browser_click/annotations/title",
+      "pointer": "/surface/tools/0/annotations/title",
+      "text": "Click"
+    },
+    {
+      "element": "tool:browser_click/inputSchema/properties/button/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/button/description",
+      "text": "Button to click, defaults to left"
+    },
+    {
+      "element": "tool:browser_click/inputSchema/properties/doubleClick/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/doubleClick/description",
+      "text": "Whether to perform a double click instead of a single click"
+    },
+    {
+      "element": "tool:browser_click/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_click/inputSchema/properties/modifiers/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/modifiers/description",
+      "text": "Modifier keys to press"
+    },
+    {
+      "element": "tool:browser_click/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/0/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_close/description",
+      "pointer": "/surface/tools/1/description",
+      "text": "Close the page"
+    },
+    {
+      "element": "tool:browser_close/annotations/title",
+      "pointer": "/surface/tools/1/annotations/title",
+      "text": "Close browser"
+    },
+    {
+      "element": "tool:browser_console_messages/description",
+      "pointer": "/surface/tools/2/description",
+      "text": "Returns all console messages"
+    },
+    {
+      "element": "tool:browser_console_messages/annotations/title",
+      "pointer": "/surface/tools/2/annotations/title",
+      "text": "Get console messages"
+    },
+    {
+      "element": "tool:browser_console_messages/inputSchema/properties/all/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/all/description",
+      "text": "Return all console messages since the beginning of the session, not just since the last navigation. Defaults to false."
+    },
+    {
+      "element": "tool:browser_console_messages/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/filename/description",
+      "text": "File name to save the console messages to. Relative file names are resolved against the workspace root. If not provided, messages are returned as text."
+    },
+    {
+      "element": "tool:browser_console_messages/inputSchema/properties/level/description",
+      "pointer": "/surface/tools/2/inputSchema/properties/level/description",
+      "text": "Level of the console messages to return. Each level includes the messages of more severe levels. Defaults to \"info\"."
+    },
+    {
+      "element": "tool:browser_drag/description",
+      "pointer": "/surface/tools/3/description",
+      "text": "Perform drag and drop between two elements"
+    },
+    {
+      "element": "tool:browser_drag/annotations/title",
+      "pointer": "/surface/tools/3/annotations/title",
+      "text": "Drag mouse"
+    },
+    {
+      "element": "tool:browser_drag/inputSchema/properties/endElement/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/endElement/description",
+      "text": "Human-readable target element description used to obtain the permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_drag/inputSchema/properties/endTarget/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/endTarget/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_drag/inputSchema/properties/startElement/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/startElement/description",
+      "text": "Human-readable source element description used to obtain the permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_drag/inputSchema/properties/startTarget/description",
+      "pointer": "/surface/tools/3/inputSchema/properties/startTarget/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_drop/description",
+      "pointer": "/surface/tools/4/description",
+      "text": "Drop files or MIME-typed data onto an element, as if dragged from outside the page. At least one of \"paths\" or \"data\" must be provided."
+    },
+    {
+      "element": "tool:browser_drop/annotations/title",
+      "pointer": "/surface/tools/4/annotations/title",
+      "text": "Drop files or data onto an element"
+    },
+    {
+      "element": "tool:browser_drop/inputSchema/properties/data/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/data/description",
+      "text": "Data to drop, as a map of MIME type to string value (e.g. {\"text/plain\": \"hello\", \"text/uri-list\": \"https://example.com\"})."
+    },
+    {
+      "element": "tool:browser_drop/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_drop/inputSchema/properties/paths/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/paths/description",
+      "text": "Absolute paths to files to drop onto the element."
+    },
+    {
+      "element": "tool:browser_drop/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/4/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_evaluate/description",
+      "pointer": "/surface/tools/5/description",
+      "text": "Evaluate JavaScript expression on page or element"
+    },
+    {
+      "element": "tool:browser_evaluate/annotations/title",
+      "pointer": "/surface/tools/5/annotations/title",
+      "text": "Evaluate JavaScript"
+    },
+    {
+      "element": "tool:browser_evaluate/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_evaluate/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/filename/description",
+      "text": "File name to save the result to. Relative file names are resolved against the workspace root. If not provided, result is returned as text."
+    },
+    {
+      "element": "tool:browser_evaluate/inputSchema/properties/function/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/function/description",
+      "text": "() => { /* code */ } or (element) => { /* code */ } when element is provided"
+    },
+    {
+      "element": "tool:browser_evaluate/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/5/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_file_upload/description",
+      "pointer": "/surface/tools/6/description",
+      "text": "Upload one or multiple files"
+    },
+    {
+      "element": "tool:browser_file_upload/annotations/title",
+      "pointer": "/surface/tools/6/annotations/title",
+      "text": "Upload files"
+    },
+    {
+      "element": "tool:browser_file_upload/inputSchema/properties/paths/description",
+      "pointer": "/surface/tools/6/inputSchema/properties/paths/description",
+      "text": "The absolute paths to the files to upload. Can be single file or multiple files. If omitted, file chooser is cancelled."
+    },
+    {
+      "element": "tool:browser_fill_form/description",
+      "pointer": "/surface/tools/7/description",
+      "text": "Fill multiple form fields"
+    },
+    {
+      "element": "tool:browser_fill_form/annotations/title",
+      "pointer": "/surface/tools/7/annotations/title",
+      "text": "Fill form"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/description",
+      "text": "Fields to fill in"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/items/properties/element/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/items/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/items/properties/name/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/items/properties/name/description",
+      "text": "Human-readable field name"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/items/properties/target/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/items/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/items/properties/type/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/items/properties/type/description",
+      "text": "Type of the field"
+    },
+    {
+      "element": "tool:browser_fill_form/inputSchema/properties/fields/items/properties/value/description",
+      "pointer": "/surface/tools/7/inputSchema/properties/fields/items/properties/value/description",
+      "text": "Value to fill in the field. If the field is a checkbox, the value should be `true` or `false`. If the field is a combobox, the value should be the text of the option."
+    },
+    {
+      "element": "tool:browser_find/description",
+      "pointer": "/surface/tools/8/description",
+      "text": "Search the accessibility snapshot of the current page for text or a regular expression. Returns matching snapshot nodes with a few lines of surrounding context (like search snippets), each shown under its path from the root of the tree, which is cheaper than capturing the whole snapshot when you only need to locate an element and its ref."
+    },
+    {
+      "element": "tool:browser_find/annotations/title",
+      "pointer": "/surface/tools/8/annotations/title",
+      "text": "Find in page snapshot"
+    },
+    {
+      "element": "tool:browser_find/inputSchema/properties/regex/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/regex/description",
+      "text": "Regular expression to search for in the page snapshot. Matching is case-sensitive by default; wrap the pattern in slashes to add flags, e.g. \"/error/i\" for case-insensitive. Provide either text or regex, not both."
+    },
+    {
+      "element": "tool:browser_find/inputSchema/properties/text/description",
+      "pointer": "/surface/tools/8/inputSchema/properties/text/description",
+      "text": "Plain text to search for in the page snapshot (case-insensitive substring match). Provide either text or regex, not both."
+    },
+    {
+      "element": "tool:browser_handle_dialog/description",
+      "pointer": "/surface/tools/9/description",
+      "text": "Handle a dialog"
+    },
+    {
+      "element": "tool:browser_handle_dialog/annotations/title",
+      "pointer": "/surface/tools/9/annotations/title",
+      "text": "Handle a dialog"
+    },
+    {
+      "element": "tool:browser_handle_dialog/inputSchema/properties/accept/description",
+      "pointer": "/surface/tools/9/inputSchema/properties/accept/description",
+      "text": "Whether to accept the dialog."
+    },
+    {
+      "element": "tool:browser_handle_dialog/inputSchema/properties/promptText/description",
+      "pointer": "/surface/tools/9/inputSchema/properties/promptText/description",
+      "text": "The text of the prompt in case of a prompt dialog."
+    },
+    {
+      "element": "tool:browser_hover/description",
+      "pointer": "/surface/tools/10/description",
+      "text": "Hover over element on page"
+    },
+    {
+      "element": "tool:browser_hover/annotations/title",
+      "pointer": "/surface/tools/10/annotations/title",
+      "text": "Hover mouse"
+    },
+    {
+      "element": "tool:browser_hover/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/10/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_hover/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/10/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_navigate/description",
+      "pointer": "/surface/tools/11/description",
+      "text": "Navigate to a URL"
+    },
+    {
+      "element": "tool:browser_navigate/annotations/title",
+      "pointer": "/surface/tools/11/annotations/title",
+      "text": "Navigate to a URL"
+    },
+    {
+      "element": "tool:browser_navigate/inputSchema/properties/url/description",
+      "pointer": "/surface/tools/11/inputSchema/properties/url/description",
+      "text": "The URL to navigate to"
+    },
+    {
+      "element": "tool:browser_navigate_back/description",
+      "pointer": "/surface/tools/12/description",
+      "text": "Go back to the previous page in the history"
+    },
+    {
+      "element": "tool:browser_navigate_back/annotations/title",
+      "pointer": "/surface/tools/12/annotations/title",
+      "text": "Go back"
+    },
+    {
+      "element": "tool:browser_network_request/description",
+      "pointer": "/surface/tools/13/description",
+      "text": "Returns full details (headers and body) of a single network request, or a single part if `part` is set. Use the number from browser_network_requests."
+    },
+    {
+      "element": "tool:browser_network_request/annotations/title",
+      "pointer": "/surface/tools/13/annotations/title",
+      "text": "Show network request details"
+    },
+    {
+      "element": "tool:browser_network_request/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/filename/description",
+      "text": "File name to save the result to. Relative file names are resolved against the workspace root. If not provided, output is returned as text."
+    },
+    {
+      "element": "tool:browser_network_request/inputSchema/properties/index/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/index/description",
+      "text": "1-based index of the request, as printed by browser_network_requests."
+    },
+    {
+      "element": "tool:browser_network_request/inputSchema/properties/part/description",
+      "pointer": "/surface/tools/13/inputSchema/properties/part/description",
+      "text": "Return only this part of the request. Omit to return full details."
+    },
+    {
+      "element": "tool:browser_network_requests/description",
+      "pointer": "/surface/tools/14/description",
+      "text": "Returns a numbered list of network requests since loading the page. Use browser_network_request with the number to get full details."
+    },
+    {
+      "element": "tool:browser_network_requests/annotations/title",
+      "pointer": "/surface/tools/14/annotations/title",
+      "text": "List network requests"
+    },
+    {
+      "element": "tool:browser_network_requests/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/filename/description",
+      "text": "File name to save the network requests to. Relative file names are resolved against the workspace root. If not provided, requests are returned as text."
+    },
+    {
+      "element": "tool:browser_network_requests/inputSchema/properties/filter/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/filter/description",
+      "text": "Only return requests whose URL matches this regexp (e.g. \"/api/.*user\")."
+    },
+    {
+      "element": "tool:browser_network_requests/inputSchema/properties/static/description",
+      "pointer": "/surface/tools/14/inputSchema/properties/static/description",
+      "text": "Whether to include successful static resources like images, fonts, scripts, etc. Defaults to false."
+    },
+    {
+      "element": "tool:browser_press_key/description",
+      "pointer": "/surface/tools/15/description",
+      "text": "Press a key on the keyboard"
+    },
+    {
+      "element": "tool:browser_press_key/annotations/title",
+      "pointer": "/surface/tools/15/annotations/title",
+      "text": "Press a key"
+    },
+    {
+      "element": "tool:browser_press_key/inputSchema/properties/key/description",
+      "pointer": "/surface/tools/15/inputSchema/properties/key/description",
+      "text": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"
+    },
+    {
+      "element": "tool:browser_resize/description",
+      "pointer": "/surface/tools/16/description",
+      "text": "Resize the browser window"
+    },
+    {
+      "element": "tool:browser_resize/annotations/title",
+      "pointer": "/surface/tools/16/annotations/title",
+      "text": "Resize browser window"
+    },
+    {
+      "element": "tool:browser_resize/inputSchema/properties/height/description",
+      "pointer": "/surface/tools/16/inputSchema/properties/height/description",
+      "text": "Height of the browser window"
+    },
+    {
+      "element": "tool:browser_resize/inputSchema/properties/width/description",
+      "pointer": "/surface/tools/16/inputSchema/properties/width/description",
+      "text": "Width of the browser window"
+    },
+    {
+      "element": "tool:browser_run_code_unsafe/description",
+      "pointer": "/surface/tools/17/description",
+      "text": "Run a Playwright code snippet. Unsafe: executes arbitrary JavaScript in the Playwright server process and is RCE-equivalent."
+    },
+    {
+      "element": "tool:browser_run_code_unsafe/annotations/title",
+      "pointer": "/surface/tools/17/annotations/title",
+      "text": "Run Playwright code (unsafe)"
+    },
+    {
+      "element": "tool:browser_run_code_unsafe/inputSchema/properties/code/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/code/description",
+      "text": "A JavaScript function containing Playwright code to execute. It will be invoked with a single argument, page, which you can use for any page interaction. For example: `async (page) => { await page.getByRole('button', { name: 'Submit' }).click(); return await page.title(); }`"
+    },
+    {
+      "element": "tool:browser_run_code_unsafe/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/17/inputSchema/properties/filename/description",
+      "text": "Load code from the specified file. Relative file names are resolved against the workspace root. If both code and filename are provided, code will be ignored."
+    },
+    {
+      "element": "tool:browser_select_option/description",
+      "pointer": "/surface/tools/18/description",
+      "text": "Select an option in a dropdown"
+    },
+    {
+      "element": "tool:browser_select_option/annotations/title",
+      "pointer": "/surface/tools/18/annotations/title",
+      "text": "Select option"
+    },
+    {
+      "element": "tool:browser_select_option/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_select_option/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_select_option/inputSchema/properties/values/description",
+      "pointer": "/surface/tools/18/inputSchema/properties/values/description",
+      "text": "Array of values to select in the dropdown. This can be a single value or multiple values."
+    },
+    {
+      "element": "tool:browser_snapshot/description",
+      "pointer": "/surface/tools/19/description",
+      "text": "Capture accessibility snapshot of the current page, this is better than screenshot"
+    },
+    {
+      "element": "tool:browser_snapshot/annotations/title",
+      "pointer": "/surface/tools/19/annotations/title",
+      "text": "Page snapshot"
+    },
+    {
+      "element": "tool:browser_snapshot/inputSchema/properties/boxes/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/boxes/description",
+      "text": "Include each element's bounding box as [box=x,y,width,height] in the snapshot. Coordinates are viewport-relative, in CSS pixels (Element.getBoundingClientRect)"
+    },
+    {
+      "element": "tool:browser_snapshot/inputSchema/properties/depth/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/depth/description",
+      "text": "Limit the depth of the snapshot tree"
+    },
+    {
+      "element": "tool:browser_snapshot/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/filename/description",
+      "text": "Save snapshot to a file instead of returning it in the response. Relative file names are resolved against the workspace root."
+    },
+    {
+      "element": "tool:browser_snapshot/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/19/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_tabs/description",
+      "pointer": "/surface/tools/20/description",
+      "text": "List, create, close, or select a browser tab."
+    },
+    {
+      "element": "tool:browser_tabs/annotations/title",
+      "pointer": "/surface/tools/20/annotations/title",
+      "text": "Manage tabs"
+    },
+    {
+      "element": "tool:browser_tabs/inputSchema/properties/action/description",
+      "pointer": "/surface/tools/20/inputSchema/properties/action/description",
+      "text": "Operation to perform"
+    },
+    {
+      "element": "tool:browser_tabs/inputSchema/properties/index/description",
+      "pointer": "/surface/tools/20/inputSchema/properties/index/description",
+      "text": "Tab index, used for close/select. If omitted for close, current tab is closed."
+    },
+    {
+      "element": "tool:browser_tabs/inputSchema/properties/url/description",
+      "pointer": "/surface/tools/20/inputSchema/properties/url/description",
+      "text": "URL to navigate to in the new tab, used for new."
+    },
+    {
+      "element": "tool:browser_take_screenshot/description",
+      "pointer": "/surface/tools/21/description",
+      "text": "Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions."
+    },
+    {
+      "element": "tool:browser_take_screenshot/annotations/title",
+      "pointer": "/surface/tools/21/annotations/title",
+      "text": "Take a screenshot"
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/filename/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/filename/description",
+      "text": "File name to save the screenshot to. Relative file names are resolved against the workspace root. If not specified, the screenshot is saved into the output directory as `page-{timestamp}.{png|jpeg|webp}`."
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/fullPage/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/fullPage/description",
+      "text": "When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots."
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/scale/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/scale/description",
+      "text": "Image resolution scale. \"css\" produces a screenshot sized in CSS pixels (smaller, consistent across devices). \"device\" produces a high-resolution screenshot using device pixels (larger, accounts for the device pixel ratio). Default is css."
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_take_screenshot/inputSchema/properties/type/description",
+      "pointer": "/surface/tools/21/inputSchema/properties/type/description",
+      "text": "Image format for the screenshot. If unset, inferred from the filename extension, otherwise png."
+    },
+    {
+      "element": "tool:browser_type/description",
+      "pointer": "/surface/tools/22/description",
+      "text": "Type text into editable element"
+    },
+    {
+      "element": "tool:browser_type/annotations/title",
+      "pointer": "/surface/tools/22/annotations/title",
+      "text": "Type text"
+    },
+    {
+      "element": "tool:browser_type/inputSchema/properties/element/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/element/description",
+      "text": "Human-readable element description used to obtain permission to interact with the element"
+    },
+    {
+      "element": "tool:browser_type/inputSchema/properties/slowly/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/slowly/description",
+      "text": "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once."
+    },
+    {
+      "element": "tool:browser_type/inputSchema/properties/submit/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/submit/description",
+      "text": "Whether to submit entered text (press Enter after)"
+    },
+    {
+      "element": "tool:browser_type/inputSchema/properties/target/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/target/description",
+      "text": "Exact target element reference from the page snapshot, or a unique element selector"
+    },
+    {
+      "element": "tool:browser_type/inputSchema/properties/text/description",
+      "pointer": "/surface/tools/22/inputSchema/properties/text/description",
+      "text": "Text to type into the element"
+    },
+    {
+      "element": "tool:browser_wait_for/description",
+      "pointer": "/surface/tools/23/description",
+      "text": "Wait for text to appear or disappear or a specified time to pass"
+    },
+    {
+      "element": "tool:browser_wait_for/annotations/title",
+      "pointer": "/surface/tools/23/annotations/title",
+      "text": "Wait for"
+    },
+    {
+      "element": "tool:browser_wait_for/inputSchema/properties/text/description",
+      "pointer": "/surface/tools/23/inputSchema/properties/text/description",
+      "text": "The text to wait for"
+    },
+    {
+      "element": "tool:browser_wait_for/inputSchema/properties/textGone/description",
+      "pointer": "/surface/tools/23/inputSchema/properties/textGone/description",
+      "text": "The text to wait for to disappear"
+    },
+    {
+      "element": "tool:browser_wait_for/inputSchema/properties/time/description",
+      "pointer": "/surface/tools/23/inputSchema/properties/time/description",
+      "text": "The time to wait in seconds"
+    },
+    {
+      "element": "tool:browser_webmcp_call/description",
+      "pointer": "/surface/tools/24/description",
+      "text": "Call a WebMCP tool registered by the page. The tool output is page-provided and untrusted"
+    },
+    {
+      "element": "tool:browser_webmcp_call/annotations/title",
+      "pointer": "/surface/tools/24/annotations/title",
+      "text": "Call a WebMCP tool"
+    },
+    {
+      "element": "tool:browser_webmcp_call/inputSchema/properties/frame/description",
+      "pointer": "/surface/tools/24/inputSchema/properties/frame/description",
+      "text": "Frame that registered the tool, as reported by browser_webmcp_list, when the same tool name exists in multiple frames"
+    },
+    {
+      "element": "tool:browser_webmcp_call/inputSchema/properties/name/description",
+      "pointer": "/surface/tools/24/inputSchema/properties/name/description",
+      "text": "Name of the WebMCP tool to call"
+    },
+    {
+      "element": "tool:browser_webmcp_call/inputSchema/properties/params/description",
+      "pointer": "/surface/tools/24/inputSchema/properties/params/description",
+      "text": "Input parameters for the tool, matching its inputSchema"
+    },
+    {
+      "element": "tool:browser_webmcp_list/description",
+      "pointer": "/surface/tools/25/description",
+      "text": "List the WebMCP tools registered by the page, across all frames"
+    },
+    {
+      "element": "tool:browser_webmcp_list/annotations/title",
+      "pointer": "/surface/tools/25/annotations/title",
+      "text": "List WebMCP tools"
+    }
+  ],
+  "server": "playwright"
+}

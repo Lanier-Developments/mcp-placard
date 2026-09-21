@@ -66,7 +66,7 @@ src/mcp_placard/
   transport/        stdio and http MCP client wrappers — connect and enumerate only
   manifest/         Canonical serialization, hashing, schema (pydantic models)
   classify/         Risk tier inference, declared-vs-inferred reconciliation
-  inject/           Injection surface heuristics over descriptions and resource text
+  inject/           Injection surface heuristics over every model-facing string (not resource contents)
   diff/             Manifest comparison and escalation rules
   report/           Markdown and SARIF renderers
 tests/
@@ -75,6 +75,8 @@ tests/
 docs/
   THREAT_MODEL.md   What Placard does and does not defend against
   TAXONOMY.md       Risk tier definitions with worked examples
+  INJECTION.md      The seven injection classes, the corpus, the ratchet
+  dispatches/       The dated Chief/Jr. briefs, reports, and decisions that produced the rules
 ```
 
 Every directory under `src/` carries a README.md stating its responsibility and its boundary.
@@ -123,13 +125,22 @@ Three hash levels, all required:
 Splitting schema from description is what makes "the server rewrote its prompt but kept the API
 identical" a visible event. Do not collapse these into one hash for convenience.
 
+`classification_hash` covers Placard's own analysis — `classification`, `injection_findings`,
+and the `ruleset_version` that produced them — and sits outside `surface_hash` so a rule change
+never moves the hash of a server that did not change. `diff` re-analyses any side whose
+`ruleset_version` is not the current one before comparing (Phase 3 §4): only surface changes can
+produce findings. Bump `RULESET_VERSION` on any change to a rule, a field list, a pattern, or a
+kind derivation.
+
 ## Exit Codes
 
-Exit codes are **categories, not a severity ladder**: `2` is a different review path, not a
-worse outcome than `1`. Codes are pinned per command below and are an interface Phase 4's
-GitHub Action consumes — a code changing meaning for a command is a breaking change to that
-interface, not an implementation detail. Pin every code for every command in tests; add a row
-before changing one (`tests/test_exit_code_contract.py`, `tests/test_diff_table.py`).
+Exit codes are a **per-command contract** and an interface Phase 4's GitHub Action consumes — a code
+changing meaning for a command is a breaking change to that interface, not an implementation detail.
+Pin every code for every command in tests; add a row before changing one
+(`tests/test_exit_code_contract.py`, `tests/test_diff_table.py`, `tests/test_inject_diff.py`).
+
+Read a code only in the context of the command that produced it. `verify`'s `1` and `diff`'s `1` share
+a number, not a meaning.
 
 ### `scan`
 
@@ -137,27 +148,38 @@ before changing one (`tests/test_exit_code_contract.py`, `tests/test_diff_table.
 | --- | --- |
 | 0 | Enumerated successfully; manifest written |
 | 3 | Server unreachable, or enumeration failed after a successful handshake |
-| 10 | Usage or configuration error (unresolvable transport, empty target) |
+| 64 | Usage or configuration error (unresolvable transport, empty target) |
 
-### `diff`
+### `diff` — a bitmask of finding categories
 
-| Code | Condition |
-| --- | --- |
-| 0 | No change, or changes entirely below the configured ceiling |
-| 1 | Escalation — new tool at or above `--ceiling` (default R4), a tier increase, capabilities changed, or (Phase 3) a new injection finding. A change in `kinds` alone is not a diff finding (not yet — see Phase 6) |
-| 2 | Description change on any existing tool (prompt change, requires review) |
-| 3 | Tool removed |
-| 10 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
+`diff`'s status is the **OR of one bit per finding category** present in the run. Categories are not a
+severity ladder and are not ranked: one integer cannot carry several categories exclusively, and any
+precedence order masks something (the pre-0.3.0 rule `3 > 1 > 2 > 0` reported `3` for "one R0 tool
+removed, one R5 egress tool added," and a consumer gating on `1` missed the escalation). Under the
+bitmask a consumer asks `(( rc & 2 ))` for "does this need a prompt review" independent of everything
+else in the run.
 
-When several conditions apply at once, the reported code is the highest-precedence one:
-`3 > 1 > 2 > 0`. Every finding is still listed on stderr regardless of which code wins. Exit
-code 2 is deliberately never silenceable by tier config — a prompt change is always reviewable.
+| Bit | Value | Category |
+| --- | --- | --- |
+| — | 0 | No findings, or all changes below the configured ceiling |
+| 0 | 1 | Escalation — tier increase, new tool at or above `--ceiling` (default R4), capabilities changed |
+| 1 | 2 | Prompt change — description changed on an existing element. Never silenceable by tier configuration |
+| 2 | 4 | Tool removed |
+| 3 | 8 | Injection finding — new in this diff, both sides analysed under the current ruleset |
+| — | 64 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`). Exclusive: never OR'd with a finding bit, since no comparison happened |
+
+A run with an escalation and a prompt change exits `3`. Every finding is listed on stderr regardless
+of the bits. Injection has its own bit rather than joining escalation because the useful signal for a
+reviewer is precisely the difference between "the prompt changed" (`2`) and "the prompt changed and it
+looks hostile" (`2 | 8`).
 
 A tool absent from a manifest's `classification` — an old `"1.0"` manifest, or one nothing has
 classified — falls back to the Phase 1 conservative default (escalate) for both `tool_added` and
-`tool_schema_changed`: AGENTS.md forbids treating "we cannot grade this" as "this is safe." A
-schema change on a tool that *can* be graded escalates only if it moved the tier (already caught
-separately as a tier increase) or if `--escalate-schema-changes` is set.
+`tool_schema_changed`: AGENTS.md forbids treating "we cannot grade this" as "this is safe." A schema
+change on a tool that *can* be graded escalates only if it moved the tier (already caught separately
+as a tier increase) or if `--escalate-schema-changes` is set.
+
+A change in `kinds` alone is not a diff finding (not yet — see Phase 6).
 
 ### `verify`
 
@@ -165,16 +187,19 @@ separately as a tier increase) or if `--escalate-schema-changes` is set.
 | --- | --- |
 | 0 | Every recorded hash matches its content |
 | 1 | At least one recorded hash does not match — the manifest was edited after it was produced |
-| 10 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
-
-`verify`'s code `1` and `diff`'s code `1` share a number, not a meaning — the first is an
-integrity failure, the second is a risk escalation. Read a code only in the context of the
-command that produced it.
+| 64 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
 
 ### `report` (reserved, Phase 4)
 
-Not implemented yet. Codes `20`-`29` are reserved for it so nothing in `scan`, `diff`, or
-`verify` claims them before Phase 4 defines their meaning.
+Not implemented yet. Codes `100`-`109` are reserved for it so nothing in `scan`, `diff`, or `verify`
+claims them before Phase 4 defines their meaning, and so the reservation sits clear of any future
+fifth finding bit.
+
+### History
+
+0.1.0 and 0.2.0 used exclusive codes with a precedence rule (`3 > 1 > 2 > 0`), usage error `10`, and
+`20`-`29` reserved for `report`. 0.3.0 replaced that with the bitmask above in one breaking change;
+`10` collides with `8 | 2`, which is why usage error moved.
 
 ## Testing
 
@@ -187,7 +212,13 @@ before changing the rule.
 Injection heuristics are tested against a corpus in `tests/fixtures/injection/` holding both
 malicious samples and benign descriptions that superficially resemble them. False-positive rate
 on the benign set is a tracked metric, not an afterthought — a scanner that cries wolf gets
-turned off.
+turned off. Concretely: the benign half is every model-facing string from the real servers in
+`tests/fixtures/real_servers/`, materialised by `scripts/build_benign_corpus.py`; the malicious
+half is stored base64-encoded, labelled `synthetic` or `lifted` (with a source), and decoded only
+inside test code; `tests/fixtures/injection/baseline.json` is a ratchet CI fails against in
+either direction; the annotated hard cases in `benign/hard_cases.json` never flag, with zero
+tolerance; and a held-out set under `heldout/` is never opened during development and scored
+once with `scripts/score_heldout.py`.
 
 Coverage floor is 85% on `src/`, enforced in CI. Do not lower it to make a PR pass.
 
@@ -234,7 +265,11 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
-- **Phase 3** — injection surface heuristics with a tracked false-positive rate.
+- **Phase 3** — done. Seven deterministic injection classes over every model-facing string
+  (`docs/INJECTION.md`), manifest format `2.2` with `injection_findings` and `ruleset_version`,
+  re-analysis in `diff` so ruleset changes never produce findings, the bitmask exit contract, a
+  benign corpus of 388 real strings with a ratcheted zero false-positive baseline, and an encoded
+  malicious corpus with synthetic and lifted provenances reported separately.
 - **Phase 4** — GitHub Action wrapper, SARIF output, ceiling configuration.
 - **Phase 5** — manifest signing, and a published index of blast radii for widely used public MCP
   servers.

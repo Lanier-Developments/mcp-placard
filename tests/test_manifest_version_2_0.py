@@ -23,9 +23,9 @@ LEGACY_2_0 = FIXTURES / "legacy_manifest_2_0.json"
 CURRENT = FIXTURES / "mock_server_manifest.json"
 
 
-def test_this_build_writes_2_1() -> None:
-    assert MANIFEST_VERSION == "2.1"
-    assert load_manifest(CURRENT).manifest_version == "2.1"
+def test_this_build_writes_a_version_after_2_0() -> None:
+    assert MANIFEST_VERSION >= "2.1"
+    assert load_manifest(CURRENT).manifest_version == MANIFEST_VERSION
 
 
 def test_a_2_0_manifest_parses_with_empty_kinds() -> None:
