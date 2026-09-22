@@ -44,7 +44,10 @@ claimed by no other command.
 
 from __future__ import annotations
 
+import json
+import os
 import sys
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -52,14 +55,18 @@ import typer
 
 from . import MANIFEST_VERSION, __version__
 from .analysis import analyze
+from .check import CATEGORY_BITS, DEFAULT_FAIL_ON, dump_outputs, run_check, write_baselines
 from .classify.overrides import load_overrides
+from .config import FindingCategory, load_config, unpinned_target_warnings
 from .diff import diff_manifests
 from .diff.engine import DEFAULT_CEILING
 from .errors import (
     EXIT_OK,
+    EXIT_UNREACHABLE,
     EXIT_USAGE,
     HashMismatchError,
     PlacardError,
+    UsageError,
 )
 from .inject.render import stderr_line
 from .manifest import (
@@ -71,7 +78,10 @@ from .manifest import (
     write_manifest,
 )
 from .manifest.verify import hash_mismatches
+from .report import build_report
+from .report.findings import decode_bits
 from .transport import DEFAULT_TIMEOUT_SECONDS, TransportChoice, scan_target
+from .transport.launch import isolated_launch
 
 app = typer.Typer(
     name="placard",
@@ -87,6 +97,17 @@ app = typer.Typer(
 def _err(message: str) -> None:
     """Write one diagnostic line to stderr."""
     print(message, file=sys.stderr)
+
+
+def _passthrough(names: list[str]) -> dict[str, str]:
+    """Resolve ``--env`` names against this process's environment. A named variable
+    that is not set is a usage error, not a silently different launch."""
+    values: dict[str, str] = {}
+    for name in names:
+        if name not in os.environ:
+            raise UsageError(f"--env names {name}, which is not set in the environment")
+        values[name] = os.environ[name]
+    return values
 
 
 def _emit_manifest(manifest: Manifest, out: Path | None) -> None:
@@ -127,7 +148,16 @@ def scan(
         Path | None,
         typer.Option(
             "--override",
-            help="A JSON override allowlist. The only way a tier is ever downgraded.",
+            help="A JSON override allowlist, added to any from --config. The only way a "
+            "tier is ever downgraded.",
+        ),
+    ] = None,
+    env: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--env",
+            help="Name of an environment variable a stdio server may receive at launch, "
+            "read from this process's environment. Repeatable. Everything else is withheld.",
         ),
     ] = None,
 ) -> None:
@@ -138,8 +168,14 @@ def scan(
     prompts. No tool is ever invoked and no resource is ever read. Classification is
     a separate, pure pass over the enumerated surface — it reads the schema and
     declared annotations already captured, and never re-contacts the server.
+
+    A stdio server is launched with an isolated environment: PATH, a temporary HOME,
+    redirected package caches, and only the variables named with --env. It still runs
+    as this user with this user's filesystem access — isolation is not a sandbox.
     """
-    raw = scan_target(target, transport=transport, timeout=timeout)
+    passthrough = _passthrough(env or [])
+    with isolated_launch(passthrough) as launch_env:
+        raw = scan_target(target, transport=transport, timeout=timeout, env=launch_env)
     manifest = build_manifest(raw)
     overrides = load_overrides(override) if override is not None else []
     manifest = analyze(manifest, overrides=overrides)
@@ -221,6 +257,204 @@ def verify(
         f"{manifest_path}: intact — manifest_version {manifest.manifest_version}, "
         f"surface_hash {manifest.surface_hash}, {tools} tool(s) verified"
     )
+
+
+class ReportFormat(StrEnum):
+    MARKDOWN = "markdown"
+    SARIF = "sarif"
+
+
+@app.command()
+def report(
+    manifest_path: Annotated[
+        Path, typer.Argument(metavar="MANIFEST", help="The manifest to report on.")
+    ],
+    against: Annotated[
+        Path | None,
+        typer.Option(
+            "--against",
+            help="A baseline manifest. With it the report covers the diff; without, the "
+            "full manifest. SARIF locations point at this file.",
+        ),
+    ] = None,
+    fmt: Annotated[
+        ReportFormat,
+        typer.Option(
+            "--format",
+            help="markdown for humans and step summaries; sarif for GitHub code scanning.",
+        ),
+    ] = ReportFormat.MARKDOWN,
+    server_name: Annotated[
+        str | None,
+        typer.Option(
+            "--server-name",
+            help="Name used in the report title and SARIF fingerprints. Defaults to the "
+            "server's declared name.",
+        ),
+    ] = None,
+    config: Annotated[
+        Path | None,
+        typer.Option("--config", help="placard.toml, for the [report.level] mapping and ceiling."),
+    ] = None,
+    out: Annotated[Path | None, typer.Option("--out", help="Also write the report here.")] = None,
+) -> None:
+    """Render a manifest, or a diff against a baseline, as Markdown or SARIF.
+
+    Refuses a manifest (101) or a baseline (102) whose hashes do not match: a
+    report of tampered data is worse than no report. Every scanned string is escaped
+    before it is placed; SARIF messages are text only, never Markdown.
+    """
+    manifest = load_manifest(manifest_path)
+    baseline = load_manifest(against) if against is not None else None
+    levels = None
+    ceiling: Tier = DEFAULT_CEILING
+    if config is not None:
+        loaded = load_config(config)
+        levels = loaded.report.level
+        ceiling = loaded.defaults.ceiling
+    name = server_name or manifest.surface.server.name
+    built = build_report(
+        manifest,
+        server=name,
+        baseline=baseline,
+        baseline_path=str(against) if against is not None else None,
+        levels=levels,
+        ceiling=ceiling,
+    )
+    text = built.markdown() if fmt is ReportFormat.MARKDOWN else built.sarif_text()
+    sys.stdout.write(text)
+    if out is not None:
+        try:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(text, encoding="utf-8")
+        except OSError as exc:
+            raise UsageError(f"cannot write report {out}: {exc}") from exc
+        _err(f"wrote report to {out}")
+
+
+def _config_root(config: Path) -> Path:
+    return config.resolve().parent
+
+
+def _server_filter(server: list[str] | None) -> list[str] | None:
+    return list(server) if server else None
+
+
+@app.command()
+def baseline(
+    config: Annotated[Path, typer.Option("--config", help="placard.toml")] = Path("placard.toml"),
+    server: Annotated[
+        list[str] | None, typer.Option("--server", help="Only this server. Repeatable.")
+    ] = None,
+) -> None:
+    """Scan every configured server and write its manifest to its baseline path.
+
+    This is how a repository adopts Placard and how an approved change gets
+    committed: the committed baseline is the approval record. Never run this in
+    CI — approving a capability change is a human commit, by design.
+
+    Exits 0 when every baseline was written, 3 when any server could not be
+    scanned, 64 on a configuration error.
+    """
+    loaded = load_config(config)
+    for warning in unpinned_target_warnings(loaded):
+        _err(f"warning: {warning}")
+    results = write_baselines(loaded, root=_config_root(config), only=_server_filter(server))
+    failed = False
+    for name, path, error in results:
+        if error is None:
+            _err(f"{name}: wrote {path}")
+        else:
+            failed = True
+            _err(f"{name}: not written — {error}")
+    if failed:
+        raise typer.Exit(code=EXIT_UNREACHABLE)
+
+
+@app.command()
+def check(
+    config: Annotated[Path, typer.Option("--config", help="placard.toml")] = Path("placard.toml"),
+    server: Annotated[
+        list[str] | None, typer.Option("--server", help="Only this server. Repeatable.")
+    ] = None,
+    sarif: Annotated[Path | None, typer.Option("--sarif", help="Write the SARIF log here.")] = None,
+    summary: Annotated[
+        Path | None, typer.Option("--summary", help="Write the Markdown summary here.")
+    ] = None,
+    outputs: Annotated[
+        Path | None,
+        typer.Option(
+            "--outputs",
+            help="Write a JSON file of the bitmask, one boolean per "
+            "category, and the gate decision — what the GitHub Action turns into outputs.",
+        ),
+    ] = None,
+    fail_on: Annotated[
+        str,
+        typer.Option(
+            "--fail-on",
+            help="Comma-separated categories that fail the gate; recorded in --outputs as "
+            "'fail'. The exit status is always the full bitmask.",
+        ),
+    ] = ",".join(DEFAULT_FAIL_ON),
+) -> None:
+    """Scan every configured server, diff each against its baseline, and exit with
+    the OR of every finding bit — plus 16 when a server could not be scanned.
+
+    A server with no baseline yet is reported, not failed. The exit status is the
+    contract; --fail-on only decides the 'fail' value in --outputs, which is what
+    the GitHub Action gates on.
+    """
+    loaded = load_config(config)
+    for warning in unpinned_target_warnings(loaded):
+        _err(f"warning: {warning}")
+    categories = _parse_fail_on(fail_on)
+    result = run_check(loaded, root=_config_root(config), only=_server_filter(server))
+
+    for outcome in result.outcomes:
+        if not outcome.scanned:
+            _err(f"[incomplete] {outcome.name}: {outcome.error}")
+        elif not outcome.baseline_present:
+            _err(f"[no-baseline] {outcome.name}: reported, not failed ({outcome.baseline_path})")
+        else:
+            bits = ", ".join(decode_bits(outcome.status)) or "no change"
+            _err(f"[{outcome.status}] {outcome.name}: {bits}")
+            if outcome.report is not None and outcome.report.diff is not None:
+                for note in outcome.report.diff.notes:
+                    _err(f"note: {note}")
+                for finding in outcome.report.diff.findings:
+                    _err(f"[{finding.kind.value}] {finding.summary}")
+
+    if summary is not None:
+        _write_text(summary, result.markdown())
+    if sarif is not None:
+        _write_text(sarif, json.dumps(result.sarif(), indent=2, sort_keys=True) + "\n")
+    if outputs is not None:
+        dump_outputs(result, categories, outputs)
+    raise typer.Exit(code=result.status)
+
+
+def _parse_fail_on(value: str) -> list[FindingCategory]:
+    categories: list[FindingCategory] = []
+    for raw in value.split(","):
+        name = raw.strip()
+        if not name:
+            continue
+        if name not in CATEGORY_BITS:
+            raise UsageError(
+                f"--fail-on: unknown category {name!r}; expected any of " + ", ".join(CATEGORY_BITS)
+            )
+        categories.append(name)
+    return categories
+
+
+def _write_text(path: Path, text: str) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    except OSError as exc:
+        raise UsageError(f"cannot write {path}: {exc}") from exc
+    _err(f"wrote {path}")
 
 
 @app.command()

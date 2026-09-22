@@ -11,6 +11,8 @@ enumeration on a fresh event loop, and returns a
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import anyio
 
 from ..manifest.raw import RawSurface
@@ -49,11 +51,17 @@ async def enumerate_target(
     transport: TransportChoice = TransportChoice.AUTO,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     env: dict[str, str] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> RawSurface:
-    """Resolve the transport for ``target`` and enumerate its surface."""
+    """Resolve the transport for ``target`` and enumerate its surface.
+
+    ``env`` is the complete launch environment for a stdio target (see
+    ``transport/launch.py``); ``headers`` are request headers for an HTTP target.
+    Neither is stored anywhere.
+    """
     kind = resolve_transport(target, transport)
     if kind is TransportKind.HTTP:
-        return await enumerate_http(target, timeout=timeout)
+        return await enumerate_http(target, timeout=timeout, headers=headers)
     return await enumerate_stdio(target, env=env, timeout=timeout)
 
 
@@ -63,6 +71,7 @@ def scan_target(
     transport: TransportChoice = TransportChoice.AUTO,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     env: dict[str, str] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> RawSurface:
     """Synchronous wrapper around :func:`enumerate_target` for the CLI.
 
@@ -70,5 +79,7 @@ def scan_target(
     down with it, so no transport state outlives a command.
     """
     return anyio.run(
-        lambda: enumerate_target(target, transport=transport, timeout=timeout, env=env)
+        lambda: enumerate_target(
+            target, transport=transport, timeout=timeout, env=env, headers=headers
+        )
     )

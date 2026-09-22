@@ -294,23 +294,40 @@ def _references_foreign_tool(element: TextElement, identifier: str) -> bool:
     return _is_tool_shaped(identifier)
 
 
+_GENERIC_NAME_TOKENS = frozenset({"mcp", "server", "servers", "tools", "tool"})
+
+
+def _own_name_forms(declared: str) -> set[str]:
+    """The forms a server's own declared name may legitimately take in its text
+    (Phase 4 go memo, 3.1 correction): the whole name, or its final path segment
+    after the last ``/``, each with generic tokens stripped. *Not* arbitrary tokens
+    — the declared name comes from ``initialize``, which the server controls, and a
+    server calling itself ``jira-slack-github-bridge`` must not thereby exempt every
+    reference to Jira, Slack, and GitHub."""
+    forms: set[str] = set()
+    for candidate in (declared, declared.rsplit("/", 1)[-1]):
+        tokens = [t for t in re.split(r"[\s_.-]+", candidate.lower()) if t]
+        stripped = [t for t in tokens if t not in _GENERIC_NAME_TOKENS]
+        for variant in (tokens, stripped):
+            if variant:
+                forms.add(" ".join(variant))
+    return forms
+
+
 def _own_server_name(element: TextElement, name: str) -> bool:
     """A server referring to itself by name ("in the Playwright server process") is
-    in scope. Exact against the declared ``initialize`` name, its first token, or
-    a prefix shared with the server's own tool names."""
-    lowered = name.lower().strip()
-    declared = element.server_name
-    if declared:
-        declared_tokens = [t for t in re.split(r"[\s_./-]+", declared) if t]
-        name_tokens = [t for t in re.split(r"[\s_./-]+", lowered) if t]
-        if (
-            lowered == declared
-            or declared.startswith(lowered)
-            or (name_tokens and all(t in declared_tokens or t == "mcp" for t in name_tokens))
-        ):
-            return True
+    in scope. Exact against the declared ``initialize`` name or its final path
+    segment, generic tokens stripped — or a prefix shared with the server's own tool
+    names."""
+    tokens = [t for t in re.split(r"[\s_.-]+", name.lower().strip()) if t]
+    normalised = " ".join(t for t in tokens if t not in _GENERIC_NAME_TOKENS)
+    if not normalised:
+        return True  # "MCP server" alone names nothing
+    if element.server_name and normalised in _own_name_forms(element.server_name):
+        return True
+    first = tokens[0]
     return any(
-        tool.startswith(lowered) or tool.split("_")[0] == lowered for tool in element.own_tool_names
+        tool.startswith(first) or tool.split("_")[0] == first for tool in element.own_tool_names
     )
 
 
@@ -622,6 +639,32 @@ def detect_markup_smuggling(element: TextElement) -> Iterator[Match]:
         if m.group(1).lower() in HTML_FORMATTING_TAGS:
             continue
         yield Match("markup_smuggling", "markup_smuggling.paired_custom_tag", m.start(), m.end())
+
+
+def rule_names() -> list[str]:
+    """Every rule id a detector can cite, ``<class>.<name>``, for the SARIF catalog."""
+    names = [
+        *_OVERRIDE_RULES,
+        "override.hierarchy_invalidated",
+        "override.priority_claim",
+        *_CONCEALMENT_RULES,
+        *_CROSS_SCOPE_PHRASES,
+        "cross_scope.foreign_tool_identifier",
+        "cross_scope.named_service_host",
+        "sensitive_target.credential_path",
+        "sensitive_target.credential_transmission",
+        "exfil_sink.url",
+        "exfil_sink.email",
+        "hidden_content.zero_width",
+        "hidden_content.bidi_override",
+        "hidden_content.unicode_tags",
+        "hidden_content.base64_run",
+        "markup_smuggling.html_comment",
+        "markup_smuggling.pseudo_tag",
+        "markup_smuggling.bracket_tag",
+        "markup_smuggling.paired_custom_tag",
+    ]
+    return sorted(set(names))
 
 
 DETECTORS: tuple[Detector, ...] = (

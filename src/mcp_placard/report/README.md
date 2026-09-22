@@ -1,11 +1,13 @@
 # `report/` — Markdown and SARIF renderers
 
-## Status: empty. Phase 4.
+## Status: implemented (Phase 4)
 
-This directory exists because AGENTS.md's structure names it. The `placard report`
-command does not exist yet, and SARIF output is explicitly out of scope for Phase 1.
-
-**Do not add speculative scaffolding.**
+`placard report` renders a manifest, or a diff against a baseline, as Markdown (for
+humans and `$GITHUB_STEP_SUMMARY`) or SARIF 2.1.0 (for GitHub code scanning). Findings
+are unified in `findings.py`; `locate.py` maps a JSON Pointer to a real line in the
+indented baseline so SARIF regions point at something; `sarif.py` emits the rule
+catalog, text-only messages, physical and logical locations, and partial fingerprints
+derived from server, element, rule, and excerpt hash — never from position.
 
 ## Responsibility (Phase 4)
 
@@ -35,6 +37,11 @@ Concretely, that means:
 - A description that reads as an instruction to whoever is reviewing the report is
   itself the payload. Rendering it verbatim inside a fenced, escaped block is the
   goal; rendering it as prose in the reviewer's reading flow is not.
+
+## Refusal
+
+`report` refuses a manifest (101) or a baseline (102) whose hashes do not match. A
+report of tampered data is worse than no report.
 
 ## Phase 1 note
 

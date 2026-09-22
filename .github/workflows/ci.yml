@@ -77,52 +77,46 @@ jobs:
           if-no-files-found: error
 
   self-gate:
-    name: Placard gates itself
+    name: Placard gates itself (via the action)
     runs-on: ubuntu-latest
     # AGENTS.md: "CI also runs Placard against its own mock server and diffs the
-    # result against a checked-in manifest — the tool gates itself." A change to the
-    # mock server's surface that nobody recorded fails the build here.
+    # result against a checked-in manifest — the tool gates itself." Since Phase 4
+    # the gate *is* the GitHub Action, running from this checkout: hash-pinned
+    # dependencies, Placard installed from the repository at this SHA, the mock
+    # server scanned in an isolated environment, and the diff against
+    # tests/fixtures/mock_server_manifest.json rendered as a step summary and
+    # uploaded as SARIF. Every category fails here, removal included.
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v7
+      - name: Run the action from this checkout
+        id: placard
+        uses: ./
         with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: pyproject.toml
+          config: placard.toml
+          fail-on: escalation,prompt,removal,injection,incomplete
+          sarif: true
+          summary: true
 
-      - name: Install
-        run: pip install -e ".[dev]"
-
-      - name: Scan the mock server
-        run: placard scan "python -m tests.mock_server" --out current_manifest.json
-
-      - name: Verify the recorded manifest's own hashes
-        run: placard verify tests/fixtures/mock_server_manifest.json
-
-      - name: Verify the fresh scan's hashes
-        run: placard verify current_manifest.json
-
-      - name: Diff the fresh scan against the checked-in manifest
-        # Exit codes, per AGENTS.md: a bitmask — 1 escalation, 2 description change,
-        # 4 tool removed, 8 injection; 64 usage error. Any nonzero code here means the
-        # mock server's surface drifted without the fixture being updated.
-        run: placard diff tests/fixtures/mock_server_manifest.json current_manifest.json
-
-      - name: Confirm the scan is byte-for-byte reproducible
-        # Stronger than the diff: proves the manifest is reproducible, not merely
-        # equivalent. Catches any nondeterminism — ordering, a timestamp, an
-        # environment-dependent value — that the diff would step over.
-        run: diff -u tests/fixtures/mock_server_manifest.json current_manifest.json
+      - name: Outputs are the bitmask and one boolean per category
+        env:
+          RC: ${{ steps.placard.outputs.exit-code }}
+          ESC: ${{ steps.placard.outputs.escalation }}
+          PROMPT: ${{ steps.placard.outputs.prompt }}
+          INC: ${{ steps.placard.outputs.incomplete }}
+        run: |
+          test "$RC" -eq 0 || { echo "expected bitmask 0, got $RC"; exit 1; }
+          test "$ESC" = "false" && test "$PROMPT" = "false" && test "$INC" = "false"
 
       - name: Explain a failure
         if: failure()
         run: |
           echo "::error::The mock server's surface drifted from the checked-in manifest."
-          echo "Read the diff above before doing anything else."
-          echo "If the change is intended, regenerate the fixture deliberately:"
-          echo "  placard scan \"python -m tests.mock_server\" \\"
-          echo "    --out tests/fixtures/mock_server_manifest.json"
+          echo "If the change is intended, regenerate the baseline deliberately:"
+          echo "  placard baseline --config placard.toml"
           echo "Regenerating it to make a red build green is adversary A5 in docs/THREAT_MODEL.md."
 
   drift-detection-works:

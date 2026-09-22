@@ -18,14 +18,16 @@ from ..manifest.models import InjectionFinding
 MAX_EXCERPT = 120
 """Characters of excerpt shown. The manifest holds the span; the line is a pointer."""
 
-_MARKDOWN_SPECIAL = "\\`*_{}[]()#+-.!|<>~"
+_MARKDOWN_SPECIAL = "\\`*_[]#|<>~!"
 
 
 def escape_excerpt(text: str, *, limit: int = MAX_EXCERPT) -> str:
     """Render ``text`` inert for Markdown and terminals.
 
-    * Every Markdown-significant character is backslash-escaped, so ``<IMPORTANT>``
-      shows as text and a backtick cannot close the code span around it.
+    * Every character that is Markdown-significant *inline* is backslash-escaped,
+      so ``<IMPORTANT>`` shows as text, ``[x](y)`` cannot become a link, and a
+      backtick cannot close a code span. Excerpts are only ever placed inline, so
+      line-start markers (``-``, ``+``, ``1.``, ``#`` handled anyway) need no escape.
     * Control characters, format characters (zero-width, bidi, Unicode tags), and
       anything else invisible is shown as ``\\uXXXX`` — the point of the
       ``hidden_content`` class is that these are invisible, so the rendering must

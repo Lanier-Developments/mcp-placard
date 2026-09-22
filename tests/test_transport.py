@@ -91,11 +91,20 @@ def test_shell_metacharacters_are_arguments_not_operators() -> None:
     assert args == ["rm", "-rf", "/"]
 
 
-def test_stdio_parameters_carry_command_args_and_env() -> None:
-    params = stdio_parameters("server --flag value", {"TOKEN": "x"})
+def test_stdio_parameters_without_env_pass_the_command_through() -> None:
+    params = stdio_parameters("server --flag value")
     assert params.command == "server"
     assert params.args == ["--flag", "value"]
-    assert params.env == {"TOKEN": "x"}
+    assert params.env is None
+
+
+def test_stdio_parameters_with_env_launch_through_env_i_for_exact_isolation() -> None:
+    """Phase 4 §5: the SDK merges its inherited allowlist *under* the env it is
+    given, so exactness needs ``env -i``, which clears everything first."""
+    params = stdio_parameters("server --flag value", {"PATH": "/bin", "TOKEN": "x"})
+    assert params.command == "/usr/bin/env"
+    assert params.args == ["-i", "PATH=/bin", "TOKEN=x", "server", "--flag", "value"]
+    assert params.env == {"PATH": "/bin", "TOKEN": "x"}
 
 
 def test_validate_url_rejects_a_non_url() -> None:

@@ -27,7 +27,7 @@ manifest, and fails CI when the next scan disagrees with the last one.
 **Placard never invokes a tool.** Enumeration and static analysis only. No code path may
 call `tools/call`; `scripts/check_no_tool_invocation.py` enforces that mechanically.
 
-## Status: Phases 1, 2, 2.1, and 3 complete
+## Status: Phases 1 through 4 complete
 
 `scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, description, and
 declared-annotation signals combine as a monotonic maximum (never a weighted score), reconciled
@@ -44,6 +44,20 @@ rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION
 re-analyses any manifest produced under an older ruleset before comparing, so a Placard upgrade
 never produces findings on a server that did not change. SARIF/GitHub Action packaging (Phase 4)
 and manifest signing (Phase 5) are not yet built.
+
+**In CI, Placard is a GitHub Action.** `placard.toml` names the servers a repository depends on;
+committed baseline manifests are the approval record; the action scans each server in an isolated
+environment, diffs it against its baseline, writes a step summary and a SARIF log for code
+scanning, exposes one output per finding category so a prompt change and an escalation can be
+routed to different reviewers, and fails on the categories you choose. It installs every
+dependency hash-pinned and Placard itself from its own checkout at the SHA you pinned.
+[`docs/ACTION.md`](docs/ACTION.md).
+
+```yaml
+- uses: Lanier-Developments/mcp-placard@<commit-sha>
+  with:
+    fail-on: escalation,prompt,injection,incomplete
+```
 
 ### Against real servers
 
@@ -162,6 +176,9 @@ together, so a consumer can ask about one category regardless of what else happe
 | `scan` | 0 enumerated · 3 server unreachable · 64 usage error |
 | `diff` | bits: 1 escalation · 2 prompt change · 4 tool removed · 8 new injection finding · 64 usage error (exclusive) |
 | `verify` | 0 every hash matches · 1 a hash does not match · 64 usage error |
+| `baseline` | 0 written · 3 a server could not be scanned · 64 usage error |
+| `check` | `diff`'s bits OR'd across servers · 16 a server could not be scanned · 64 usage error |
+| `report` | 0 rendered · 101 manifest fails verify · 102 baseline fails verify · 64 usage error |
 
 ```bash
 placard diff baseline.json current.json
@@ -225,6 +242,7 @@ placard scan "python -m tests.mock_server" --out tests/fixtures/mock_server_mani
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) — what Placard does and does not defend against
 - [`docs/TAXONOMY.md`](docs/TAXONOMY.md) — the R0-R5 risk ladder, the kind axis, Rules A-H, worked examples
 - [`docs/INJECTION.md`](docs/INJECTION.md) — the seven injection classes, the corpus, the ratchet
+- [`docs/ACTION.md`](docs/ACTION.md) — `placard.toml`, `baseline`, `check`, the GitHub Action, and what scanning executes
 
 ## License
 

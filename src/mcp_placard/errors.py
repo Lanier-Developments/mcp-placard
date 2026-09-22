@@ -38,6 +38,23 @@ DIFF_FINDING_BITS: tuple[int, ...] = (
 """Every bit ``diff`` may set. A ``diff`` exit status is the OR of a subset of these,
 so it ranges over 0-15; ``64`` is the only other value it can produce."""
 
+EXIT_INCOMPLETE = 16
+"""Bit 4 — ``check`` only: one or more configured servers could not be scanned
+(Phase 4 go memo). ``check`` scans before it diffs, and a server that cannot be
+scanned has no representation in ``diff``'s bits; reporting nothing would pass the
+gate on a server it never looked at — fail-open, in a security gate. ``diff`` never
+sets this bit: it compares two files and cannot be incomplete."""
+
+CHECK_FINDING_BITS: tuple[int, ...] = (*DIFF_FINDING_BITS, EXIT_INCOMPLETE)
+"""Every bit ``check`` may set: ``diff``'s four plus incomplete, 0-31."""
+
+# ---- report ------------------------------------------------------------------------
+EXIT_REPORT_VERIFY_FAILED = 101
+"""``report``: the manifest fails ``verify``. A report of tampered data is worse than
+no report, so ``report`` refuses to render it."""
+EXIT_REPORT_BASELINE_VERIFY_FAILED = 102
+"""``report``: the ``--against`` baseline fails ``verify``."""
+
 # ---- scan --------------------------------------------------------------------------
 EXIT_UNREACHABLE = 3
 """``scan``: server unreachable, or enumeration failed after a successful handshake.
@@ -55,9 +72,9 @@ EXIT_USAGE = 64
 finding bit. Moved from 10 in 0.3.0 because 10 collides with ``8 | 2``."""
 
 EXIT_REPORT_RESERVED = range(100, 110)
-"""Reserved for ``report`` (Phase 4, not yet implemented). Nothing in ``scan``,
-``diff``, or ``verify`` may claim a code in this range; it sits clear of any future
-fifth finding bit (16, 32) and of ``64``."""
+"""Reserved for ``report``. Nothing in ``scan``, ``diff``, ``verify``, ``baseline``, or
+``check`` may claim a code in this range; it sits clear of the finding bits (up to
+31) and of ``64``. ``report`` claims 101 and 102 so far."""
 
 
 class PlacardError(Exception):
