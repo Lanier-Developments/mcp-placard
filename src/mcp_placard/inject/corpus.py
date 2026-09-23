@@ -35,6 +35,28 @@ RESOURCE_TEMPLATE_URI = "file:///corpus/{path}"
 FILLER = "A prompt."
 
 
+def _sibling_tools(sample: dict[str, Any]) -> list[dict[str, Any]]:
+    """The other tools the fictional server exposes, from the optional ``siblings`` list.
+
+    A sample could not previously say that its server has any tool but the one it names,
+    so a description referring to a tool *on the same server* — "call ``build_status``
+    first" — was a foreign reference by construction and ``cross_scope`` fired correctly
+    on a server that did not exist. Held-out v2's benign file was the first thing to ask
+    for this: malicious samples never needed siblings, because ``cross_scope`` wants
+    references that really are foreign.
+
+    Absent, behaves exactly as before.
+    """
+    return [
+        {
+            "name": name,
+            "description": "A tool.",
+            "inputSchema": {"type": "object", "properties": {}},
+        }
+        for name in sample.get("siblings") or []
+    ]
+
+
 def decode_payload(sample: dict[str, Any]) -> str:
     return base64.b64decode(sample["payload_b64"]).decode("utf-8")
 
@@ -56,6 +78,13 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
     and ``tool`` is ignored — and for ``prompt_argument_description`` ``property``
     names the argument.
 
+    Two optional fields let a sample state a server the defaults cannot express, both
+    added after held-out v2's benign file needed them. ``uri`` overrides the synthesized
+    resource or template URI, which matters because under ruleset 3.3 the URI *is* the
+    evidence: a fixed URI removes the author's ability to state the case being made.
+    ``siblings`` lists further tool names on the fictional server, so a same-server
+    reference can be written without ``cross_scope`` firing on a server of one tool.
+
     The element ids returned here must match ``surface.enumerate_text`` exactly: the
     scorer selects findings by equality on this string, so a divergence would score a
     correct detection as a miss.
@@ -63,7 +92,7 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
     payload = decode_payload(sample)
     element_kind = sample["element"]
     instructions: str | None = None
-    tools: list[dict[str, Any]] = [BASELINE_TOOL]
+    tools: list[dict[str, Any]] = [BASELINE_TOOL, *_sibling_tools(sample)]
     prompts: list[dict[str, Any]] = []
     resources: list[dict[str, Any]] = []
     resource_templates: list[dict[str, Any]] = []
@@ -86,17 +115,19 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
         ]
         element_id = f"prompt:{PROMPT_NAME}/arguments/{argument}/description"
     elif element_kind == "resource_description":
-        resources = [{"name": "corpus_resource", "uri": RESOURCE_URI, "description": payload}]
-        element_id = f"resource:{escape_pointer(RESOURCE_URI)}/description"
+        uri = sample.get("uri") or RESOURCE_URI
+        resources = [{"name": "corpus_resource", "uri": uri, "description": payload}]
+        element_id = f"resource:{escape_pointer(uri)}/description"
     elif element_kind == "resource_template_description":
+        uri = sample.get("uri") or RESOURCE_TEMPLATE_URI
         resource_templates = [
             {
                 "name": "corpus_template",
-                "uriTemplate": RESOURCE_TEMPLATE_URI,
+                "uriTemplate": uri,
                 "description": payload,
             }
         ]
-        element_id = f"resource_template:{escape_pointer(RESOURCE_TEMPLATE_URI)}/description"
+        element_id = f"resource_template:{escape_pointer(uri)}/description"
     elif element_kind in ("tool_description", "property_description"):
         tool = sample["tool"]
         props: dict[str, Any] = {name: {"type": "string"} for name in tool.get("params", [])}
@@ -113,7 +144,8 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
                 "name": tool["name"],
                 "description": description,
                 "inputSchema": {"type": "object", "properties": props},
-            }
+            },
+            *_sibling_tools(sample),
         ]
     else:
         raise ValueError(f"unknown element kind {element_kind!r}")
