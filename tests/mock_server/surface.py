@@ -80,6 +80,9 @@ class MockConfig:
     description_variant: str = "a"
     include_extra_tool: bool = False
     omit_tools: frozenset[str] = field(default_factory=frozenset)
+    dump_env_to: str | None = None
+    """Phase 4 §5: write the process environment as JSON to this path before
+    serving, so a test can assert what a launched server actually received."""
 
 
 def _annotations(
@@ -346,6 +349,7 @@ def config_from_args(argv: list[str]) -> MockConfig:
     variant = "a"
     include_extra = False
     omit: set[str] = set()
+    dump_env_to: str | None = None
 
     index = 0
     while index < len(argv):
@@ -358,6 +362,9 @@ def config_from_args(argv: list[str]) -> MockConfig:
         elif argument == "--drop-tool":
             index += 1
             omit.add(argv[index])
+        elif argument == "--dump-env":
+            index += 1
+            dump_env_to = argv[index]
         else:
             raise SystemExit(f"mock server: unknown argument {argument!r}")
         index += 1
@@ -369,6 +376,7 @@ def config_from_args(argv: list[str]) -> MockConfig:
         description_variant=variant,
         include_extra_tool=include_extra,
         omit_tools=frozenset(omit),
+        dump_env_to=dump_env_to,
     )
 
 

@@ -1,0 +1,15 @@
+# Placard's own configuration — the tool gates itself (Phase 4 §3, "Dogfood").
+#
+# One manifest per MCP server this repository depends on is committed as the
+# approval record. `placard check` diffs a fresh scan against it; `placard baseline`
+# rewrites it, deliberately, never in CI.
+
+[defaults]
+ceiling = "R4"
+baseline_dir = ".placard/baselines"
+
+[[server]]
+name = "mock"
+target = "python -m tests.mock_server"
+# The mock server's manifest is also the self-gate fixture; keep the one file.
+baseline = "tests/fixtures/mock_server_manifest.json"

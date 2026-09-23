@@ -29,4 +29,4 @@ MANIFEST_VERSION = "2.2"
 #: the current rules before comparing, so a ruleset change can never produce a
 #: finding on a server that did not change (Phase 3 §4). Bump on any change to a
 #: rule, a field list, a pattern, or a kind derivation.
-RULESET_VERSION = "3.1"
+RULESET_VERSION = "3.2"

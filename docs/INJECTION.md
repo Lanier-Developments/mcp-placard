@@ -72,7 +72,11 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   external services referenced as tool hosts ("the X server's", "X MCP server", "the X
   integration") count regardless of intervening tokens, in every element type. The server's
   own declared name is exempt, so "in the Playwright server process" is in scope; bare "MCP
-  server" is not a service name.
+  server" is not a service name. **Ruleset 3.2:** the exemption matches the whole declared
+  name or its final path segment with generic tokens (`mcp`, `server`, `tools`) stripped —
+  never arbitrary tokens. The declared name comes from `initialize`, which the server
+  controls; a server calling itself `jira-slack-github-bridge` exempts nothing but its own
+  full name (`syn-cross-scope-7`).
 - **`markup_smuggling` fires on any paired custom tag** — an opening tag and its matching
   close — whose name is not a common HTML formatting element. Attributes permitted. Pairing
   is what keeps this safe: usage placeholders such as `<file>` or `<path>` are unpaired and

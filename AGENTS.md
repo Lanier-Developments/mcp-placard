@@ -45,6 +45,9 @@ in tests runs against fixtures and a local mock server.
 | `placard diff <old.json> <new.json>` | Compare two manifests; exit nonzero on escalation |
 | `placard report <manifest.json>` | Human-readable Markdown or SARIF output |
 | `placard verify <manifest.json>` | Recompute and check manifest hashes |
+| `placard report <manifest> [--against <baseline>] --format markdown\|sarif` | Render for humans or code scanning; refuses a manifest that fails `verify` |
+| `placard baseline --config placard.toml` | Scan every configured server and write its baseline — the approval record. Never in CI |
+| `placard check --config placard.toml` | Scan, diff each server against its baseline, exit with the OR'd bitmask (+16 incomplete); writes summary, SARIF, outputs |
 
 `<target>` accepts a stdio command string or an HTTP(S) URL. Transport is inferred; `--transport`
 overrides.
@@ -68,7 +71,13 @@ src/mcp_placard/
   classify/         Risk tier inference, declared-vs-inferred reconciliation
   inject/           Injection surface heuristics over every model-facing string (not resource contents)
   diff/             Manifest comparison and escalation rules
-  report/           Markdown and SARIF renderers
+  report/           Markdown and SARIF renderers; JSON-Pointer→line locator for SARIF regions
+  config.py         placard.toml: servers, baselines, overrides, report levels
+  check.py          baseline and check: the configured-servers workflow, the bitmask across servers
+  transport/launch.py  The isolated launch environment (temporary HOME, redirected caches)
+action.yml          The composite GitHub Action; installs from its own checkout, deps hash-pinned
+requirements/action.txt  The hash-pinned lockfile the action installs
+placard.toml        This repository's own configuration — the tool gates itself
 tests/
   fixtures/         Captured manifests and synthetic server surfaces
   mock_server/      Local MCP server used by integration tests
@@ -189,11 +198,37 @@ A change in `kinds` alone is not a diff finding (not yet — see Phase 6).
 | 1 | At least one recorded hash does not match — the manifest was edited after it was produced |
 | 64 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
 
-### `report` (reserved, Phase 4)
+### `baseline`
 
-Not implemented yet. Codes `100`-`109` are reserved for it so nothing in `scan`, `diff`, or `verify`
-claims them before Phase 4 defines their meaning, and so the reservation sits clear of any future
-fifth finding bit.
+| Code | Condition |
+| --- | --- |
+| 0 | Every configured server scanned and its baseline written |
+| 3 | At least one server could not be scanned (the others are still written) |
+| 64 | Usage or configuration error |
+
+### `check` — `diff`'s bitmask plus one bit
+
+| Bit | Value | Category |
+| --- | --- | --- |
+| 0-3 | 1, 2, 4, 8 | As `diff`, OR'd across every configured server |
+| 4 | 16 | Incomplete — one or more configured servers could not be scanned. `check` scans before it diffs, and a server it never looked at has no representation in `diff`'s bits; reporting nothing would be fail-open in a security gate. `diff` never sets this bit |
+| — | 64 | Usage or configuration error |
+
+A server with no baseline yet is reported, not failed, and sets no bit. The exit status is always the
+full bitmask; `--fail-on` only decides the `fail` value written to `--outputs`, which is what the
+GitHub Action gates on.
+
+### `report`
+
+| Code | Condition |
+| --- | --- |
+| 0 | Rendered |
+| 64 | Usage or configuration error |
+| 101 | The manifest fails `verify` — `report` refuses to render tampered data |
+| 102 | The `--against` baseline fails `verify` |
+
+Codes `100`-`109` are `report`'s; nothing else claims them, and the range sits clear of the finding
+bits (up to 31) and of 64.
 
 ### History
 
@@ -239,6 +274,11 @@ code does not print and does not call `sys.exit`.
 - Report renderers escape scanned content. An injection string must not become live markup in the
   Markdown or SARIF output.
 - Network egress during a scan goes only to the target server. No telemetry.
+- Scanning *launches* a stdio server, which executes its code as the current user. Every launch
+  gets an explicitly constructed environment — `PATH`, a temporary `HOME`, redirected caches, and
+  only the variables the configuration names — through `env -i`. Credential values named by
+  `header_env`/`env` never reach a manifest, report, output, or stderr. This is not a sandbox;
+  `docs/THREAT_MODEL.md` A7 says what it is not.
 
 ## Git and PR Conventions
 
@@ -265,6 +305,9 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
+- **Phase 3.2** — done (with Phase 4). The own-name exemption in `cross_scope` matches the whole
+  declared server name or its final path segment, generic tokens stripped — not arbitrary tokens,
+  which a hostile name like `jira-slack-github-bridge` could steer.
 - **Phase 3.1** — done. Held-out v1 scored once at 24/35 (ruleset 3.0); the four weak classes moved
   from phrase matching to structural rules (`docs/INJECTION.md`); v1 retired into regression at 35/35;
   ruleset 3.1. Held-out v2 is the next headline number.
@@ -273,7 +316,12 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   re-analysis in `diff` so ruleset changes never produce findings, the bitmask exit contract, a
   benign corpus of 388 real strings with a ratcheted zero false-positive baseline, and an encoded
   malicious corpus with synthetic and lifted provenances reported separately.
-- **Phase 4** — GitHub Action wrapper, SARIF output, ceiling configuration.
+- **Phase 4** — done. `placard.toml` (servers, baselines, overrides folded in, `[report.level]`),
+  `report` in Markdown and SARIF 2.1.0 with a rule catalog, real line regions, and stable
+  fingerprints, `baseline` and `check`, the composite action with per-category outputs and a
+  hash-pinned install from its own checkout, the self-gate replaced by the action, environment
+  isolation at launch with a temporary `HOME`, and header redaction. `docs/ACTION.md`.
+  Ruleset 3.2 rode along: the own-name exemption matches the whole declared name only.
 - **Phase 5** — manifest signing, and a published index of blast radii for widely used public MCP
   servers.
 - **Phase 6** (proposed, Amendment 2 §9) — scan a client configuration (`mcp.json`,

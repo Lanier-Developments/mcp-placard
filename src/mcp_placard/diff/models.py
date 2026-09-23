@@ -30,6 +30,7 @@ from ..errors import (
     EXIT_OK,
     EXIT_REMOVED,
 )
+from ..manifest.models import InjectionFinding
 
 
 class ChangeKind(StrEnum):
@@ -104,6 +105,10 @@ class Finding(BaseModel):
     """One line, safe to print. Scanned content is never interpolated raw — see
     ``diff.engine``, which reports hashes rather than description text, and
     ``inject.render`` for the one place an excerpt is shown, escaped."""
+
+    injection: InjectionFinding | None = None
+    """For ``INJECTION_FINDING``: the structured finding (class, rule, pointer, span,
+    excerpt) behind the summary, so a report can cite it without re-parsing text."""
 
     exit_code: int
     """The finding bit this finding on its own contributes — one of

@@ -1,0 +1,124 @@
+name: "Placard"
+description: >-
+  Scan every MCP server named in placard.toml, diff each against its committed
+  baseline manifest, write a step summary and a SARIF log, and fail on the finding
+  categories you choose. Placard never invokes a tool.
+author: "Lanier Developments"
+branding:
+  icon: "shield"
+  color: "gray-dark"
+
+inputs:
+  config:
+    description: "Path to placard.toml."
+    required: false
+    default: "placard.toml"
+  fail-on:
+    description: >-
+      Comma-separated finding categories that fail the job: any of escalation,
+      prompt, removal, injection, incomplete.
+    required: false
+    default: "escalation,prompt,injection,incomplete"
+  sarif:
+    description: "Upload the SARIF log to GitHub code scanning (needs security-events: write)."
+    required: false
+    default: "true"
+  summary:
+    description: "Write the Markdown report to the job's step summary."
+    required: false
+    default: "true"
+  python-version:
+    description: "Python version to run Placard with."
+    required: false
+    default: "3.12"
+
+outputs:
+  exit-code:
+    description: "The raw bitmask: 1 escalation, 2 prompt change, 4 removal, 8 injection, 16 incomplete."
+    value: ${{ steps.check.outputs.exit-code }}
+  escalation:
+    description: "true when bit 1 is set."
+    value: ${{ steps.check.outputs.escalation }}
+  prompt:
+    description: "true when bit 2 is set — route to prompt review."
+    value: ${{ steps.check.outputs.prompt }}
+  removal:
+    description: "true when bit 4 is set."
+    value: ${{ steps.check.outputs.removal }}
+  injection:
+    description: "true when bit 8 is set."
+    value: ${{ steps.check.outputs.injection }}
+  incomplete:
+    description: "true when bit 16 is set — a configured server could not be scanned."
+    value: ${{ steps.check.outputs.incomplete }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Placard (hash-pinned dependencies, Placard from this checkout)
+      # Every dependency — the build backend included — is pinned by hash for every
+      # platform wheel; Placard itself is installed from the action's own checkout at
+      # the SHA the consumer pinned, with build isolation off so nothing is fetched
+      # for the build either. PyPI is never trusted for Placard. A supply-chain tool
+      # that installed whatever PyPI served today would be a punchline.
+      shell: bash
+      run: |
+        python -m pip install --quiet --upgrade pip
+        python -m pip install --quiet --require-hashes -r "${GITHUB_ACTION_PATH}/requirements/action.txt"
+        python -m pip install --quiet --no-deps --no-build-isolation "${GITHUB_ACTION_PATH}"
+        placard version
+
+    - name: Check configured servers against their baselines
+      id: check
+      shell: bash
+      env:
+        PLACARD_CONFIG: ${{ inputs.config }}
+        PLACARD_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set +e
+        placard check --config "$PLACARD_CONFIG" --fail-on "$PLACARD_FAIL_ON" \
+          --sarif placard.sarif --summary placard-summary.md --outputs placard-outputs.json
+        rc=$?
+        set -e
+        if [ ! -f placard-outputs.json ]; then
+          echo "::error::placard check produced no outputs (exit $rc); see the log above"
+          exit "$rc"
+        fi
+        python - <<'PY' >> "$GITHUB_OUTPUT"
+        import json
+        o = json.load(open("placard-outputs.json"))
+        print(f"exit-code={o['exit_code']}")
+        for k in ("escalation", "prompt", "removal", "injection", "incomplete"):
+            print(f"{k}={'true' if o[k] else 'false'}")
+        print(f"fail={'true' if o['fail'] else 'false'}")
+        PY
+        echo "exit-code=$rc (bitmask)"
+
+    - name: Step summary
+      if: ${{ inputs.summary == 'true' }}
+      shell: bash
+      run: cat placard-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload SARIF to code scanning
+      if: ${{ inputs.sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
+      with:
+        sarif_file: placard.sarif
+        category: placard
+
+    - name: Gate
+      shell: bash
+      env:
+        FAIL: ${{ steps.check.outputs.fail }}
+        RC: ${{ steps.check.outputs.exit-code }}
+      run: |
+        if [ "$FAIL" = "true" ]; then
+          echo "::error::Placard: a finding in a fail-on category is present (bitmask $RC). See the step summary."
+          exit 1
+        fi
+        echo "Placard: gate passed (bitmask $RC)."

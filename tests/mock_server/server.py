@@ -87,6 +87,12 @@ async def serve_stdio(config: MockConfig) -> None:
 def main(argv: list[str] | None = None) -> None:
     """Entry point for ``python -m tests.mock_server``."""
     config = config_from_args(list(sys.argv[1:] if argv is None else argv))
+    if config.dump_env_to is not None:
+        import json
+        import os
+        from pathlib import Path
+
+        Path(config.dump_env_to).write_text(json.dumps(dict(os.environ)), encoding="utf-8")
     anyio.run(serve_stdio, config)
 
 

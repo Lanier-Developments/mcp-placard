@@ -225,6 +225,7 @@ def _new_injection_findings(old: Manifest, new: Manifest) -> list[Finding]:
                     f"{escape_excerpt(finding.excerpt)}"
                 ),
                 exit_code=CHANGE_EXIT_CODES[ChangeKind.INJECTION_FINDING],
+                injection=finding,
             )
         )
     return out

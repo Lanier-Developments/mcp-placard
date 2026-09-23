@@ -18,6 +18,7 @@ from __future__ import annotations
 from itertools import combinations
 
 from mcp_placard.errors import (
+    CHECK_FINDING_BITS,
     DIFF_FINDING_BITS,
     EXIT_DESCRIPTION_CHANGE,
     EXIT_ESCALATION,
@@ -25,7 +26,9 @@ from mcp_placard.errors import (
     EXIT_INJECTION,
     EXIT_OK,
     EXIT_REMOVED,
+    EXIT_REPORT_BASELINE_VERIFY_FAILED,
     EXIT_REPORT_RESERVED,
+    EXIT_REPORT_VERIFY_FAILED,
     EXIT_UNREACHABLE,
     EXIT_USAGE,
 )
@@ -45,6 +48,20 @@ DIFF_CODES = DIFF_BITMASK_VALUES | {EXIT_USAGE}
 
 VERIFY_CODES = {EXIT_OK, EXIT_HASH_MISMATCH, EXIT_USAGE}
 """``verify``: 0 intact, 1 hash mismatch, 64 usage."""
+
+BASELINE_CODES = {EXIT_OK, EXIT_UNREACHABLE, EXIT_USAGE}
+"""``baseline``: 0 every baseline written, 3 a server could not be scanned, 64 usage."""
+
+CHECK_BITMASK_VALUES = {
+    sum(subset)
+    for n in range(len(CHECK_FINDING_BITS) + 1)
+    for subset in combinations(CHECK_FINDING_BITS, n)
+}
+CHECK_CODES = CHECK_BITMASK_VALUES | {EXIT_USAGE}
+"""``check``: ``diff``'s four bits plus 16 incomplete — 0 through 31 — and 64 usage."""
+
+REPORT_CODES = {EXIT_OK, EXIT_USAGE, EXIT_REPORT_VERIFY_FAILED, EXIT_REPORT_BASELINE_VERIFY_FAILED}
+"""``report``: 0 rendered, 64 usage, 101 manifest fails verify, 102 baseline fails verify."""
 
 
 def test_the_finding_bits_are_distinct_powers_of_two() -> None:
@@ -73,13 +90,25 @@ def test_usage_error_is_exclusive_and_clear_of_every_bit_combination() -> None:
     assert 10 in DIFF_BITMASK_VALUES  # the collision that forced the move
 
 
-def test_no_command_claims_a_code_reserved_for_report() -> None:
-    """``report`` is Phase 4 and unimplemented; 100-109 must stay unclaimed until it
-    defines what they mean, and clear of any future fifth finding bit."""
+def test_only_report_claims_codes_in_its_reserved_range() -> None:
+    """100-109 belongs to ``report`` alone, and sits clear of the finding bits
+    (which now reach 31 with ``check``'s incomplete bit) and of 64."""
     assert range(100, 110) == EXIT_REPORT_RESERVED
-    for codes in (SCAN_CODES, DIFF_CODES, VERIFY_CODES):
+    for codes in (SCAN_CODES, DIFF_CODES, VERIFY_CODES, BASELINE_CODES, CHECK_CODES):
         assert codes.isdisjoint(EXIT_REPORT_RESERVED)
-    assert 16 not in EXIT_REPORT_RESERVED and 32 not in EXIT_REPORT_RESERVED
+    assert {EXIT_REPORT_VERIFY_FAILED, EXIT_REPORT_BASELINE_VERIFY_FAILED} <= set(
+        EXIT_REPORT_RESERVED
+    )
+    assert max(CHECK_BITMASK_VALUES) == 31 < 64 < 100
+
+
+def test_check_adds_exactly_the_incomplete_bit() -> None:
+    """``diff`` compares two files and cannot be incomplete; ``check`` scans first
+    and needs a bit for a server it never got to look at — fail-open in a security
+    gate otherwise."""
+    assert (*DIFF_FINDING_BITS, 16) == CHECK_FINDING_BITS
+    assert set(range(32)) == CHECK_BITMASK_VALUES
+    assert 16 not in DIFF_FINDING_BITS
 
 
 def test_scan_keeps_three_and_it_is_not_a_diff_category() -> None:

@@ -26,6 +26,9 @@ evidence attached — usually a real server's `tools/list`. The amendments thems
 | 2026-09-21 | Jr. → Chief | Phase 3 report: corpus, ratchet, re-analysis, the spurious-escalation confirmation |
 | 2026-09-21 | Chief → Jr. | Held-out v1 findings: 24/35, four structural rules, v1 retired to regression (Phase 3.1) |
 | 2026-09-21 | Jr. → Chief | Phase 3.1 report: regression table across four provenances, harness answer |
+| 2026-09-21 | Chief → Jr. | Phase 4 brief: SARIF, Markdown report, the GitHub Action, configuration, launch-time threat model |
+| 2026-09-21 | Chief → Jr. | Phase 4 go: rulings on six interpretations, bit 16, temporary HOME, the 3.2 own-name correction |
+| 2026-09-22 | Jr. → Chief | Phase 4 report: the three flag-backs answered, the eleven-server isolation run |
 
 These are kept verbatim, including the parts that turned out to be wrong. A taxonomy whose
 history is visible is easier to trust than one that only shows its current text.

@@ -34,9 +34,10 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
     payload was placed in, so a test can assert the finding landed *there*.
 
     ``element`` is one of ``tool_description``, ``property_description``,
-    ``instructions``. ``tool`` names the owning tool and its parameter names (all
-    unconstrained strings); ``property`` names which parameter's description carries
-    the payload.
+    ``instructions``. ``server_name`` (optional) sets the declared ``initialize``
+    name, for samples that exercise the own-name exemption. ``tool`` names the owning
+    tool and its parameter names (all unconstrained strings); ``property`` names
+    which parameter's description carries the payload.
     """
     payload = decode_payload(sample)
     element_kind = sample["element"]
@@ -70,7 +71,7 @@ def sample_manifest(sample: dict[str, Any]) -> tuple[Manifest, str]:
         ]
 
     raw = RawSurface(
-        server_info={"name": "corpus-sample", "version": "0"},
+        server_info={"name": sample.get("server_name") or "corpus-sample", "version": "0"},
         capabilities={"tools": {"listChanged": False}},
         environment={},
         instructions=instructions,

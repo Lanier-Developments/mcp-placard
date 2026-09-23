@@ -29,6 +29,21 @@ MOCK_MANIFEST_FIXTURE = FIXTURES / "mock_server_manifest.json"
 
 
 @pytest.fixture(scope="session", autouse=True)
+def _placard_cache_in_tmp(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Every launched server's package cache goes under pytest's temp root, never
+    under the real home — the suite must not write outside its own sandbox."""
+    previous = os.environ.get("PLACARD_CACHE_DIR")
+    os.environ["PLACARD_CACHE_DIR"] = str(tmp_path_factory.mktemp("placard-cache"))
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("PLACARD_CACHE_DIR", None)
+        else:
+            os.environ["PLACARD_CACHE_DIR"] = previous
+
+
+@pytest.fixture(scope="session", autouse=True)
 def _run_from_repo_root() -> Iterator[None]:
     """Run the whole suite from the repo root.
 

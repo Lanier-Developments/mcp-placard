@@ -119,6 +119,33 @@ routable differently. AGENTS.md makes the false-positive rate of Phase 3's heuri
 a tracked metric for the same reason. `README.md` states plainly that regenerating
 the mock-server fixture is a deliberate act, not a way to get past CI.
 
+### A7 — The server that attacks the scanner at launch
+
+Placard never calls `tools/call`. But scanning a stdio server means **launching** it,
+and launching an `npx` or `uvx` package executes that package's code, in the CI
+runner, as the runner's user, with whatever the runner's environment holds. A
+malicious server does not need a tool call to read the runner's environment or
+home directory; it needs to be started. "Placard never invokes a tool" is true and
+is not the same as "scanning is safe."
+
+**Partially covered.** Every launch gets an explicitly constructed environment
+(`transport/launch.py`): `PATH`, a fresh temporary `HOME` per launch that is removed
+afterwards, package caches redirected to a shared cache directory so `npx` and
+`uvx` work without the real home, and only the variables the configuration names
+for that server. Launch goes through `env -i`, so the SDK's own inherited allowlist
+cannot leak `USER`, `SHELL`, or `TERM` under it either. A server scanned for GitHub
+never sees the token configured for Slack; a real `~/.npmrc`, `~/.docker/config.json`,
+git credential helper, or cloud CLI profile is never in reach. HTTP targets receive
+only the headers named in `header_env`. No credential value reaches a manifest, a
+report, an output file, or stderr — asserted with a sentinel in `tests/test_check.py`.
+
+**Not covered, and stated plainly: this is not a sandbox.** The launched process
+still runs as the runner's user, with the runner's filesystem access, network access,
+and process privileges. It can read the repository checkout it is scanned from. The
+action's documentation therefore recommends a dedicated job with `contents: read`,
+no deploy credentials, and no checkout of secrets — because the code Placard launches
+is the code being audited, and the only safe assumption is that it is hostile.
+
 ### A6 — Placard itself
 
 A tool that connects to untrusted servers and parses whatever they return is itself
