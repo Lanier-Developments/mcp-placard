@@ -36,7 +36,7 @@ ladder, and 0.3.0 removed the last one from the exit codes.
 | `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `secret_from_audience`, `behind_the_scenes`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover` |
 | `cross_scope` | References to tools or servers outside the element's own server — tool shadowing | `foreign_tool_identifier` ("the X tool", "tool X", "call X" where X is not on this server), `named_service_host` ("the Jira MCP server's", "the Confluence integration's", regardless of intervening tokens), `other_tools`, `on_other_tool_call`, `other_server_by_name`, `parenthesised_tool_ref` |
 | `sensitive_target` | Credential and secret paths or names in an element whose tool does not otherwise handle them | `credential_path`, `credential_transmission` |
-| `exfil_sink` | URLs and email addresses embedded in description text rather than in schema fields | `url`, `email` |
+| `exfil_sink` | URLs and email addresses that description text names as a **destination for data** — not merely as references | `url`, `email` |
 | `hidden_content` | Zero-width characters, bidirectional overrides, Unicode tag characters (U+E0000 block), long base64-shaped runs | `zero_width`, `bidi_override`, `unicode_tags`, `base64_run` |
 | `markup_smuggling` | HTML comments and pseudo-tags used to fence instructions | `paired_custom_tag` (any opening tag with its matching close whose name is not a common HTML formatting element; attributes permitted), `html_comment`, `pseudo_tag`, `bracket_tag` |
 
@@ -138,6 +138,27 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   window, closed negator list, same boundary as the reversibility negation guard.
 - **Documentation and loopback hosts are examples, never sinks.** `example.com`,
   `localhost`, `127.0.0.1`, `*.test`, `*.invalid` (RFC 2606 / RFC 6761).
+- **A URL is a reference until something makes it a destination** (**ruleset 3.4**). A host
+  allowlist cannot fix this: real servers cite specs constantly and the set of hosts they
+  cite is unbounded. The grammatical role does it instead. `exfil_sink` fires when a URL or
+  address is:
+  - the **goal of a transmission predicate** — send, post, forward, transmit, report,
+    upload, mirror, dispatch, deliver, notify, sync, submit, push — introduced by `to`
+    within the same sentence; or
+  - the **direct object of an address verb** — email, mail, cc, bcc, message, text. These
+    are a separate group because the class covers addresses as well as endpoints, and the
+    endpoint verbs name nothing you do to an address; or
+  - the **declared value of a sink noun** — webhook, endpoint, callback, sink, collector,
+    receiver, destination, hook, listener — as a predicate complement or after a colon:
+    "the webhook to notify is `https://…`", "Webhook URL: `https://…`".
+
+  A sink introduced by a locative — at, on, in, available at, documented at, see — is a
+  citation. "Report issues at `https://github.com/org/repo/issues`" does not fire, and
+  neither does "documented at `https://spec.openapis.org/…`". This is deliberately not a
+  general copula rule: the sink noun carries the whole signal, so "Documentation is at
+  `https://…`" stays clear. The stated limit of the class is that a bare URL with no such
+  marking could still be fetched by some *other* tool the agent holds — that is the
+  cross-server chain, and it is Phase 6.
 - **Ordinary markup is not smuggling.** `<br>`, `<b>`, Markdown headers, and backticked
   identifiers do not match; only a closed list of instruction-fencing tag names and
   HTML comments do.

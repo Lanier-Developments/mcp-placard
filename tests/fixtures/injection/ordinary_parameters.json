@@ -1,0 +1,163 @@
+{
+  "note": "Parameter names that must never establish a sensitive_target exemption, and a short list that must. Added in the 3.4 vocabulary audit (Chief, 2026-09-23), whose findings were all reached by reading the vocabulary rather than by a test failing \u2014 the ratchet sat still through every one of them. This file turns that reading into something CI holds: adding a token to either vocabulary that starts matching an ordinary parameter fails here. Names marked with a server were taken from the eleven real-server fixtures; the rest are shapes we expect to scan and do not yet have a fixture for.",
+  "must_not_exempt": [
+    {
+      "name": "key",
+      "seen_on": "playwright",
+      "why": "a keyboard key to press, not a credential"
+    },
+    {
+      "name": "max_tokens",
+      "why": "on every LLM-proxy server; a context budget, not a credential"
+    },
+    {
+      "name": "page_token",
+      "why": "pagination, as Google and AWS spell it"
+    },
+    {
+      "name": "next_page_token",
+      "why": "pagination"
+    },
+    {
+      "name": "continuation_token",
+      "why": "pagination"
+    },
+    {
+      "name": "sort_key",
+      "why": "an ordering field"
+    },
+    {
+      "name": "cache_key",
+      "why": "a cache index"
+    },
+    {
+      "name": "partition_key",
+      "why": "a storage shard selector"
+    },
+    {
+      "name": "idempotency_key",
+      "why": "a request deduplication id"
+    },
+    {
+      "name": "primary_key",
+      "why": "a database column"
+    },
+    {
+      "name": "source",
+      "seen_on": "filesystem",
+      "why": "a generic origin, not a filesystem location"
+    },
+    {
+      "name": "source_timezone",
+      "seen_on": "time",
+      "why": "a timezone; it bought convert_time a path exemption under token matching until source was dropped"
+    },
+    {
+      "name": "target_timezone",
+      "seen_on": "time",
+      "why": "a timezone"
+    },
+    {
+      "name": "data_source",
+      "why": "an origin identifier"
+    },
+    {
+      "name": "root_cause",
+      "why": "ordinary prose compound"
+    },
+    {
+      "name": "pattern",
+      "seen_on": "filesystem",
+      "why": "a regex or match pattern is not a path"
+    },
+    {
+      "name": "name_pattern",
+      "why": "a regex"
+    },
+    {
+      "name": "excludepatterns",
+      "seen_on": "filesystem",
+      "why": "a regex list"
+    },
+    {
+      "name": "regex",
+      "seen_on": "playwright",
+      "why": "a regex"
+    },
+    {
+      "name": "target",
+      "seen_on": "playwright",
+      "why": "a DOM target, not a filesystem one"
+    },
+    {
+      "name": "location",
+      "seen_on": "everything",
+      "why": "a page position"
+    },
+    {
+      "name": "sortby",
+      "seen_on": "filesystem",
+      "why": "an ordering field"
+    },
+    {
+      "name": "message",
+      "seen_on": "git",
+      "why": "a commit message; free text"
+    },
+    {
+      "name": "text",
+      "seen_on": "playwright",
+      "why": "free text"
+    },
+    {
+      "name": "query",
+      "seen_on": "github",
+      "why": "free text"
+    }
+  ],
+  "must_exempt": [
+    {
+      "name": "path",
+      "axis": "paths",
+      "seen_on": "filesystem",
+      "why": "the canonical case"
+    },
+    {
+      "name": "file_path",
+      "axis": "paths",
+      "why": "compound; token matching is what makes this work"
+    },
+    {
+      "name": "repo_path",
+      "axis": "paths",
+      "seen_on": "git",
+      "why": "compound"
+    },
+    {
+      "name": "filename",
+      "axis": "paths",
+      "seen_on": "playwright",
+      "why": "a file"
+    },
+    {
+      "name": "credentials_file_path",
+      "axis": "both",
+      "why": "the rotate_aws_keys shape Doc's benign sample exposed"
+    },
+    {
+      "name": "password",
+      "axis": "credentials",
+      "why": "unambiguous"
+    },
+    {
+      "name": "auth_secret",
+      "axis": "credentials",
+      "why": "unambiguous"
+    },
+    {
+      "name": "credentials",
+      "axis": "credentials",
+      "why": "unambiguous"
+    }
+  ]
+}

@@ -35,34 +35,31 @@ PATH_HANDLING_FIELDS = frozenset(
         "paths",
         "file",
         "files",
-        "file_path",
         "filepath",
         "filename",
         "directory",
         "dir",
         "folder",
-        "source",
         "destination",
         "dest",
-        "target_path",
-        "output_path",
-        "root",
         "cwd",
-        "repo_path",
         "repository",
         "glob",
-        "pattern",
     }
 )
-"""A tool with one of these parameters handles paths; path-like mentions in its
-text are in scope for it (``sensitive_target`` does not fire on them)."""
+"""A tool with one of these *tokens* in a parameter name handles paths; path-like
+mentions in its text are in scope for it (``sensitive_target`` does not fire on them).
+
+``source``, ``root`` and ``pattern`` were dropped in the 3.4 vocabulary audit:
+``data_source``, ``root_cause`` and ``name_pattern`` are ordinary parameters, and
+``source_timezone`` on the real ``time`` server bought ``convert_time`` a path exemption
+it never had before token matching. ``file_path``, ``target_path``, ``output_path`` and
+``repo_path`` were deleted as dead entries — under token matching they can never match,
+since they split to ``{file, path}`` and ``path`` already covers them, and a rule that
+cannot fire misleads whoever reads the list next."""
 
 CREDENTIAL_HANDLING_TOKENS = frozenset(
     {
-        "key",
-        "keys",
-        "token",
-        "tokens",
         "secret",
         "secrets",
         "password",
@@ -74,6 +71,15 @@ CREDENTIAL_HANDLING_TOKENS = frozenset(
     }
 )
 """A tool with one of these *tokens* in a parameter name handles credentials.
+
+``key``/``keys`` and ``token``/``tokens`` were dropped in the 3.4 vocabulary audit
+(Chief, 2026-09-23). ``max_tokens`` is on every LLM-proxy server; ``page_token`` and
+``next_page_token`` are how Google, AWS and GitHub spell pagination; ``sort_key``,
+``cache_key`` and ``idempotency_key`` are ordinary. Each bought an exemption on servers
+we would expect to scan, and an exemption that matches half the parameters in existence
+is not an exemption. The cost is that a tool whose only credential parameter is literally
+named ``key`` loses its exemption and may produce a finding a human dismisses in five
+seconds — which is the direction we can afford to fail in.
 
 Both vocabularies are matched by token, not by substring and not by whole name
 (ruleset 3.4). Substring made ``pathological`` a path parameter; whole-name membership

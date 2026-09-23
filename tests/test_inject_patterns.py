@@ -403,7 +403,10 @@ def test_a_prompt_argument_named_like_a_credential_may_ask_for_one() -> None:
                 "name": "authenticate",
                 "description": "Authenticate.",
                 "arguments": [
-                    {"name": "api_key", "description": "Provide the API key in this field."}
+                    {
+                        "name": "auth_credentials",
+                        "description": "Provide the API key in this field.",
+                    }
                 ],
             }
         ]
@@ -485,8 +488,34 @@ def test_path_and_credential_evidence_is_decided_by_token_not_substring() -> Non
 
     assert evidence("credentials_file_path") == (True, True)
     assert evidence("pathological") == (False, False)
-    assert evidence("apiKey") == (False, True)
+    assert evidence("auth_secret") == (False, True)
     assert evidence("query") == (False, False)
+
+
+def test_the_generic_tokens_dropped_in_the_audit_no_longer_exempt() -> None:
+    """The 3.4 vocabulary audit, and the cost it accepted.
+
+    ``key``/``keys`` and ``token``/``tokens`` matched ``max_tokens``, ``page_token``,
+    ``sort_key`` and ``cache_key`` — ordinary parameters on servers we expect to scan,
+    each buying an exemption that fails *open*. ``source``/``root``/``pattern`` did the
+    same on the path side. The accepted cost is below: ``apiKey`` no longer establishes
+    credential handling, so a tool whose only credential parameter is named that way may
+    now produce a finding. That direction fails closed, and a human dismisses it in five
+    seconds."""
+    from mcp_placard.classify.signals.verb import name_tokens
+    from mcp_placard.inject.surface import CREDENTIAL_HANDLING_TOKENS, PATH_HANDLING_FIELDS
+
+    def evidence(name: str) -> tuple[bool, bool]:
+        tokens = set(name_tokens(name))
+        return bool(tokens & PATH_HANDLING_FIELDS), bool(tokens & CREDENTIAL_HANDLING_TOKENS)
+
+    for name in ("max_tokens", "page_token", "next_page_token", "sort_key", "cache_key"):
+        assert evidence(name) == (False, False), name
+    for name in ("data_source", "root_cause", "name_pattern", "source_timezone"):
+        assert evidence(name) == (False, False), name
+    assert evidence("apiKey") == (False, False)  # the accepted cost
+    assert evidence("credentials") == (False, True)
+    assert evidence("file_path") == (True, False)
 
 
 def test_a_credential_tool_may_name_the_credential_paths_it_rotates() -> None:
