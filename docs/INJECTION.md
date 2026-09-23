@@ -117,6 +117,18 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   - No evidence available means no exemption, exactly as for a tool with neither a path
     nor a credential parameter. A generic noun such as "private key" names no location
     for a family to narrow, so it answers to the boolean alone.
+
+  **Known gap, recorded rather than fixed.** 3.3 gives these elements evidence for
+  `sensitive_target` only. `cross_scope` reads `own_param_names`, which prompt arguments
+  still do not populate, so a prompt description naming its own `repo` argument can be
+  read as a foreign reference — the same false-positive shape 3.3 fixed, one rule over.
+  It is not fixed because the two changes are not symmetric in risk: narrowing
+  `sensitive_target` removes false positives, while widening `own_param_names` suppresses
+  findings, and prompt argument names are generic enough (`query`, `path`, `name`, `repo`)
+  that populating them could mask a genuine foreign reference. Held-out v2's benign file
+  was the test — it contained a prompt description and a prompt-argument description,
+  written with no view of the implementation, and neither produced a `cross_scope` finding.
+  No evidence either way, so the gap waits for a real case rather than a hypothetical one.
 - **A negated transmit verb is not a transmission instruction.** "Do not include any
   sensitive information such as API keys" is an instruction against, not for. Two-word
   window, closed negator list, same boundary as the reversibility negation guard.
