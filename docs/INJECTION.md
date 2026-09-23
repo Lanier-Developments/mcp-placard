@@ -99,6 +99,36 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   `destination`, …) or a credential (`key`, `token`, `secret`, `password`, …). A
   filesystem tool mentioning `~/.ssh/config` is doing its job; a weather tool
   mentioning `~/.ssh/id_rsa` is not.
+- **So may a prompt or a resource, on its own evidence** (**ruleset 3.3**). These
+  elements have no schema, and before 3.3 they had no evidence either, so the exemption
+  above could never apply to them — a resource that legitimately *is* the SSH config
+  flagged for describing itself. The evidence each one does have:
+  - **A resource or resource template**: the URI. A filesystem-bearing scheme (`file://`,
+    `ssh://`, `sftp://`, …) establishes that it handles paths. Where the URI names a
+    concrete path, the exemption is **limited to that path family**: a resource at
+    `file:///home/user/.ssh/config` may describe itself; one at `file:///var/log/app.log`
+    may not mention `~/.ssh/id_rsa`. A URI names an actual location rather than a shape,
+    which is more specific evidence than a parameter name, and the narrower exemption
+    keeps that precision. Only literal segments count — `{profile}` names no location.
+  - **A prompt argument**: its name, on the same footing and by the same test as a tool
+    parameter name.
+  - **A prompt**: the evidence of its own arguments, which are the closest thing it has
+    to a schema.
+  - No evidence available means no exemption, exactly as for a tool with neither a path
+    nor a credential parameter. A generic noun such as "private key" names no location
+    for a family to narrow, so it answers to the boolean alone.
+
+  **Known gap, recorded rather than fixed.** 3.3 gives these elements evidence for
+  `sensitive_target` only. `cross_scope` reads `own_param_names`, which prompt arguments
+  still do not populate, so a prompt description naming its own `repo` argument can be
+  read as a foreign reference — the same false-positive shape 3.3 fixed, one rule over.
+  It is not fixed because the two changes are not symmetric in risk: narrowing
+  `sensitive_target` removes false positives, while widening `own_param_names` suppresses
+  findings, and prompt argument names are generic enough (`query`, `path`, `name`, `repo`)
+  that populating them could mask a genuine foreign reference. Held-out v2's benign file
+  was the test — it contained a prompt description and a prompt-argument description,
+  written with no view of the implementation, and neither produced a `cross_scope` finding.
+  No evidence either way, so the gap waits for a real case rather than a hypothetical one.
 - **A negated transmit verb is not a transmission instruction.** "Do not include any
   sensitive information such as API keys" is an instruction against, not for. Two-word
   window, closed negator list, same boundary as the reversibility negation guard.

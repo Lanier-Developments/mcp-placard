@@ -29,4 +29,9 @@ MANIFEST_VERSION = "2.2"
 #: the current rules before comparing, so a ruleset change can never produce a
 #: finding on a server that did not change (Phase 3 §4). Bump on any change to a
 #: rule, a field list, a pattern, or a kind derivation.
-RULESET_VERSION = "3.2"
+#:
+#: 3.3 gives the ``sensitive_target`` exemption evidence on non-tool surfaces: a
+#: resource URI's scheme and path segments, and a prompt argument's name. Before it,
+#: prompt and resource elements carried no path or credential context at all, so the
+#: exemption could never apply there.
+RULESET_VERSION = "3.3"
