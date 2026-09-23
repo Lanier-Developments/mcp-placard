@@ -1,13 +1,13 @@
 {
   "note": "The ratchet (Phase 3 \u00a76). CI fails if benign false positives rise above this or detections fall below it. Move it only in the improving direction, only in a commit whose message says so.",
-  "ruleset_version": "3.2",
+  "ruleset_version": "3.5",
   "benign": {
     "elements": 388,
     "false_positives": 0
   },
   "synthetic": {
-    "samples": 35,
-    "detected": 35
+    "samples": 37,
+    "detected": 37
   },
   "lifted": {
     "samples": 2,
@@ -17,5 +17,16 @@
     "samples": 35,
     "detected": 35,
     "scored_once_on_ruleset_3_0": "24/35"
+  },
+  "heldout-v2": {
+    "samples": 49,
+    "detected": 33,
+    "scored_once_on_ruleset_3_3": "33/49",
+    "note": "Floor raised from 32 in the commit that earned it: the 3.5 path family restored the sensitive_target detection 1a's token matching had cost."
+  },
+  "heldout-v2-surfaces": {
+    "samples": 21,
+    "detected": 14,
+    "scored_once_on_ruleset_3_3": "14/21"
   }
 }

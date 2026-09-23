@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..classify.schema_walk import TraversalStatus, walk_schema
+from ..classify.signals.verb import name_tokens
 from ..manifest.models import Manifest, ToolEntry
 
 PATH_HANDLING_FIELDS = frozenset(
@@ -34,30 +35,57 @@ PATH_HANDLING_FIELDS = frozenset(
         "paths",
         "file",
         "files",
-        "file_path",
         "filepath",
         "filename",
         "directory",
         "dir",
         "folder",
-        "source",
         "destination",
         "dest",
-        "target_path",
-        "output_path",
-        "root",
         "cwd",
-        "repo_path",
         "repository",
         "glob",
-        "pattern",
     }
 )
-"""A tool with one of these parameters handles paths; path-like mentions in its
-text are in scope for it (``sensitive_target`` does not fire on them)."""
+"""A tool with one of these *tokens* in a parameter name handles paths; path-like
+mentions in its text are in scope for it (``sensitive_target`` does not fire on them).
 
-CREDENTIAL_HANDLING_TOKENS = ("key", "token", "secret", "password", "credential", "auth")
-"""A tool whose parameter names contain one of these handles credentials."""
+``source``, ``root`` and ``pattern`` were dropped in the 3.4 vocabulary audit:
+``data_source``, ``root_cause`` and ``name_pattern`` are ordinary parameters, and
+``source_timezone`` on the real ``time`` server bought ``convert_time`` a path exemption
+it never had before token matching. ``file_path``, ``target_path``, ``output_path`` and
+``repo_path`` were deleted as dead entries — under token matching they can never match,
+since they split to ``{file, path}`` and ``path`` already covers them, and a rule that
+cannot fire misleads whoever reads the list next."""
+
+CREDENTIAL_HANDLING_TOKENS = frozenset(
+    {
+        "secret",
+        "secrets",
+        "password",
+        "passwords",
+        "passphrase",
+        "credential",
+        "credentials",
+        "auth",
+    }
+)
+"""A tool with one of these *tokens* in a parameter name handles credentials.
+
+``key``/``keys`` and ``token``/``tokens`` were dropped in the 3.4 vocabulary audit
+(Chief, 2026-09-23). ``max_tokens`` is on every LLM-proxy server; ``page_token`` and
+``next_page_token`` are how Google, AWS and GitHub spell pagination; ``sort_key``,
+``cache_key`` and ``idempotency_key`` are ordinary. Each bought an exemption on servers
+we would expect to scan, and an exemption that matches half the parameters in existence
+is not an exemption. The cost is that a tool whose only credential parameter is literally
+named ``key`` loses its exemption and may produce a finding a human dismisses in five
+seconds — which is the direction we can afford to fail in.
+
+Both vocabularies are matched by token, not by substring and not by whole name
+(ruleset 3.4). Substring made ``pathological`` a path parameter; whole-name membership
+made ``credentials_file_path`` a credential parameter but not a path one, which is the
+false positive Doc's ``rotate_aws_keys`` sample exposed. Split on the same boundaries as
+tool-name verbs and the two sides agree: ``{credentials, file, path}`` establishes both."""
 
 FILESYSTEM_SCHEMES = frozenset({"file", "ssh", "sftp", "scp", "smb", "cifs", "nfs", "afp", "ftp"})
 """URI schemes that name a location in a filesystem. A resource served under one of
@@ -113,17 +141,44 @@ def escape_pointer(segment: str) -> str:
     return segment.replace("~", "~0").replace("/", "~1")
 
 
-def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool]:
+def parameter_path_family(names: Iterable[str]) -> frozenset[str]:
+    """The path family the *path-establishing* parameter names describe.
+
+    Ruleset 3.5, Chief's ruling of 2026-09-23. 3.3 gave resources a precise exemption
+    because a URI names a location, and left tools the coarse boolean because a schema
+    names a shape. But a parameter name often carries a family too: ``api_key_file`` says
+    *key file*, ``config_path`` says *config*. Where it does, the exemption is scoped to
+    it, on the same principle — an element may mention the secret it is demonstrably
+    about, and nothing else.
+
+    A parameter that genuinely names only a shape (``path``, ``file_path``) contributes no
+    family, and one bare-shape parameter is enough to restore the boolean for the whole
+    tool: a filesystem server's ``path`` really does mean any path.
+    """
+    family: set[str] = set()
+    for name in names:
+        tokens = set(name_tokens(name))
+        if not tokens & PATH_HANDLING_FIELDS:
+            continue
+        distinctive = tokens - PATH_HANDLING_FIELDS
+        if not distinctive:
+            return frozenset()
+        family |= distinctive
+    return frozenset(family)
+
+
+def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool, frozenset[str]]:
     result = walk_schema(tool.input_schema)
     names = frozenset(prop.name.lower() for prop in result.properties)
     if result.status is not TraversalStatus.COMPLETE:
         # Fail closed the *other* way for scoping: an untraversable schema is
         # treated as handling everything, so sensitive_target does not fire on a
         # tool whose parameters we could not read. The tier side already forces R4.
-        return names, True, True
-    handles_paths = bool(names & PATH_HANDLING_FIELDS)
-    handles_credentials = any(tok in name for name in names for tok in CREDENTIAL_HANDLING_TOKENS)
-    return names, handles_paths, handles_credentials
+        return names, True, True, frozenset()
+    tokens = {token for name in names for token in name_tokens(name)}
+    handles_paths = bool(tokens & PATH_HANDLING_FIELDS)
+    handles_credentials = bool(tokens & CREDENTIAL_HANDLING_TOKENS)
+    return names, handles_paths, handles_credentials, parameter_path_family(names)
 
 
 def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
@@ -150,7 +205,7 @@ def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
     return True, frozenset(segments)
 
 
-def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
+def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool, frozenset[str]]:
     """``(handles_paths, handles_credentials)`` from prompt argument names.
 
     Ruleset 3.3: an argument name is evidence on the same footing as a tool parameter
@@ -158,10 +213,13 @@ def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
     A prompt inherits the evidence of its own arguments, which are the closest thing it
     has to a schema.
     """
-    lowered = [name.lower() for name in names]
-    handles_paths = any(name in PATH_HANDLING_FIELDS for name in lowered)
-    handles_credentials = any(tok in name for name in lowered for tok in CREDENTIAL_HANDLING_TOKENS)
-    return handles_paths, handles_credentials
+    names = list(names)
+    tokens = {token for name in names for token in name_tokens(name)}
+    return (
+        bool(tokens & PATH_HANDLING_FIELDS),
+        bool(tokens & CREDENTIAL_HANDLING_TOKENS),
+        parameter_path_family(names),
+    )
 
 
 def _schema_descriptions(schema: dict[str, Any]) -> list[tuple[str, str]]:
@@ -184,6 +242,7 @@ class _ToolContext:
     params: frozenset[str]
     handles_paths: bool
     handles_credentials: bool
+    path_family: frozenset[str]
     server_name: str
 
     def element(self, suffix: str, text: str) -> TextElement:
@@ -196,6 +255,7 @@ class _ToolContext:
             own_param_names=self.params,
             handles_paths=self.handles_paths,
             handles_credentials=self.handles_credentials,
+            path_family=self.path_family,
             server_name=self.server_name,
         )
 
@@ -219,7 +279,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
         )
 
     for index, tool in enumerate(surface.tools):
-        params, handles_paths, handles_credentials = _tool_params(tool)
+        params, handles_paths, handles_credentials, path_family = _tool_params(tool)
         context = _ToolContext(
             tool=tool,
             index=index,
@@ -227,6 +287,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
             params=params,
             handles_paths=handles_paths,
             handles_credentials=handles_credentials,
+            path_family=path_family,
             server_name=server_name,
         )
         if tool.description:
@@ -240,7 +301,9 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
         base = f"/surface/prompts/{index}"
         arguments = prompt.arguments or []
         # A prompt inherits the evidence of its own arguments (ruleset 3.3).
-        prompt_paths, prompt_credentials = _prompt_argument_evidence(a.name for a in arguments)
+        prompt_paths, prompt_credentials, prompt_family = _prompt_argument_evidence(
+            a.name for a in arguments
+        )
         if prompt.description:
             elements.append(
                 TextElement(
@@ -250,12 +313,13 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     own_tool_names=own_tools,
                     handles_paths=prompt_paths,
                     handles_credentials=prompt_credentials,
+                    path_family=prompt_family,
                     server_name=server_name,
                 )
             )
         for arg_index, argument in enumerate(arguments):
             if argument.description:
-                arg_paths, arg_credentials = _prompt_argument_evidence([argument.name])
+                arg_paths, arg_credentials, arg_family = _prompt_argument_evidence([argument.name])
                 elements.append(
                     TextElement(
                         element=f"prompt:{prompt.name}/arguments/{argument.name}/description",
@@ -264,6 +328,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                         own_tool_names=own_tools,
                         handles_paths=arg_paths,
                         handles_credentials=arg_credentials,
+                        path_family=arg_family,
                         server_name=server_name,
                     )
                 )
