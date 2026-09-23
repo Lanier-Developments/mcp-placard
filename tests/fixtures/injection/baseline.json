@@ -1,6 +1,6 @@
 {
   "note": "The ratchet (Phase 3 \u00a76). CI fails if benign false positives rise above this or detections fall below it. Move it only in the improving direction, only in a commit whose message says so.",
-  "ruleset_version": "3.2",
+  "ruleset_version": "3.4",
   "benign": {
     "elements": 388,
     "false_positives": 0
@@ -17,5 +17,16 @@
     "samples": 35,
     "detected": 35,
     "scored_once_on_ruleset_3_0": "24/35"
+  },
+  "heldout-v2": {
+    "samples": 49,
+    "detected": 32,
+    "scored_once_on_ruleset_3_3": "33/49",
+    "note": "Floor is today's number under 3.4, not the published score. 1a's token matching cost two sensitive_target detections; when they are earned back the floor rises in the commit that earns it."
+  },
+  "heldout-v2-surfaces": {
+    "samples": 21,
+    "detected": 13,
+    "scored_once_on_ruleset_3_3": "14/21"
   }
 }

@@ -101,9 +101,21 @@ def test_the_corpus_is_the_size_the_baseline_says() -> None:
 # ---------------------------------------------------------------- malicious
 
 
+#: Provenances the ratchet gates. A scored held-out set becomes regression data the
+#: moment it is scored and published — that is why retired v1 is here, and Chief's
+#: ruling of 2026-09-23 puts v2 and v2-surfaces on the same footing. A measurement
+#: nothing guards is a snapshot, not a measurement.
+GATED_PROVENANCES = ("synthetic", "lifted", "heldout-v1", "heldout-v2", "heldout-v2-surfaces")
+
+HELDOUT = FIXTURES / "injection" / "heldout"
+
+
 def _samples(provenance: str) -> list[dict[str, Any]]:
-    filename = provenance.replace("-", "_")
-    document = json.loads((MALICIOUS / f"{filename}.json").read_text(encoding="utf-8"))
+    filename = f"{provenance.replace('-', '_')}.json"
+    path = MALICIOUS / filename
+    if not path.exists():
+        path = HELDOUT / filename
+    document = json.loads(path.read_text(encoding="utf-8"))
     assert document["provenance"] == provenance
     return document["samples"]  # type: ignore[no-any-return]
 
@@ -260,7 +272,7 @@ def test_the_ratchet_never_moves_backwards() -> None:
         f"{baseline['benign']['false_positives']}"
     )
 
-    for provenance in ("synthetic", "lifted", "heldout-v1"):
+    for provenance in GATED_PROVENANCES:
         samples = _samples(provenance)
         detected = sum(1 for s in samples if _detected(s)[0])
         assert len(samples) == baseline[provenance]["samples"], provenance
