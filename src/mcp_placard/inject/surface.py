@@ -87,7 +87,12 @@ class TextElement:
     the cross-scope service-host rule exempts exactly this name."""
 
 
-def _escape_pointer(segment: str) -> str:
+def escape_pointer(segment: str) -> str:
+    """Escape one JSON Pointer segment (RFC 6901).
+
+    Public because ``corpus`` reconstructs resource element ids with it. The two
+    must agree exactly or the held-out scorer selects no findings.
+    """
     return segment.replace("~", "~0").replace("/", "~1")
 
 
@@ -204,7 +209,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
         if resource.description:
             elements.append(
                 TextElement(
-                    element=f"resource:{_escape_pointer(resource.uri)}/description",
+                    element=f"resource:{escape_pointer(resource.uri)}/description",
                     pointer=f"/surface/resources/{index}/description",
                     text=resource.description,
                     own_tool_names=own_tools,
@@ -217,7 +222,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
             elements.append(
                 TextElement(
                     element=(
-                        f"resource_template:{_escape_pointer(template.uri_template)}/description"
+                        f"resource_template:{escape_pointer(template.uri_template)}/description"
                     ),
                     pointer=f"/surface/resource_templates/{index}/description",
                     text=template.description,
