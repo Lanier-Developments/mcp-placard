@@ -21,6 +21,7 @@ paths is doing its job; a weather tool mentioning ``~/.ssh`` is not).
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -58,6 +59,11 @@ text are in scope for it (``sensitive_target`` does not fire on them)."""
 CREDENTIAL_HANDLING_TOKENS = ("key", "token", "secret", "password", "credential", "auth")
 """A tool whose parameter names contain one of these handles credentials."""
 
+FILESYSTEM_SCHEMES = frozenset({"file", "ssh", "sftp", "scp", "smb", "cifs", "nfs", "afp", "ftp"})
+"""URI schemes that name a location in a filesystem. A resource served under one of
+these handles paths, on the same footing as a tool with a ``path`` parameter: the
+scheme is the evidence (ruleset 3.3)."""
+
 
 @dataclass(frozen=True)
 class TextElement:
@@ -80,6 +86,17 @@ class TextElement:
 
     handles_paths: bool = False
     handles_credentials: bool = False
+
+    path_family: frozenset[str] = field(default_factory=frozenset)
+    """The literal path segments of a resource URI, when it names a concrete location.
+
+    Ruleset 3.3. A tool's ``handles_paths`` is a boolean because a schema names a
+    *shape* — a ``path`` parameter says nothing about which path. A resource URI names
+    an actual location, which is more specific evidence, and the exemption is narrowed
+    to match: a resource at ``file:///home/user/.ssh/config`` may describe itself, but
+    one at ``file:///var/log/app.log`` may not mention ``~/.ssh/id_rsa``. Empty means
+    no concrete path was available — a tool, or a template whose segments are all
+    variables — and ``handles_paths`` then exempts path mentions outright, as before."""
 
     server_name: str = ""
     """The server's declared ``name`` from ``initialize``, lowercased. A server
@@ -107,6 +124,44 @@ def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool]:
     handles_paths = bool(names & PATH_HANDLING_FIELDS)
     handles_credentials = any(tok in name for name in names for tok in CREDENTIAL_HANDLING_TOKENS)
     return names, handles_paths, handles_credentials
+
+
+def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
+    """``(handles_paths, path_family)`` for a resource URI or URI template.
+
+    Ruleset 3.3, Chief's ruling of 2026-09-23. The scheme establishes that the element
+    handles paths; the literal segments of the path narrow *which* path mentions are in
+    scope for it. Template variables (``{path}``) contribute no segment — a template
+    names a family, not a location, so only its literal segments count.
+    """
+    scheme, separator, remainder = uri.partition("://")
+    if not separator:
+        scheme, separator, remainder = uri.partition(":")
+        if not separator:
+            return False, frozenset()
+    if scheme.lower() not in FILESYSTEM_SCHEMES:
+        return False, frozenset()
+    path = remainder.split("?", 1)[0].split("#", 1)[0]
+    segments = {
+        segment.lower()
+        for segment in path.split("/")
+        if segment and "{" not in segment and "}" not in segment
+    }
+    return True, frozenset(segments)
+
+
+def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
+    """``(handles_paths, handles_credentials)`` from prompt argument names.
+
+    Ruleset 3.3: an argument name is evidence on the same footing as a tool parameter
+    name, and by the same test — exact membership for paths, substring for credentials.
+    A prompt inherits the evidence of its own arguments, which are the closest thing it
+    has to a schema.
+    """
+    lowered = [name.lower() for name in names]
+    handles_paths = any(name in PATH_HANDLING_FIELDS for name in lowered)
+    handles_credentials = any(tok in name for name in lowered for tok in CREDENTIAL_HANDLING_TOKENS)
+    return handles_paths, handles_credentials
 
 
 def _schema_descriptions(schema: dict[str, Any]) -> list[tuple[str, str]]:
@@ -183,6 +238,9 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
 
     for index, prompt in enumerate(surface.prompts):
         base = f"/surface/prompts/{index}"
+        arguments = prompt.arguments or []
+        # A prompt inherits the evidence of its own arguments (ruleset 3.3).
+        prompt_paths, prompt_credentials = _prompt_argument_evidence(a.name for a in arguments)
         if prompt.description:
             elements.append(
                 TextElement(
@@ -190,35 +248,44 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     pointer=f"{base}/description",
                     text=prompt.description,
                     own_tool_names=own_tools,
+                    handles_paths=prompt_paths,
+                    handles_credentials=prompt_credentials,
                     server_name=server_name,
                 )
             )
-        for arg_index, argument in enumerate(prompt.arguments or []):
+        for arg_index, argument in enumerate(arguments):
             if argument.description:
+                arg_paths, arg_credentials = _prompt_argument_evidence([argument.name])
                 elements.append(
                     TextElement(
                         element=f"prompt:{prompt.name}/arguments/{argument.name}/description",
                         pointer=f"{base}/arguments/{arg_index}/description",
                         text=argument.description,
                         own_tool_names=own_tools,
+                        handles_paths=arg_paths,
+                        handles_credentials=arg_credentials,
                         server_name=server_name,
                     )
                 )
 
     for index, resource in enumerate(surface.resources):
         if resource.description:
+            handles_paths, path_family = _uri_evidence(resource.uri)
             elements.append(
                 TextElement(
                     element=f"resource:{escape_pointer(resource.uri)}/description",
                     pointer=f"/surface/resources/{index}/description",
                     text=resource.description,
                     own_tool_names=own_tools,
+                    handles_paths=handles_paths,
+                    path_family=path_family,
                     server_name=server_name,
                 )
             )
 
     for index, template in enumerate(surface.resource_templates):
         if template.description:
+            handles_paths, path_family = _uri_evidence(template.uri_template)
             elements.append(
                 TextElement(
                     element=(
@@ -227,6 +294,8 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     pointer=f"/surface/resource_templates/{index}/description",
                     text=template.description,
                     own_tool_names=own_tools,
+                    handles_paths=handles_paths,
+                    path_family=path_family,
                     server_name=server_name,
                 )
             )

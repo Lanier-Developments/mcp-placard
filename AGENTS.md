@@ -305,6 +305,11 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
+- **Phase 3.3** — the `sensitive_target` exemption gains evidence on non-tool surfaces: a resource
+  URI's scheme and path segments, a prompt argument's name, and for a prompt its own arguments'
+  evidence. Before it, prompt and resource elements carried no path or credential context at all,
+  so a resource that legitimately *is* a credential path flagged for describing itself. The URI
+  exemption is scoped to the path family the URI names, not boolean as the tool rule is.
 - **Phase 3.2** — done (with Phase 4). The own-name exemption in `cross_scope` matches the whole
   declared server name or its final path segment, generic tokens stripped — not arbitrary tokens,
   which a hostile name like `jira-slack-github-bridge` could steer.

@@ -99,6 +99,24 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   `destination`, …) or a credential (`key`, `token`, `secret`, `password`, …). A
   filesystem tool mentioning `~/.ssh/config` is doing its job; a weather tool
   mentioning `~/.ssh/id_rsa` is not.
+- **So may a prompt or a resource, on its own evidence** (**ruleset 3.3**). These
+  elements have no schema, and before 3.3 they had no evidence either, so the exemption
+  above could never apply to them — a resource that legitimately *is* the SSH config
+  flagged for describing itself. The evidence each one does have:
+  - **A resource or resource template**: the URI. A filesystem-bearing scheme (`file://`,
+    `ssh://`, `sftp://`, …) establishes that it handles paths. Where the URI names a
+    concrete path, the exemption is **limited to that path family**: a resource at
+    `file:///home/user/.ssh/config` may describe itself; one at `file:///var/log/app.log`
+    may not mention `~/.ssh/id_rsa`. A URI names an actual location rather than a shape,
+    which is more specific evidence than a parameter name, and the narrower exemption
+    keeps that precision. Only literal segments count — `{profile}` names no location.
+  - **A prompt argument**: its name, on the same footing and by the same test as a tool
+    parameter name.
+  - **A prompt**: the evidence of its own arguments, which are the closest thing it has
+    to a schema.
+  - No evidence available means no exemption, exactly as for a tool with neither a path
+    nor a credential parameter. A generic noun such as "private key" names no location
+    for a family to narrow, so it answers to the boolean alone.
 - **A negated transmit verb is not a transmission instruction.** "Do not include any
   sensitive information such as API keys" is an instruction against, not for. Two-word
   window, closed negator list, same boundary as the reversibility negation guard.

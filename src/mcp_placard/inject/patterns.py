@@ -343,7 +343,7 @@ def _is_named_service(name: str) -> bool:
 
 # ------------------------------------------------------------- sensitive_target
 
-_SENSITIVE_PATH = re.compile(
+_SENSITIVE_PATH_LOCATION = re.compile(
     r"~/\.(ssh|aws|gnupg|gpg|config|cursor|claude|docker|kube|azure|gcloud|netrc|npmrc|pypirc|"
     r"git-credentials|bash_history|zsh_history)\b"
     r"|\bid_(rsa|ed25519|ecdsa|dsa)\b"
@@ -351,9 +351,18 @@ _SENSITIVE_PATH = re.compile(
     r"|(?<![\w/])\.env(\.[a-z]+)?\b(?!ironment)"
     r"|\b(credentials|secrets?|token|tokens|keys)\.(json|ya?ml|txt|ini|toml)\b"
     r"|\bmcp\.json\b|\bclaude_desktop_config\.json\b|\bcursor/mcp\.json\b"
-    r"|\bkeychain\b|\b[\w.-]+\.pem\b|\bprivate\s+keys?\b",
+    r"|\b[\w.-]+\.pem\b",
     _I,
 )
+"""Sensitive things named as a *location* — a path or a filename. These are what a
+resource's ``path_family`` can narrow, because both sides name a place (ruleset 3.3)."""
+
+_SENSITIVE_PATH_NOUN = re.compile(r"\bkeychain\b|\bprivate\s+keys?\b", _I)
+"""Sensitive things named as a *thing* rather than a location. A path family cannot
+narrow these — there is no place to compare — so they answer to ``handles_paths``
+alone, exactly as every path mention did before 3.3."""
+
+_PATH_SEPARATORS = re.compile(r"[\\/]")
 _CREDENTIAL_WORD = (
     r"(api[\s_-]?keys?|access[\s_-]?tokens?|auth(?:entication|orization)?[\s_-]?tokens?|"
     r"bearer\s+tokens?|secret[\s_-]?keys?|passwords?|passphrases?|credentials?|"
@@ -586,10 +595,40 @@ def detect_cross_scope(element: TextElement) -> Iterator[Match]:
             yield Match("cross_scope", "cross_scope.foreign_tool_identifier", *span)
 
 
+def _leading_segment(match_text: str) -> str:
+    """The most significant path segment of a sensitive-location match.
+
+    ``~/.ssh/config`` is about ``.ssh``; ``credentials.json`` is about itself. The
+    leading segment is what a path family is compared against, so that a resource at
+    ``file:///home/user/.ssh/config`` covers its own directory's contents and nothing
+    else.
+    """
+    segments = [s for s in _PATH_SEPARATORS.split(match_text.strip().lstrip("~")) if s]
+    return segments[0].lower() if segments else match_text.strip().lower()
+
+
+def _path_mention_is_in_scope(element: TextElement, match_text: str) -> bool:
+    """Whether this element may name this location (ruleset 3.3).
+
+    Without a concrete path family the answer is the pre-3.3 boolean: a tool that
+    handles paths may name any of them, because its schema names a shape rather than a
+    location. With one — a resource URI — the element may name only its own family.
+    """
+    if not element.handles_paths:
+        return False
+    if not element.path_family:
+        return True
+    return _leading_segment(match_text) in element.path_family
+
+
 def detect_sensitive_target(element: TextElement) -> Iterator[Match]:
     text = element.text
+    for m in _SENSITIVE_PATH_LOCATION.finditer(text):
+        if _path_mention_is_in_scope(element, m.group(0)):
+            continue
+        yield Match("sensitive_target", "sensitive_target.credential_path", m.start(), m.end())
     if not element.handles_paths:
-        for m in _SENSITIVE_PATH.finditer(text):
+        for m in _SENSITIVE_PATH_NOUN.finditer(text):
             yield Match("sensitive_target", "sensitive_target.credential_path", m.start(), m.end())
     if not element.handles_credentials:
         for m in _SENSITIVE_CREDENTIAL.finditer(text):
