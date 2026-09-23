@@ -12,7 +12,7 @@ from __future__ import annotations
 
 __all__ = ["MANIFEST_VERSION", "RULESET_VERSION", "__version__"]
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 #: Schema version stamped into every manifest this build writes. Bumped when the
 #: manifest layout changes in a way older readers cannot handle. Phase 1 wrote

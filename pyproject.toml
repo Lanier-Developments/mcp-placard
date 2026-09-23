@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-placard"
-version = "0.3.1"
+version = "0.4.0"
 description = "Static analysis and drift detection for the surface an MCP server exposes to an agent."
 readme = "README.md"
 requires-python = ">=3.11"
