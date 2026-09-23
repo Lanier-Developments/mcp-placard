@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..classify.schema_walk import TraversalStatus, walk_schema
+from ..classify.signals.verb import name_tokens
 from ..manifest.models import Manifest, ToolEntry
 
 PATH_HANDLING_FIELDS = frozenset(
@@ -56,8 +57,29 @@ PATH_HANDLING_FIELDS = frozenset(
 """A tool with one of these parameters handles paths; path-like mentions in its
 text are in scope for it (``sensitive_target`` does not fire on them)."""
 
-CREDENTIAL_HANDLING_TOKENS = ("key", "token", "secret", "password", "credential", "auth")
-"""A tool whose parameter names contain one of these handles credentials."""
+CREDENTIAL_HANDLING_TOKENS = frozenset(
+    {
+        "key",
+        "keys",
+        "token",
+        "tokens",
+        "secret",
+        "secrets",
+        "password",
+        "passwords",
+        "passphrase",
+        "credential",
+        "credentials",
+        "auth",
+    }
+)
+"""A tool with one of these *tokens* in a parameter name handles credentials.
+
+Both vocabularies are matched by token, not by substring and not by whole name
+(ruleset 3.4). Substring made ``pathological`` a path parameter; whole-name membership
+made ``credentials_file_path`` a credential parameter but not a path one, which is the
+false positive Doc's ``rotate_aws_keys`` sample exposed. Split on the same boundaries as
+tool-name verbs and the two sides agree: ``{credentials, file, path}`` establishes both."""
 
 FILESYSTEM_SCHEMES = frozenset({"file", "ssh", "sftp", "scp", "smb", "cifs", "nfs", "afp", "ftp"})
 """URI schemes that name a location in a filesystem. A resource served under one of
@@ -121,8 +143,9 @@ def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool]:
         # treated as handling everything, so sensitive_target does not fire on a
         # tool whose parameters we could not read. The tier side already forces R4.
         return names, True, True
-    handles_paths = bool(names & PATH_HANDLING_FIELDS)
-    handles_credentials = any(tok in name for name in names for tok in CREDENTIAL_HANDLING_TOKENS)
+    tokens = {token for name in names for token in name_tokens(name)}
+    handles_paths = bool(tokens & PATH_HANDLING_FIELDS)
+    handles_credentials = bool(tokens & CREDENTIAL_HANDLING_TOKENS)
     return names, handles_paths, handles_credentials
 
 
@@ -158,10 +181,8 @@ def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
     A prompt inherits the evidence of its own arguments, which are the closest thing it
     has to a schema.
     """
-    lowered = [name.lower() for name in names]
-    handles_paths = any(name in PATH_HANDLING_FIELDS for name in lowered)
-    handles_credentials = any(tok in name for name in lowered for tok in CREDENTIAL_HANDLING_TOKENS)
-    return handles_paths, handles_credentials
+    tokens = {token for name in names for token in name_tokens(name)}
+    return bool(tokens & PATH_HANDLING_FIELDS), bool(tokens & CREDENTIAL_HANDLING_TOKENS)
 
 
 def _schema_descriptions(schema: dict[str, Any]) -> list[tuple[str, str]]:

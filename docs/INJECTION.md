@@ -95,10 +95,14 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   instructions are the server talking about itself; only explicit cross-server
   phrasing counts there.
 - **A tool that handles paths or credentials may mention them.** Decided by schema
-  evidence: a parameter named like a path (`path`, `file`, `directory`, `source`,
-  `destination`, …) or a credential (`key`, `token`, `secret`, `password`, …). A
+  evidence: a parameter with a path token (`path`, `file`, `directory`, `source`,
+  `destination`, …) or a credential token (`key`, `token`, `secret`, `password`, …). A
   filesystem tool mentioning `~/.ssh/config` is doing its job; a weather tool
-  mentioning `~/.ssh/id_rsa` is not.
+  mentioning `~/.ssh/id_rsa` is not. **Ruleset 3.4:** both sides are decided by *token*,
+  splitting the parameter name on snake, kebab, dotted and camel boundaries — the same
+  splitter as tool-name verbs. Whole-name membership made `credentials_file_path` a
+  credential parameter but not a path one; substring would make `pathological` a path
+  parameter. `{credentials, file, path}` establishes both.
 - **So may a prompt or a resource, on its own evidence** (**ruleset 3.3**). These
   elements have no schema, and before 3.3 they had no evidence either, so the exemption
   above could never apply to them — a resource that legitimately *is* the SSH config
