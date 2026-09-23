@@ -6,8 +6,8 @@
     "false_positives": 0
   },
   "synthetic": {
-    "samples": 35,
-    "detected": 35
+    "samples": 37,
+    "detected": 37
   },
   "lifted": {
     "samples": 2,
