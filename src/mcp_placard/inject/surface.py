@@ -141,18 +141,44 @@ def escape_pointer(segment: str) -> str:
     return segment.replace("~", "~0").replace("/", "~1")
 
 
-def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool]:
+def parameter_path_family(names: Iterable[str]) -> frozenset[str]:
+    """The path family the *path-establishing* parameter names describe.
+
+    Ruleset 3.5, Chief's ruling of 2026-09-23. 3.3 gave resources a precise exemption
+    because a URI names a location, and left tools the coarse boolean because a schema
+    names a shape. But a parameter name often carries a family too: ``api_key_file`` says
+    *key file*, ``config_path`` says *config*. Where it does, the exemption is scoped to
+    it, on the same principle — an element may mention the secret it is demonstrably
+    about, and nothing else.
+
+    A parameter that genuinely names only a shape (``path``, ``file_path``) contributes no
+    family, and one bare-shape parameter is enough to restore the boolean for the whole
+    tool: a filesystem server's ``path`` really does mean any path.
+    """
+    family: set[str] = set()
+    for name in names:
+        tokens = set(name_tokens(name))
+        if not tokens & PATH_HANDLING_FIELDS:
+            continue
+        distinctive = tokens - PATH_HANDLING_FIELDS
+        if not distinctive:
+            return frozenset()
+        family |= distinctive
+    return frozenset(family)
+
+
+def _tool_params(tool: ToolEntry) -> tuple[frozenset[str], bool, bool, frozenset[str]]:
     result = walk_schema(tool.input_schema)
     names = frozenset(prop.name.lower() for prop in result.properties)
     if result.status is not TraversalStatus.COMPLETE:
         # Fail closed the *other* way for scoping: an untraversable schema is
         # treated as handling everything, so sensitive_target does not fire on a
         # tool whose parameters we could not read. The tier side already forces R4.
-        return names, True, True
+        return names, True, True, frozenset()
     tokens = {token for name in names for token in name_tokens(name)}
     handles_paths = bool(tokens & PATH_HANDLING_FIELDS)
     handles_credentials = bool(tokens & CREDENTIAL_HANDLING_TOKENS)
-    return names, handles_paths, handles_credentials
+    return names, handles_paths, handles_credentials, parameter_path_family(names)
 
 
 def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
@@ -179,7 +205,7 @@ def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
     return True, frozenset(segments)
 
 
-def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
+def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool, frozenset[str]]:
     """``(handles_paths, handles_credentials)`` from prompt argument names.
 
     Ruleset 3.3: an argument name is evidence on the same footing as a tool parameter
@@ -187,8 +213,13 @@ def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool]:
     A prompt inherits the evidence of its own arguments, which are the closest thing it
     has to a schema.
     """
+    names = list(names)
     tokens = {token for name in names for token in name_tokens(name)}
-    return bool(tokens & PATH_HANDLING_FIELDS), bool(tokens & CREDENTIAL_HANDLING_TOKENS)
+    return (
+        bool(tokens & PATH_HANDLING_FIELDS),
+        bool(tokens & CREDENTIAL_HANDLING_TOKENS),
+        parameter_path_family(names),
+    )
 
 
 def _schema_descriptions(schema: dict[str, Any]) -> list[tuple[str, str]]:
@@ -211,6 +242,7 @@ class _ToolContext:
     params: frozenset[str]
     handles_paths: bool
     handles_credentials: bool
+    path_family: frozenset[str]
     server_name: str
 
     def element(self, suffix: str, text: str) -> TextElement:
@@ -223,6 +255,7 @@ class _ToolContext:
             own_param_names=self.params,
             handles_paths=self.handles_paths,
             handles_credentials=self.handles_credentials,
+            path_family=self.path_family,
             server_name=self.server_name,
         )
 
@@ -246,7 +279,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
         )
 
     for index, tool in enumerate(surface.tools):
-        params, handles_paths, handles_credentials = _tool_params(tool)
+        params, handles_paths, handles_credentials, path_family = _tool_params(tool)
         context = _ToolContext(
             tool=tool,
             index=index,
@@ -254,6 +287,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
             params=params,
             handles_paths=handles_paths,
             handles_credentials=handles_credentials,
+            path_family=path_family,
             server_name=server_name,
         )
         if tool.description:
@@ -267,7 +301,9 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
         base = f"/surface/prompts/{index}"
         arguments = prompt.arguments or []
         # A prompt inherits the evidence of its own arguments (ruleset 3.3).
-        prompt_paths, prompt_credentials = _prompt_argument_evidence(a.name for a in arguments)
+        prompt_paths, prompt_credentials, prompt_family = _prompt_argument_evidence(
+            a.name for a in arguments
+        )
         if prompt.description:
             elements.append(
                 TextElement(
@@ -277,12 +313,13 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                     own_tool_names=own_tools,
                     handles_paths=prompt_paths,
                     handles_credentials=prompt_credentials,
+                    path_family=prompt_family,
                     server_name=server_name,
                 )
             )
         for arg_index, argument in enumerate(arguments):
             if argument.description:
-                arg_paths, arg_credentials = _prompt_argument_evidence([argument.name])
+                arg_paths, arg_credentials, arg_family = _prompt_argument_evidence([argument.name])
                 elements.append(
                     TextElement(
                         element=f"prompt:{prompt.name}/arguments/{argument.name}/description",
@@ -291,6 +328,7 @@ def enumerate_text(manifest: Manifest) -> list[TextElement]:
                         own_tool_names=own_tools,
                         handles_paths=arg_paths,
                         handles_credentials=arg_credentials,
+                        path_family=arg_family,
                         server_name=server_name,
                     )
                 )

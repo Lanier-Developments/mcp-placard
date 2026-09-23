@@ -133,6 +133,29 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   was the test — it contained a prompt description and a prompt-argument description,
   written with no view of the implementation, and neither produced a `cross_scope` finding.
   No evidence either way, so the gap waits for a real case rather than a hypothetical one.
+- **Exemption laundering** (**ruleset 3.5**). Every evidence-derived exemption rests on
+  data the *server* controls — a parameter name, a resource URI, a prompt argument name —
+  so a hostile server can name a thing to buy an exemption it should not have. Doc's
+  held-out v2 declared a parameter `api_key_file` and pointed its default at
+  `~/.ssh/id_rsa`: the name establishes path handling, and a boolean exemption then
+  licenses *any* path. This is the general shape, not one sample, and the same move works
+  against the resource-URI rule and the prompt-argument rule.
+
+  The mitigation is the same in all three places, and it is the principle the resource
+  rule already stated: **an element may name what it is demonstrably about, and nothing
+  else.** A family — the distinctive tokens of a parameter name, the literal segments of a
+  URI — scopes the exemption, and the test is the **leaf** of the path expression, because
+  the leaf is the secret. `credentials_file_path` may name `~/.aws/credentials` and not
+  `~/.ssh/id_rsa`; `config_path` may name `~/.config` and not
+  `~/.config/gcloud/credentials.db`, which is a credential store that happens to sit
+  inside a configuration directory. A parameter that names only a *shape* — `path`,
+  `file_path` — carries no family and keeps the boolean, because a filesystem server's
+  `path` really does mean any path.
+
+  What this does not fix: the exemption is still granted on server-controlled evidence,
+  and a server willing to name a parameter `ssh_key_path` can still describe
+  `~/.ssh/id_rsa` without firing. It has to declare what it is doing to get there, which
+  is the same bargain the own-name exemption strikes in `cross_scope`.
 - **A negated transmit verb is not a transmission instruction.** "Do not include any
   sensitive information such as API keys" is an instruction against, not for. Two-word
   window, closed negator list, same boundary as the reversibility negation guard.

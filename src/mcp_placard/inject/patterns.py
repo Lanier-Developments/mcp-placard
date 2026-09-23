@@ -649,36 +649,58 @@ def detect_cross_scope(element: TextElement) -> Iterator[Match]:
             yield Match("cross_scope", "cross_scope.foreign_tool_identifier", *span)
 
 
-def _leading_segment(match_text: str) -> str:
-    """The most significant path segment of a sensitive-location match.
+def _normalise_segment(segment: str) -> str:
+    """Lowercase and strip a leading dot, so a URI family segment (``.ssh``) and a
+    parameter family token (``config``) are comparable on the same footing."""
+    return segment.strip().lower().lstrip(".")
 
-    ``~/.ssh/config`` is about ``.ssh``; ``credentials.json`` is about itself. The
-    leading segment is what a path family is compared against, so that a resource at
-    ``file:///home/user/.ssh/config`` covers its own directory's contents and nothing
-    else.
+
+_PATH_EXPRESSION = re.compile(r"[\w~./\\-]+")
+
+
+def _path_leaf(text: str, start: int) -> str:
+    """The **leaf** of the whole path expression beginning at ``start``.
+
+    The sensitive-path patterns match a prefix — ``~/.ssh`` out of ``~/.ssh/id_rsa``,
+    ``~/.aws`` out of ``~/.aws/credentials`` — so comparing what they matched compares a
+    *directory* against a family. The thing an element is demonstrably about is the file
+    at the end of the path, so the expression is re-read from the match onwards and its
+    last segment is what a family is tested against.
+
+    That distinction is the whole rule. ``credentials_file_path`` describing
+    ``~/.aws/credentials`` is naming its own subject; the same parameter pointed at
+    ``~/.ssh/id_rsa`` is not. ``config_path`` may name ``~/.config`` and still not be
+    about ``~/.config/gcloud/credentials.db``, which is a credential store that happens
+    to live inside a configuration directory.
     """
-    segments = [s for s in _PATH_SEPARATORS.split(match_text.strip().lstrip("~")) if s]
-    return segments[0].lower() if segments else match_text.strip().lower()
+    expression = _PATH_EXPRESSION.match(text, start)
+    raw = expression.group(0) if expression else text[start:]
+    segments = [s for s in _PATH_SEPARATORS.split(raw.strip().strip(".").lstrip("~")) if s]
+    return _normalise_segment(segments[-1] if segments else raw)
 
 
-def _path_mention_is_in_scope(element: TextElement, match_text: str) -> bool:
-    """Whether this element may name this location (ruleset 3.3).
+def _path_mention_is_in_scope(element: TextElement, text: str, start: int) -> bool:
+    """Whether this element may name this location.
 
-    Without a concrete path family the answer is the pre-3.3 boolean: a tool that
-    handles paths may name any of them, because its schema names a shape rather than a
-    location. With one — a resource URI — the element may name only its own family.
+    Without a family the answer is the pre-3.3 boolean: a parameter named only for a
+    shape — ``path``, ``file_path`` — says any path, so a filesystem tool may name any of
+    them. With a family — a resource URI's segments, or the distinctive tokens of a
+    parameter name — the element may name only what it is demonstrably about, tested at
+    the leaf of the path expression.
     """
     if not element.handles_paths:
         return False
     if not element.path_family:
         return True
-    return _leading_segment(match_text) in element.path_family
+    return _path_leaf(text, start) in {
+        _normalise_segment(segment) for segment in element.path_family
+    }
 
 
 def detect_sensitive_target(element: TextElement) -> Iterator[Match]:
     text = element.text
     for m in _SENSITIVE_PATH_LOCATION.finditer(text):
-        if _path_mention_is_in_scope(element, m.group(0)):
+        if _path_mention_is_in_scope(element, text, m.start()):
             continue
         yield Match("sensitive_target", "sensitive_target.credential_path", m.start(), m.end())
     if not element.handles_paths:
