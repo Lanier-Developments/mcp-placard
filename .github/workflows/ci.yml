@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.11"
           cache: pip
@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -128,7 +128,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.11"
           cache: pip
