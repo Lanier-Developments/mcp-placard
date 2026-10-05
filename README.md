@@ -42,8 +42,8 @@ over every model-facing string — tool and schema-property descriptions, server
 prompts, resources — flagging text that reaches outside its own scope, with a false-positive
 rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION.md); detection numbers below). `diff`
 re-analyses any manifest produced under an older ruleset before comparing, so a Placard upgrade
-never produces findings on a server that did not change. SARIF/GitHub Action packaging (Phase 4)
-and manifest signing (Phase 5) are not yet built.
+never produces findings on a server that did not change. Phase 4 shipped SARIF output and the
+GitHub Action below (v0.4.0); manifest signing (Phase 5) is not yet built.
 
 **In CI, Placard is a GitHub Action.** `placard.toml` names the servers a repository depends on;
 committed baseline manifests are the approval record; the action scans each server in an isolated
@@ -80,28 +80,34 @@ not):
 The heuristics are scored three ways, reported separately so a strong number cannot hide a weak
 one. Synthetic samples (authored alongside the detectors) measure coverage; lifted samples
 (reconstructed from public write-ups) measure realism; a **held-out set authored independently and
-never opened during development** is the only number that measures generalisation. Held-out v1,
-scored once, as-is:
+never opened during development** is the only number that measures generalisation. Each set is scored once, as-is. Held-out v2
+(ruleset 3.3) is the current headline; v1 (ruleset 3.0) is shown beside it:
 
-| Class | Held-out v1 (ruleset 3.0) |
-| --- | --- |
-| exfil_sink | 5/5 |
-| hidden_content | 5/5 |
-| sensitive_target | 5/5 |
-| concealment | 3/5 |
-| cross_scope | 3/5 |
-| markup_smuggling | 3/5 |
-| override | 0/5 |
-| **overall** | **24/35** |
+| Class | Held-out v1 (ruleset 3.0) | Held-out v2 (ruleset 3.3) |
+| --- | --- | --- |
+| exfil_sink | 5/5 | 7/7 |
+| hidden_content | 5/5 | 7/7 |
+| markup_smuggling | 3/5 | 7/7 |
+| cross_scope | 3/5 | 5/7 |
+| sensitive_target | 5/5 | 5/7 |
+| override | 0/5 | 1/7 |
+| concealment | 3/5 | 1/7 |
+| **overall** | **24/35 (68%)** | **33/49 (67%)** |
 
-That 24/35 is the first independent measurement the project has, and it is more credible for not
-being perfect. The three perfect classes included every double-negation credential phrasing,
-written by someone who never saw the negation guard. The four weak ones showed detectors that had
-learned the synthetic corpus's phrasing rather than the class; ruleset 3.1 replaced those phrase
-matches with structural rules (a hierarchy referent plus an invalidator in one sentence; a wider
+The flat overall number is the average of opposite movements. v1 showed detectors that had learned
+the synthetic corpus's phrasing rather than the class, so ruleset 3.1 replaced those phrase matches
+with structural rules (a hierarchy referent plus an invalidator in one sentence; a wider
 concealment audience; tool ownership rather than the word "server"; any paired custom tag), and v1
-was retired into the regression corpus at 35/35. Held-out v2 will be scored once, and that number
-replaces this one.
+was retired into the regression corpus at 35/35. On v2, the structural rewrite generalised for
+`markup_smuggling` (60% to 100%) and `cross_scope` (60% to 71%). It did not for `override` (0% to
+14%) or `concealment` (60% to 14%), which is worse on new vocabulary than the phrase rules it
+replaced. Those two classes are the open work.
+
+v2 also added the first coverage of prompt and resource surfaces (14/21, 66%) and a benign set:
+6 of its 15 samples fired, three of them artefacts of how a sample is built and three real
+false positives under review. The 388-string real-server benign corpus remains at zero false
+positives. Full analysis:
+[`docs/dispatches/2026-09-23_from-jr_to-chief_heldout-v2-score.md`](docs/dispatches/2026-09-23_from-jr_to-chief_heldout-v2-score.md).
 
 **The tool caught its first real drift.** Between two of these runs the Playwright `@latest`
 package shipped a release. Nobody was watching it; the diff named every change and returned
@@ -187,7 +193,7 @@ rc=$?
 (( rc & 1 )) && echo "blast radius escalated — route to security review"
 ```
 
-Codes `100`-`109` are reserved for `report` (Phase 4). Read a code only in the context of the command
+Codes `100`-`109` belong to `report`. Read a code only in the context of the command
 that produced it: `verify`'s `1` and `diff`'s `1` share a number, not a meaning.
 
 ## The manifest
