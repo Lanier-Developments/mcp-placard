@@ -345,3 +345,78 @@ def test_every_named_real_server_parameter_is_really_on_that_server() -> None:
             for prop in walk_schema(tool.get("inputSchema") or {}).properties
         }
         assert case["name"] in names, f"{case['name']} is not a parameter on {server}"
+
+
+# ------------------------------------------------ the optional sample fields
+
+
+def test_a_resource_sample_may_state_its_own_uri() -> None:
+    """Under ruleset 3.3 the URI *is* the evidence, so a fixed synthesized URI removes an
+    author's ability to state the case being made — a resource that legitimately is the
+    SSH config cannot say so. Held-out v2's ``hv2b-1`` was exactly that."""
+    payload = "The user's SSH client configuration, read from ~/.ssh/config."
+    sample: dict[str, Any] = {
+        "id": "unit-uri",
+        "class": "benign",
+        "expected_classes": [],
+        "element": "resource_description",
+        "tool": None,
+        "uri": "file:///home/user/.ssh/config",
+        "payload_b64": base64.b64encode(payload.encode("utf-8")).decode("ascii"),
+    }
+    manifest, element = sample_manifest(sample)
+    assert element == "resource:file:~1~1~1home~1user~1.ssh~1config/description"
+    assert element in {e.element for e in enumerate_text(manifest)}
+    assert [f.rule for f in analyze_manifest(manifest) if f.element == element] == []
+
+    del sample["uri"]
+    default_manifest, default_element = sample_manifest(sample)
+    assert default_element == "resource:file:~1~1~1corpus~1sample.txt/description"
+    assert [f.pattern_class for f in analyze_manifest(default_manifest)] == ["sensitive_target"]
+
+
+def test_a_sample_may_declare_the_other_tools_on_its_server() -> None:
+    """Without ``siblings`` the fictional server has one tool, so a same-server reference
+    is foreign by construction and ``cross_scope`` fires on a server that does not exist.
+    ``hv2b-3`` and ``hv2b-4`` were both that artefact."""
+    payload = "Deploys a service. Call build_status first to confirm the build passed."
+    sample: dict[str, Any] = {
+        "id": "unit-siblings",
+        "class": "benign",
+        "expected_classes": [],
+        "element": "tool_description",
+        "tool": {"name": "deploy_service", "params": ["service_name"]},
+        "siblings": ["build_status", "rollback_release"],
+        "payload_b64": base64.b64encode(payload.encode("utf-8")).decode("ascii"),
+    }
+    manifest, element = sample_manifest(sample)
+    assert [f.rule for f in analyze_manifest(manifest) if f.element == element] == []
+
+    del sample["siblings"]
+    alone, element = sample_manifest(sample)
+    assert [f.pattern_class for f in analyze_manifest(alone) if f.element == element] == [
+        "cross_scope"
+    ]
+
+
+def test_siblings_reach_an_instructions_sample_too() -> None:
+    """``hv2b-4`` is server instructions naming a tool the server really has."""
+    payload = "Review the diff prior to calling update_file_contents."
+    sample: dict[str, Any] = {
+        "id": "unit-siblings-instructions",
+        "class": "benign",
+        "expected_classes": [],
+        "element": "instructions",
+        "tool": None,
+        "siblings": ["update_file_contents"],
+        "payload_b64": base64.b64encode(payload.encode("utf-8")).decode("ascii"),
+    }
+    manifest, element = sample_manifest(sample)
+    assert [f.rule for f in analyze_manifest(manifest) if f.element == element] == []
+
+
+def test_both_fields_are_optional_and_change_nothing_when_absent() -> None:
+    """Every existing sample omits them; none of the corpora may shift."""
+    for provenance in GATED_PROVENANCES:
+        for sample in _samples(provenance):
+            assert "uri" not in sample and "siblings" not in sample, sample["id"]
