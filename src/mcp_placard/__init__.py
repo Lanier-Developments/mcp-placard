@@ -34,4 +34,11 @@ MANIFEST_VERSION = "2.2"
 #: resource URI's scheme and path segments, and a prompt argument's name. Before it,
 #: prompt and resource elements carried no path or credential context at all, so the
 #: exemption could never apply there.
-RULESET_VERSION = "3.3"
+#:
+#: 3.4 decides both handling flags by token match rather than whole-name membership on
+#: one side and substring on the other.
+#:
+#: 3.5 scopes the path exemption to the family a parameter name describes, closing the
+#: exemption-laundering hole token matching widened: a parameter named to establish path
+#: handling may name only what it is demonstrably about.
+RULESET_VERSION = "3.5"

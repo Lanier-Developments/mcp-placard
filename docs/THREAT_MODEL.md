@@ -83,6 +83,40 @@ declared tier never downgrades an inferred one. The only thing that ever lowers 
 tier is an explicit, attributable entry in the operator's own override allowlist
 (`classify/overrides.py`), and the manifest records that one applied.
 
+### A8 — The server that launders an exemption
+
+A server that names something to buy an exemption it should not have. Placard's
+injection heuristics carry scoping rules so a tool doing its job does not flag — a
+filesystem tool may mention `~/.ssh/config`, a resource that *is* the SSH config may
+describe itself — and every one of those exemptions is granted on **evidence the server
+controls**: a parameter name, a resource URI, a prompt argument name. So the adversary
+declares a parameter named `api_key_file`, or serves a resource at `file:///home/user/.ssh/`,
+and the description may then name a private key without producing a finding.
+
+This is not hypothetical. The held-out v2 set contained it — a parameter named
+`api_key_file` whose description defaulted to `~/.ssh/id_rsa` — written by an author who
+had never seen the implementation, and it landed in the same week a change widened the
+exemption from whole-name matching to token matching. It cost two detections, and the
+suite stayed green because nothing guarded the held-out numbers.
+
+**Covered, with a stated limit.** Ruleset 3.5 scopes every path exemption to the family
+its evidence describes and tests it at the **leaf** of the path expression, because the
+leaf is the secret: `credentials_file_path` may name `~/.aws/credentials` and not
+`~/.ssh/id_rsa`; `config_path` may name `~/.config` and not
+`~/.config/gcloud/credentials.db`. The same narrowing covers the resource-URI and
+prompt-argument rules, since the same move works against all three. Evidence that names
+only a *shape* — a parameter called `path` — still grants the boolean, because a
+filesystem server's `path` genuinely means any path.
+
+**The limit:** an exemption granted on server-controlled evidence can always be bought by
+a server willing to declare what it is doing. A server that names a parameter
+`ssh_key_path` may describe `~/.ssh/id_rsa` without firing — and it has had to announce
+that it handles SSH keys to get there, which is the same bargain `cross_scope`'s own-name
+exemption strikes. The narrowing raises the price; it does not abolish it.
+
+The governing rule, the same one A3 states in a different register: **server-controlled
+evidence buys scope, never silence.**
+
 ### A4 — The injection-carrying description
 
 A tool description written to be read by the model as an instruction: *"Before
@@ -313,6 +347,7 @@ Accepted, and worth stating.
 | A1 exfiltration chain composed | `classify.chain` — `CHAIN_EXFIL` | — (scan-time finding, not a diff) | **2** |
 | A3 declared-vs-inferred conflict | classifier reconciliation | 1 | **2** |
 | A4 injection-shaped description | injection heuristics | 1 | **3** |
+| A8 exemption laundered via a parameter name or URI | path family scoped to the leaf | 1 | **3.5** |
 | Manifest tampering | `verify` | 1 | 1 |
 | Classification tampering | `verify` — `classification_hash` | 1 | **2** |
 | Manifest forgery | signing | — | **5** |

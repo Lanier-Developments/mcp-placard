@@ -395,6 +395,60 @@ obvious inversion, not a parser."""
 
 # ------------------------------------------------------------------ exfil_sink
 
+_SENTENCE_BREAK = re.compile(r"[.!?][\s\n]+|\n+")
+
+_ENDPOINT_PREDICATE = (
+    r"send|sends|sending|sent|post|posts|posting|posted|forward|forwards|forwarding|forwarded|"
+    r"transmit|transmits|transmitting|transmitted|report|reports|reporting|reported|"
+    r"upload|uploads|uploading|uploaded|mirror|mirrors|mirroring|mirrored|"
+    r"dispatch|dispatches|dispatching|dispatched|deliver|delivers|delivering|delivered|"
+    r"notify|notifies|notifying|notified|sync|syncs|syncing|synced|"
+    r"submit|submits|submitting|submitted|push|pushes|pushing|pushed"
+)
+"""Verbs you do to an *endpoint*. These govern the ``exfil_sink.url`` half of the class."""
+
+_ADDRESS_PREDICATE = (
+    r"email|emails|emailing|emailed|mail|mails|mailing|mailed|cc|ccs|ccing|ccd|"
+    r"bcc|bccs|bccing|bccd|message|messages|messaging|messaged|text|texts|texting|texted"
+)
+"""Verbs you do to an *address*, recorded as its own group on Chief's ruling of
+2026-09-23. The class covers URLs and email addresses, and the first list was written
+entirely against endpoints — post, upload, push, mirror, sync, submit are all things you
+do to a URL. "Email a copy to ops@…" was therefore missed by a rule that named no verb
+for moving data to an address. The two halves exist for that reason; a future reader
+adding a verb should add it to the half it belongs to."""
+
+_TRANSMISSION_PREDICATE = re.compile(
+    r"\b(" + _ENDPOINT_PREDICATE + r"|" + _ADDRESS_PREDICATE + r")\b", _I
+)
+_ADDRESS_PREDICATE_ADJACENT = re.compile(r"\b(" + _ADDRESS_PREDICATE + r")\s+$", _I)
+
+_SINK_NOUN = (
+    r"webhooks?|endpoints?|callbacks?|sinks?|collectors?|receivers?|destinations?|hooks?|listeners?"
+)
+
+_SINK_NOUN_DECLARATION = re.compile(
+    r"\b(" + _SINK_NOUN + r")\b[^.\n]{0,80}?\b(is|are|was|were)\s+$"
+    r"|\b(" + _SINK_NOUN + r")\b[^.:\n]{0,40}?:\s*$",
+    _I,
+)
+"""A sink declared as a value rather than a destination: "the webhook to notify on each
+call **is** `https://…`", "Webhook URL**:** `https://…`", "Callback**:** `https://…`".
+
+Chief's third and last ruling on the class, 2026-09-23. Not a general copula rule — the
+**sink noun** carries the whole signal, which is what keeps it narrow. "Documentation is
+at https://…" stays clear twice over: `documentation` is not a sink noun, and `at` is
+locative anyway. A colon does the same work as the copula, because a configuration-style
+declaration is where this shape most often appears in real server descriptions."""
+
+_ROLE_MARKER = re.compile(
+    r"\b(to|at|on|in|from|via|per|of|for|with|see|under|within|about|using|through|"
+    r"beneath|near|by|alongside)\b",
+    _I,
+)
+"""The nearest of these before a sink decides its grammatical role. Only ``to`` makes it
+the *goal* of the predicate; every other one makes it a location, which is a citation."""
+
 _URL = re.compile(r"\b(?:https?|ftp|wss?)://[^\s<>\"'`)\]}]+", _I)
 _EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+(?![\w-])")
 _WEBHOOK = re.compile(r"\b(webhook|callback|beacon|endpoint)\b[^.\n]{0,40}?\b(?:https?://\S+)", _I)
@@ -595,36 +649,58 @@ def detect_cross_scope(element: TextElement) -> Iterator[Match]:
             yield Match("cross_scope", "cross_scope.foreign_tool_identifier", *span)
 
 
-def _leading_segment(match_text: str) -> str:
-    """The most significant path segment of a sensitive-location match.
+def _normalise_segment(segment: str) -> str:
+    """Lowercase and strip a leading dot, so a URI family segment (``.ssh``) and a
+    parameter family token (``config``) are comparable on the same footing."""
+    return segment.strip().lower().lstrip(".")
 
-    ``~/.ssh/config`` is about ``.ssh``; ``credentials.json`` is about itself. The
-    leading segment is what a path family is compared against, so that a resource at
-    ``file:///home/user/.ssh/config`` covers its own directory's contents and nothing
-    else.
+
+_PATH_EXPRESSION = re.compile(r"[\w~./\\-]+")
+
+
+def _path_leaf(text: str, start: int) -> str:
+    """The **leaf** of the whole path expression beginning at ``start``.
+
+    The sensitive-path patterns match a prefix — ``~/.ssh`` out of ``~/.ssh/id_rsa``,
+    ``~/.aws`` out of ``~/.aws/credentials`` — so comparing what they matched compares a
+    *directory* against a family. The thing an element is demonstrably about is the file
+    at the end of the path, so the expression is re-read from the match onwards and its
+    last segment is what a family is tested against.
+
+    That distinction is the whole rule. ``credentials_file_path`` describing
+    ``~/.aws/credentials`` is naming its own subject; the same parameter pointed at
+    ``~/.ssh/id_rsa`` is not. ``config_path`` may name ``~/.config`` and still not be
+    about ``~/.config/gcloud/credentials.db``, which is a credential store that happens
+    to live inside a configuration directory.
     """
-    segments = [s for s in _PATH_SEPARATORS.split(match_text.strip().lstrip("~")) if s]
-    return segments[0].lower() if segments else match_text.strip().lower()
+    expression = _PATH_EXPRESSION.match(text, start)
+    raw = expression.group(0) if expression else text[start:]
+    segments = [s for s in _PATH_SEPARATORS.split(raw.strip().strip(".").lstrip("~")) if s]
+    return _normalise_segment(segments[-1] if segments else raw)
 
 
-def _path_mention_is_in_scope(element: TextElement, match_text: str) -> bool:
-    """Whether this element may name this location (ruleset 3.3).
+def _path_mention_is_in_scope(element: TextElement, text: str, start: int) -> bool:
+    """Whether this element may name this location.
 
-    Without a concrete path family the answer is the pre-3.3 boolean: a tool that
-    handles paths may name any of them, because its schema names a shape rather than a
-    location. With one — a resource URI — the element may name only its own family.
+    Without a family the answer is the pre-3.3 boolean: a parameter named only for a
+    shape — ``path``, ``file_path`` — says any path, so a filesystem tool may name any of
+    them. With a family — a resource URI's segments, or the distinctive tokens of a
+    parameter name — the element may name only what it is demonstrably about, tested at
+    the leaf of the path expression.
     """
     if not element.handles_paths:
         return False
     if not element.path_family:
         return True
-    return _leading_segment(match_text) in element.path_family
+    return _path_leaf(text, start) in {
+        _normalise_segment(segment) for segment in element.path_family
+    }
 
 
 def detect_sensitive_target(element: TextElement) -> Iterator[Match]:
     text = element.text
     for m in _SENSITIVE_PATH_LOCATION.finditer(text):
-        if _path_mention_is_in_scope(element, m.group(0)):
+        if _path_mention_is_in_scope(element, text, m.start()):
             continue
         yield Match("sensitive_target", "sensitive_target.credential_path", m.start(), m.end())
     if not element.handles_paths:
@@ -639,14 +715,64 @@ def detect_sensitive_target(element: TextElement) -> Iterator[Match]:
             )
 
 
+def _sentence_bounds(text: str, start: int, end: int) -> tuple[int, int]:
+    """The sentence containing ``[start, end)``.
+
+    Split on a terminator followed by whitespace, which leaves URLs intact — ``v3.1.0``
+    and ``spec.openapis.org`` carry no space after their dots.
+    """
+    left = 0
+    for m in _SENTENCE_BREAK.finditer(text, 0, start):
+        left = m.end()
+    right = _SENTENCE_BREAK.search(text, end)
+    return left, right.start() + 1 if right else len(text)
+
+
+def _is_exfil_sink(text: str, start: int, end: int) -> bool:
+    """Whether the sink at ``[start, end)`` is a destination rather than a citation.
+
+    Ruleset 3.4, Chief's rulings of 2026-09-23. A bare URL is a *reference*; the danger
+    is an instruction to move data to it. Two conditions, and the second is the one that
+    does the work:
+
+    1. A transmission predicate governs the sentence the sink sits in. "The sentence or
+       the adjacent clause" is read as the containing sentence only — a predicate in a
+       neighbouring sentence ("Send the results. See https://docs… for the shape.")
+       governs nothing.
+    2. The sink is the **goal** of that predicate: introduced by ``to``, or the direct
+       object of an address verb ("email ops@…"). A sink introduced by a locative — at,
+       on, in, available at, documented at, see — is a citation.
+
+    The role test is what kills "report issues at https://github.com/…" while keeping
+    "report results to ops@…", on one rule rather than an unbounded host allowlist.
+
+    A sink-noun declaration — "the webhook is `https://…`" — fires on its own and needs
+    no predicate: there, the noun says what the URL is for.
+    """
+    left, right = _sentence_bounds(text, start, end)
+    prefix = text[left:start]
+    if _SINK_NOUN_DECLARATION.search(prefix):
+        return True
+    if not _TRANSMISSION_PREDICATE.search(text[left:right]):
+        return False
+    if _ADDRESS_PREDICATE_ADJACENT.search(prefix):
+        return True
+    markers = list(_ROLE_MARKER.finditer(prefix))
+    return bool(markers) and markers[-1].group(1).lower() == "to"
+
+
 def detect_exfil_sink(element: TextElement) -> Iterator[Match]:
     text = element.text
     for m in _URL.finditer(text):
         if _is_reserved_host(_url_host(m.group(0))):
             continue
+        if not _is_exfil_sink(text, m.start(), m.end()):
+            continue
         yield Match("exfil_sink", "exfil_sink.url", m.start(), m.end())
     for m in _EMAIL.finditer(text):
         if _is_reserved_host(m.group(0).rsplit("@", 1)[1].lower()):
+            continue
+        if not _is_exfil_sink(text, m.start(), m.end()):
             continue
         yield Match("exfil_sink", "exfil_sink.email", m.start(), m.end())
 
