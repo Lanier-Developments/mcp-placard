@@ -206,7 +206,7 @@ def _uri_evidence(uri: str) -> tuple[bool, frozenset[str]]:
 
 
 def _prompt_argument_evidence(names: Iterable[str]) -> tuple[bool, bool, frozenset[str]]:
-    """``(handles_paths, handles_credentials)`` from prompt argument names.
+    """``(handles_paths, handles_credentials, path_family)`` from prompt argument names.
 
     Ruleset 3.3: an argument name is evidence on the same footing as a tool parameter
     name, and by the same test — exact membership for paths, substring for credentials.

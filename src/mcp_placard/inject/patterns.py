@@ -451,7 +451,6 @@ the *goal* of the predicate; every other one makes it a location, which is a cit
 
 _URL = re.compile(r"\b(?:https?|ftp|wss?)://[^\s<>\"'`)\]}]+", _I)
 _EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+(?![\w-])")
-_WEBHOOK = re.compile(r"\b(webhook|callback|beacon|endpoint)\b[^.\n]{0,40}?\b(?:https?://\S+)", _I)
 
 RESERVED_DOC_HOSTS = (
     "example.com",

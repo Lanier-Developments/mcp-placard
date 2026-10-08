@@ -7,7 +7,10 @@ property?, uri?, siblings?, payload_b64}` — and score once with:
 
     python scripts/score_heldout.py
 
-The score is reported as-is. Nothing in this directory is read by the test suite.
+The score is reported as-is. Once a set here is scored and gated (Chief's ruling of
+2026-09-23), the ratchet in `tests/test_inject_corpus.py` reads its file directly —
+currently `heldout_v2.json` and `heldout_v2_surfaces.json` — so a scored file is live
+regression data, not an inert record. Scratch files do not belong in this directory.
 
 Two fields are optional and matter only for the case each was added for:
 
