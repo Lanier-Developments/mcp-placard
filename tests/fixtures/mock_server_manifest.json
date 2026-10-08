@@ -180,7 +180,7 @@
   "classification_hash": "f6ed91d8b8967deade2d0a1809e629b4e3b8af03ebe88b624b583395a0f9febf",
   "environment": {
     "protocol_version": "2026-07-28",
-    "sdk_version": "2.2.0"
+    "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
