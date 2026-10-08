@@ -36,7 +36,7 @@ ladder, and 0.3.0 removed the last one from the exit codes.
 | `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `secret_from_audience`, `behind_the_scenes`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover` |
 | `cross_scope` | References to tools or servers outside the element's own server — tool shadowing | `foreign_tool_identifier` ("the X tool", "tool X", "call X" where X is not on this server), `named_service_host` ("the Jira MCP server's", "the Confluence integration's", regardless of intervening tokens), `other_tools`, `on_other_tool_call`, `other_server_by_name`, `parenthesised_tool_ref` |
 | `sensitive_target` | Credential and secret paths or names in an element whose tool does not otherwise handle them | `credential_path`, `credential_transmission` |
-| `exfil_sink` | URLs and email addresses embedded in description text rather than in schema fields | `url`, `email` |
+| `exfil_sink` | URLs and email addresses that description text names as a **destination for data** — not merely as references | `url`, `email` |
 | `hidden_content` | Zero-width characters, bidirectional overrides, Unicode tag characters (U+E0000 block), long base64-shaped runs | `zero_width`, `bidi_override`, `unicode_tags`, `base64_run` |
 | `markup_smuggling` | HTML comments and pseudo-tags used to fence instructions | `paired_custom_tag` (any opening tag with its matching close whose name is not a common HTML formatting element; attributes permitted), `html_comment`, `pseudo_tag`, `bracket_tag` |
 
@@ -95,10 +95,14 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   instructions are the server talking about itself; only explicit cross-server
   phrasing counts there.
 - **A tool that handles paths or credentials may mention them.** Decided by schema
-  evidence: a parameter named like a path (`path`, `file`, `directory`, `source`,
-  `destination`, …) or a credential (`key`, `token`, `secret`, `password`, …). A
+  evidence: a parameter with a path token (`path`, `file`, `directory`, `source`,
+  `destination`, …) or a credential token (`key`, `token`, `secret`, `password`, …). A
   filesystem tool mentioning `~/.ssh/config` is doing its job; a weather tool
-  mentioning `~/.ssh/id_rsa` is not.
+  mentioning `~/.ssh/id_rsa` is not. **Ruleset 3.4:** both sides are decided by *token*,
+  splitting the parameter name on snake, kebab, dotted and camel boundaries — the same
+  splitter as tool-name verbs. Whole-name membership made `credentials_file_path` a
+  credential parameter but not a path one; substring would make `pathological` a path
+  parameter. `{credentials, file, path}` establishes both.
 - **So may a prompt or a resource, on its own evidence** (**ruleset 3.3**). These
   elements have no schema, and before 3.3 they had no evidence either, so the exemption
   above could never apply to them — a resource that legitimately *is* the SSH config
@@ -129,11 +133,55 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   was the test — it contained a prompt description and a prompt-argument description,
   written with no view of the implementation, and neither produced a `cross_scope` finding.
   No evidence either way, so the gap waits for a real case rather than a hypothetical one.
+- **Exemption laundering** (**ruleset 3.5**). Every evidence-derived exemption rests on
+  data the *server* controls — a parameter name, a resource URI, a prompt argument name —
+  so a hostile server can name a thing to buy an exemption it should not have. Doc's
+  held-out v2 declared a parameter `api_key_file` and pointed its default at
+  `~/.ssh/id_rsa`: the name establishes path handling, and a boolean exemption then
+  licenses *any* path. This is the general shape, not one sample, and the same move works
+  against the resource-URI rule and the prompt-argument rule.
+
+  The mitigation is the same in all three places, and it is the principle the resource
+  rule already stated: **an element may name what it is demonstrably about, and nothing
+  else.** A family — the distinctive tokens of a parameter name, the literal segments of a
+  URI — scopes the exemption, and the test is the **leaf** of the path expression, because
+  the leaf is the secret. `credentials_file_path` may name `~/.aws/credentials` and not
+  `~/.ssh/id_rsa`; `config_path` may name `~/.config` and not
+  `~/.config/gcloud/credentials.db`, which is a credential store that happens to sit
+  inside a configuration directory. A parameter that names only a *shape* — `path`,
+  `file_path` — carries no family and keeps the boolean, because a filesystem server's
+  `path` really does mean any path.
+
+  What this does not fix: the exemption is still granted on server-controlled evidence,
+  and a server willing to name a parameter `ssh_key_path` can still describe
+  `~/.ssh/id_rsa` without firing. It has to declare what it is doing to get there, which
+  is the same bargain the own-name exemption strikes in `cross_scope`.
 - **A negated transmit verb is not a transmission instruction.** "Do not include any
   sensitive information such as API keys" is an instruction against, not for. Two-word
   window, closed negator list, same boundary as the reversibility negation guard.
 - **Documentation and loopback hosts are examples, never sinks.** `example.com`,
   `localhost`, `127.0.0.1`, `*.test`, `*.invalid` (RFC 2606 / RFC 6761).
+- **A URL is a reference until something makes it a destination** (**ruleset 3.4**). A host
+  allowlist cannot fix this: real servers cite specs constantly and the set of hosts they
+  cite is unbounded. The grammatical role does it instead. `exfil_sink` fires when a URL or
+  address is:
+  - the **goal of a transmission predicate** — send, post, forward, transmit, report,
+    upload, mirror, dispatch, deliver, notify, sync, submit, push — introduced by `to`
+    within the same sentence; or
+  - the **direct object of an address verb** — email, mail, cc, bcc, message, text. These
+    are a separate group because the class covers addresses as well as endpoints, and the
+    endpoint verbs name nothing you do to an address; or
+  - the **declared value of a sink noun** — webhook, endpoint, callback, sink, collector,
+    receiver, destination, hook, listener — as a predicate complement or after a colon:
+    "the webhook to notify is `https://…`", "Webhook URL: `https://…`".
+
+  A sink introduced by a locative — at, on, in, available at, documented at, see — is a
+  citation. "Report issues at `https://github.com/org/repo/issues`" does not fire, and
+  neither does "documented at `https://spec.openapis.org/…`". This is deliberately not a
+  general copula rule: the sink noun carries the whole signal, so "Documentation is at
+  `https://…`" stays clear. The stated limit of the class is that a bare URL with no such
+  marking could still be fetched by some *other* tool the agent holds — that is the
+  cross-server chain, and it is Phase 6.
 - **Ordinary markup is not smuggling.** `<br>`, `<b>`, Markdown headers, and backticked
   identifiers do not match; only a closed list of instruction-fencing tag names and
   HTML comments do.

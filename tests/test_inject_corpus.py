@@ -101,9 +101,21 @@ def test_the_corpus_is_the_size_the_baseline_says() -> None:
 # ---------------------------------------------------------------- malicious
 
 
+#: Provenances the ratchet gates. A scored held-out set becomes regression data the
+#: moment it is scored and published — that is why retired v1 is here, and Chief's
+#: ruling of 2026-09-23 puts v2 and v2-surfaces on the same footing. A measurement
+#: nothing guards is a snapshot, not a measurement.
+GATED_PROVENANCES = ("synthetic", "lifted", "heldout-v1", "heldout-v2", "heldout-v2-surfaces")
+
+HELDOUT = FIXTURES / "injection" / "heldout"
+
+
 def _samples(provenance: str) -> list[dict[str, Any]]:
-    filename = provenance.replace("-", "_")
-    document = json.loads((MALICIOUS / f"{filename}.json").read_text(encoding="utf-8"))
+    filename = f"{provenance.replace('-', '_')}.json"
+    path = MALICIOUS / filename
+    if not path.exists():
+        path = HELDOUT / filename
+    document = json.loads(path.read_text(encoding="utf-8"))
     assert document["provenance"] == provenance
     return document["samples"]  # type: ignore[no-any-return]
 
@@ -260,7 +272,7 @@ def test_the_ratchet_never_moves_backwards() -> None:
         f"{baseline['benign']['false_positives']}"
     )
 
-    for provenance in ("synthetic", "lifted", "heldout-v1"):
+    for provenance in GATED_PROVENANCES:
         samples = _samples(provenance)
         detected = sum(1 for s in samples if _detected(s)[0])
         assert len(samples) == baseline[provenance]["samples"], provenance
@@ -276,3 +288,60 @@ def test_the_first_baseline_is_zero_false_positives() -> None:
     accepting a nonzero baseline silently."""
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
     assert baseline["benign"]["false_positives"] == 0
+
+
+# ------------------------------------------------ the exemption vocabularies
+
+
+ORDINARY = json.loads((FIXTURES / "injection" / "ordinary_parameters.json").read_text("utf-8"))
+
+
+def _exemptions(name: str) -> tuple[bool, bool]:
+    from mcp_placard.classify.signals.verb import name_tokens
+    from mcp_placard.inject.surface import CREDENTIAL_HANDLING_TOKENS, PATH_HANDLING_FIELDS
+
+    tokens = set(name_tokens(name))
+    return bool(tokens & PATH_HANDLING_FIELDS), bool(tokens & CREDENTIAL_HANDLING_TOKENS)
+
+
+@pytest.mark.parametrize(
+    "case", ORDINARY["must_not_exempt"], ids=[c["name"] for c in ORDINARY["must_not_exempt"]]
+)
+def test_an_ordinary_parameter_name_establishes_no_exemption(case: dict[str, Any]) -> None:
+    """The 3.4 vocabulary audit, held by CI rather than by having been read once.
+
+    Every finding in that audit was reached by reading the two vocabularies; the ratchet
+    sat still through all of them, because no benign string in the corpus happened to
+    exercise the widened exemption. A token generic enough to match ordinary parameter
+    names makes the exemption meaningless, and this fails the moment one is added.
+    """
+    assert _exemptions(case["name"]) == (False, False), case["why"]
+
+
+@pytest.mark.parametrize(
+    "case", ORDINARY["must_exempt"], ids=[c["name"] for c in ORDINARY["must_exempt"]]
+)
+def test_a_handling_parameter_name_still_establishes_its_exemption(case: dict[str, Any]) -> None:
+    """The other direction: trimming the vocabulary too far is also a defect, and it is
+    the one a narrowing pass is likely to cause."""
+    paths, credentials = _exemptions(case["name"])
+    expected = {"paths": (True, False), "credentials": (False, True), "both": (True, True)}
+    assert (paths, credentials) == expected[case["axis"]], case["why"]
+
+
+def test_every_named_real_server_parameter_is_really_on_that_server() -> None:
+    """Keeps the fixture honest, the same way the hard cases are pinned to real elements:
+    a ``seen_on`` that no longer holds means the evidence has drifted."""
+    from mcp_placard.classify.schema_walk import walk_schema
+
+    for case in ORDINARY["must_not_exempt"] + ORDINARY["must_exempt"]:
+        server = case.get("seen_on")
+        if server is None:
+            continue
+        fixture = json.loads((REAL / f"{server}.json").read_text(encoding="utf-8"))
+        names = {
+            prop.name.lower()
+            for tool in fixture["tools"]
+            for prop in walk_schema(tool.get("inputSchema") or {}).properties
+        }
+        assert case["name"] in names, f"{case['name']} is not a parameter on {server}"

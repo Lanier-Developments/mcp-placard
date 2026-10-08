@@ -71,8 +71,14 @@ _SEPARATORS = re.compile(r"[_\-./:\s]+")
 
 
 def name_tokens(tool_name: str) -> list[str]:
-    """Split a tool name into lowercase tokens at snake, kebab, dotted, and camel
-    boundaries: ``createOrUpdateFile`` → ``["create", "or", "update", "file"]``."""
+    """Split an identifier into lowercase tokens at snake, kebab, dotted, and camel
+    boundaries: ``createOrUpdateFile`` → ``["create", "or", "update", "file"]``.
+
+    Shared. ``inject.surface`` tokenizes *parameter* names with it to decide whether a
+    tool handles paths or credentials — the same defect Phase 2.1 fixed here for verbs,
+    where prefix matching meant ``git_add`` never matched ``add_``. A third place
+    spelling out tokenization would be a third place to get it wrong.
+    """
     spaced = _CAMEL_BOUNDARY.sub(r"\1_\2", tool_name)
     return [token for token in _SEPARATORS.split(spaced.lower()) if token]
 
