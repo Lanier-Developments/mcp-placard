@@ -34,9 +34,10 @@ Source = "https://github.com/Lanier-Developments/mcp-placard"
 [project.optional-dependencies]
 dev = [
   # The self-gating fixture is byte-identical only for the mcp minor the action
-  # pins (requirements/action.txt); a loose resolve of mcp 2.3 changes the mock
-  # server's scanned surface and fails test_self_gating. Move both together.
-  "mcp==2.2.0",
+  # pins (requirements/action.txt); a loose resolve of a different mcp minor
+  # changes the mock server's scanned surface and fails test_self_gating.
+  # Fixture, action pins and this pin move together.
+  "mcp==2.3.0",
   "pytest>=8.2",
   "pytest-cov>=5.0",
   "coverage>=7.5",
