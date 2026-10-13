@@ -1,0 +1,57 @@
+name: merge-gate
+
+# Fails a PR whose branch is behind its base branch, so the author (human or
+# agent) must rebase and re-run CI against current main before merging.
+# This is what would have caught PR #29 landing on top of PR #28's identical
+# fixture fix.
+#
+# Pair with branch protection on main: require this check, and enable
+# "Require branches to be up to date before merging" so GitHub enforces it
+# at merge time as well (this workflow alone only reports at push time).
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: merge-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  up-to-date:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Fail if the branch is behind the base branch
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          behind=$(git rev-list --count "HEAD..origin/${BASE_REF}")
+          if [ "$behind" -gt 0 ]; then
+            echo "::error::Branch is ${behind} commit(s) behind ${BASE_REF}. Rebase on a fresh ${BASE_REF} and re-run CI before merging."
+            echo "Commits on ${BASE_REF} missing from this branch:"
+            git log --oneline "HEAD..origin/${BASE_REF}"
+            exit 1
+          fi
+          echo "Branch is up to date with ${BASE_REF}."
+
+      - name: Warn if the diff is already present on the base branch
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # Detects duplicate fixes: every change in this PR is already on base.
+          base=$(git merge-base HEAD "origin/${BASE_REF}")
+          if git diff --quiet "origin/${BASE_REF}" HEAD -- $(git diff --name-only "$base" HEAD); then
+            echo "::warning::This PR's changes already match ${BASE_REF}; it may duplicate a merged fix."
+          fi
