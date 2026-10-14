@@ -1,0 +1,984 @@
+{
+  "capabilities": {
+    "resources": {
+      "listChanged": true,
+      "subscribe": true
+    },
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "capabilities_hash": "118640a1b038f9165b1a64bc0b0a5cdcdab6d21c2989559010c68b0a7e219f8b",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "/properties/observations/items/properties/contents: content-carrying field 'contents'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'add_observations': 'add' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "add_observations"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'create_entities': 'create' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "create_entities"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'create_relations': 'create' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "create_relations"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'delete_entities': 'delete' verb, corroborating only",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "delete_entities"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'delete_observations': 'delete' verb, corroborating only",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "delete_observations"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'delete_relations': 'delete' verb, corroborating only",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "delete_relations"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "open_nodes"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "read_graph"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "search_nodes"
+    }
+  ],
+  "classification_hash": "e1b13dad89968d5d3bc5abd7ad0eea8dcf9d3835a607bb07bfde0589118739b8",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [
+      {
+        "description": "The full knowledge graph with all entities and relations",
+        "mimeType": "application/json",
+        "name": "knowledge-graph",
+        "title": "Knowledge Graph",
+        "uri": "memory://knowledge-graph"
+      }
+    ],
+    "server": {
+      "name": "memory-server",
+      "version": "1.0.0"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Add new observations to existing entities in the knowledge graph",
+        "description_hash": "ff2fb5d38c2442cc2f1eb423b633d93c034141f318cf3f4cfdf5a9cad184c5cc",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "observations": {
+              "items": {
+                "properties": {
+                  "contents": {
+                    "description": "An array of observation contents to add",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "entityName": {
+                    "description": "The name of the entity to add the observations to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "entityName",
+                  "contents"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "observations"
+          ],
+          "type": "object"
+        },
+        "name": "add_observations",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "results": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "addedObservations": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "entityName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "entityName",
+                  "addedObservations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "results"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "73c9d2bfd98581b3be93976c78e44389209f2f9ec63e8652fd9e84795616842b",
+        "title": "Add Observations"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Create multiple new entities in the knowledge graph. An entity whose name already exists, or repeats an earlier entity in the same call, is skipped and its observations are not added; the result lists the skipped names in `skipped`. Use add_observations to add observations to an existing entity.",
+        "description_hash": "c1a7086bc5ceebf85680df1596591cb132711d1cd360738fcaef786ca45dd6f6",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "entities": {
+              "items": {
+                "properties": {
+                  "entityType": {
+                    "description": "The type of the entity",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the entity",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observation contents associated with the entity",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entityType",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities"
+          ],
+          "type": "object"
+        },
+        "name": "create_entities",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "entities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "entityType": {
+                    "description": "The type of the entity",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the entity",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observation contents associated with the entity",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entityType",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "skipped": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c54813f3fc7a076c950320c90489cec6add7482d695e23e43f2b30b8f2b9f083",
+        "title": "Create Entities"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Create multiple new relations between entities in the knowledge graph. Relations should be in active voice",
+        "description_hash": "e2dd4540b9030148fe495bef81941f9524224115944a44a27a1b24c7b22054c1",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "relations": {
+              "items": {
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "relations"
+          ],
+          "type": "object"
+        },
+        "name": "create_relations",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "relations": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "relations"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "5df4fdc93cbf199dff73ccc802d5cca510bd37eb7d99e0949fc0a17b261a65d3",
+        "title": "Create Relations"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Delete multiple entities and their associated relations from the knowledge graph",
+        "description_hash": "086222eb6cb791391cb6ad23a4edca11ec2879f4fa993c079ae8906113fd05a6",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "entityNames": {
+              "description": "An array of entity names to delete",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entityNames"
+          ],
+          "type": "object"
+        },
+        "name": "delete_entities",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "success",
+            "message"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "a1bac527df1c3bd311c9c2bf2e9a9cf8ae5e266b690bd6c97d4a62e4af2dc731",
+        "title": "Delete Entities"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Delete specific observations from entities in the knowledge graph",
+        "description_hash": "30ffb2113bd8f0f022ccbb7a31d2ca610b5bb961cfd2677c4ebe492fc8f5fc97",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "deletions": {
+              "items": {
+                "properties": {
+                  "entityName": {
+                    "description": "The name of the entity containing the observations",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observations to delete",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "entityName",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "deletions"
+          ],
+          "type": "object"
+        },
+        "name": "delete_observations",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "success",
+            "message"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "6b96624fc9e8cfbb92d8c7672e16fe06218216634815f892c8027cf7162f8ea7",
+        "title": "Delete Observations"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Delete multiple relations from the knowledge graph",
+        "description_hash": "ee6a0e5cd6554a9a84afd7fe11f50a474aec5c3fa0e989d431abcaa078144f37",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "relations": {
+              "description": "An array of relations to delete",
+              "items": {
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "relations"
+          ],
+          "type": "object"
+        },
+        "name": "delete_relations",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "success": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "success",
+            "message"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "17985b44074691e832f8548bf2efc55af3256f9c52d3398c8ddc20141f2b0697",
+        "title": "Delete Relations"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Open specific nodes in the knowledge graph by their names",
+        "description_hash": "d4df7ff09e4b7e42a029d505efe4b8881e10f24f16ca9e33c5f3c3cea6484e48",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "names": {
+              "description": "An array of entity names to retrieve",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "names"
+          ],
+          "type": "object"
+        },
+        "name": "open_nodes",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "entities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "entityType": {
+                    "description": "The type of the entity",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the entity",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observation contents associated with the entity",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entityType",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "relations": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities",
+            "relations"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "70aeb8f52abf632f4798453c1b731e1b3e0c8f967e1fdbfb4b00a8d193e5a1c0",
+        "title": "Open Nodes"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Read the entire knowledge graph",
+        "description_hash": "9701aab08ebf30e3248ebf4cfb80b17ff537834c2ccb4edbfeb24a48e5e42875",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "read_graph",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "entities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "entityType": {
+                    "description": "The type of the entity",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the entity",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observation contents associated with the entity",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entityType",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "relations": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities",
+            "relations"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "7a014b717a77aac971ea0ab5c0ff47bb13e6cae7ef9442d9dedb15ce36381b15",
+        "title": "Read Graph"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Search for nodes in the knowledge graph based on a query",
+        "description_hash": "17d75cae4af864a9fcc3adf96f9d209af1f758cf6849e3cb4088b3f1786b6631",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "query": {
+              "description": "The search query to match against entity names, types, and observation content",
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "search_nodes",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "entities": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "entityType": {
+                    "description": "The type of the entity",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the entity",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "description": "An array of observation contents associated with the entity",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entityType",
+                  "observations"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "relations": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "description": "The name of the entity where the relation starts",
+                    "type": "string"
+                  },
+                  "relationType": {
+                    "description": "The type of the relation",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "The name of the entity where the relation ends",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "relationType"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities",
+            "relations"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c6136fe03d44d266e3a7155e4e0a923cf46e4bf55c2eedf3886bb505e4202c4a",
+        "title": "Search Nodes"
+      }
+    ]
+  },
+  "surface_hash": "f5fef51bfc6129b9e0495423e4fe20ff18aee05e9684fe74192e0959f5a372d6"
+}

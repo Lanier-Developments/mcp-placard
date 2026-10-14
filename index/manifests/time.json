@@ -1,0 +1,115 @@
+{
+  "capabilities": {
+    "experimental": {},
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "67b71872b734256a931872d166e92f4e137528d97beed2de69b9d427b1215d20",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "convert_time"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "get_current_time"
+    }
+  ],
+  "classification_hash": "f21110f2198d482169d912026a357caf3f02a94b75c70a9b54f0e0595ac6ddcc",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "mcp-time",
+      "version": "2026.10.10"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Convert time between timezones",
+        "description_hash": "171c9160f314ac7ce564c0679d229f864814c2ed99728e2ca0e8bb34df580aa0",
+        "inputSchema": {
+          "properties": {
+            "source_timezone": {
+              "description": "Source IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'Etc/UTC' as local timezone if no source timezone provided by the user.",
+              "type": "string"
+            },
+            "target_timezone": {
+              "description": "Target IANA timezone name (e.g., 'Asia/Tokyo', 'America/San_Francisco'). Use 'Etc/UTC' as local timezone if no target timezone provided by the user.",
+              "type": "string"
+            },
+            "time": {
+              "description": "Time to convert in 24-hour format (HH:MM)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_timezone",
+            "time",
+            "target_timezone"
+          ],
+          "type": "object"
+        },
+        "name": "convert_time",
+        "schema_hash": "116b20b454386f6d32475bdd7e7bf5cba5673c0644f23865bc19fafc9a9fafde"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Get current time in a specific timezone",
+        "description_hash": "0a34bcff2277db311ef58792a1ce0a5d4b0d678e88a0c6d77eeed328898cd9d5",
+        "inputSchema": {
+          "properties": {
+            "timezone": {
+              "description": "IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'Etc/UTC' as local timezone if no timezone provided by the user.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "timezone"
+          ],
+          "type": "object"
+        },
+        "name": "get_current_time",
+        "schema_hash": "4c5f8341a69e313883df9a1bb60aeea0e8e5178e4591da372ff6d2571da53e69"
+      }
+    ]
+  },
+  "surface_hash": "fbb408ee3a5f08cf5c5216cc523a539c396bd4332e121555b94b15dbc2011e43"
+}

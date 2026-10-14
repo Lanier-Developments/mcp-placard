@@ -1,0 +1,1010 @@
+{
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "capabilities_hash": "46f63fd549bb6c2798199069f8f6ed94023dd8adca19f886f85548b0ed21ae06",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'create_directory': 'create' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "/properties/path: unconstrained path, no concurrency token present anywhere in the schema, on a tool an independent signal already established as writing",
+          "kinds": [
+            "write"
+          ],
+          "rule": "Rule D",
+          "signal": "schema_shape",
+          "tier": "R5"
+        }
+      ],
+      "disagreements": [
+        {
+          "annotation": "destructiveHint",
+          "declared": false,
+          "inferred_tier": "R5",
+          "reading": "Same shape as the readOnlyHint disagreement, stated more specifically."
+        }
+      ],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "create_directory"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "directory_tree"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/path: unconstrained destination path with content-carrying sibling 'edits', no concurrency token present anywhere in the schema",
+          "kinds": [
+            "write"
+          ],
+          "rule": "Rule D",
+          "signal": "schema_shape",
+          "tier": "R5"
+        },
+        {
+          "evidence": "/properties/edits: content-carrying field 'edits'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "edit_file"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "get_file_info"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "list_allowed_directories"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "list_directory"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "list_directory_with_sizes"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/destination: destination-named parameter 'destination', unconstrained, no concurrency token present anywhere in the schema",
+          "kinds": [
+            "write"
+          ],
+          "rule": "Rule D",
+          "signal": "schema_shape",
+          "tier": "R5"
+        },
+        {
+          "evidence": "tool name 'move_file': 'move' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "move_file"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "read_file"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "read_media_file"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "read_multiple_files"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "read_text_file"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "search_files"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/path: unconstrained destination path with content-carrying sibling 'content', no concurrency token present anywhere in the schema",
+          "kinds": [
+            "write"
+          ],
+          "rule": "Rule D",
+          "signal": "schema_shape",
+          "tier": "R5"
+        },
+        {
+          "evidence": "/properties/content: content-carrying field 'content'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'write_file': 'write' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "write_file"
+    }
+  ],
+  "classification_hash": "629e8df9c0352a79d733d99b7741559b1f81cc42625cf73e26a99ebcb6da2d14",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "secure-filesystem-server",
+      "version": "1.0.0"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories.",
+        "description_hash": "ebfc114d16eab12f4b47f781ad07200dcec7d77057d6bcd2eab96ddfd4e281be",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "create_directory",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c3e75a7d4e4bd6911fa21e7a3dfd29a13253847806e2f840a20e474afaa80517",
+        "title": "Create Directory"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories.",
+        "description_hash": "39e498a6e3edba99e37683349ce2b5a2b71de913a8f2762af930da9fc1497745",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "excludePatterns": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "directory_tree",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "183b99ab98934ec33bc1eada9f1468c875eb4b225afd3d780241359e64aa31ec",
+        "title": "Directory Tree"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.",
+        "description_hash": "c5940dcf5ace3043afa3718ba0f166bfdb6be93cc2843d388809df1dc8b9e1f7",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "dryRun": {
+              "default": false,
+              "description": "Preview changes using git-style diff format",
+              "type": "boolean"
+            },
+            "edits": {
+              "items": {
+                "properties": {
+                  "newText": {
+                    "description": "Text to replace with",
+                    "type": "string"
+                  },
+                  "oldText": {
+                    "description": "Text to search for - must match exactly",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "oldText",
+                  "newText"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "edits"
+          ],
+          "type": "object"
+        },
+        "name": "edit_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "0e618c69bbb36a86a0425f5d5acadd5c69abc0a2c40efb97f80e3123f2c53a06",
+        "title": "Edit File"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. This tool is perfect for understanding file characteristics without reading the actual content. Only works within allowed directories.",
+        "description_hash": "6c4682266839f449fdf7fd67464536550a1e8ce73270e641d37fe47a2863b33c",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "get_file_info",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c3e75a7d4e4bd6911fa21e7a3dfd29a13253847806e2f840a20e474afaa80517",
+        "title": "Get File Info"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns the list of directories that this server is allowed to access. Subdirectories within these allowed directories are also accessible. Use this to understand which directories and their nested paths are available before trying to access files.",
+        "description_hash": "88e6ac4a88bfbf8149934eb8bc86660c8a45f17aa161c50eb04b16af72be0d0d",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "list_allowed_directories",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "93ab7499dc3c616f8db8780fed0d9f69270803cda913882ad2ef3943db8d7225",
+        "title": "List Allowed Directories"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories.",
+        "description_hash": "0d8a17e4e0809ce15b3219c3202ef7874efc4f91b4cac119d29af4a36b872937",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "list_directory",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c3e75a7d4e4bd6911fa21e7a3dfd29a13253847806e2f840a20e474afaa80517",
+        "title": "List Directory"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Get a detailed listing of all files and directories in a specified path, including sizes. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is useful for understanding directory structure and finding specific files within a directory. Only works within allowed directories.",
+        "description_hash": "e32beaadfdf744fcdbd054efb654748ebae69f29f283bcba33fd392853e2c883",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sortBy": {
+              "default": "name",
+              "description": "Sort entries by name or size",
+              "enum": [
+                "name",
+                "size"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "list_directory_with_sizes",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "2981d4cbea6d14156e6ea8c4ea88181c95966b34b0e4f23b443dbc548c58c49d",
+        "title": "List Directory with Sizes"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Works across different directories and can be used for simple renaming within the same directory. Both source and destination must be within allowed directories.",
+        "description_hash": "ed86851661ccc4e1214776771bb815e7aef1866f604d80afe9d3e0da85032863",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "destination": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "source",
+            "destination"
+          ],
+          "type": "object"
+        },
+        "name": "move_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "da11573be25599e7d44009b2b31626d370dc345489aeb8bc04299437c0635fcb",
+        "title": "Move File"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Read the complete contents of a file as text. DEPRECATED: Use read_text_file instead.",
+        "description_hash": "a2864e90927c1d4631d6493c7a6fe13a50c7d996de90961025f7033e8c6c3335",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "head": {
+              "description": "If provided, returns only the first N lines of the file",
+              "type": "number"
+            },
+            "path": {
+              "type": "string"
+            },
+            "tail": {
+              "description": "If provided, returns only the last N lines of the file",
+              "type": "number"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "read_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c265d71cd9245cc9cab370c13acc7a1e1dd91e80f159d4d0e4580319b3a94dd3",
+        "title": "Read File (Deprecated)"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Read a file and return it as a base64-encoded content block with its MIME type. Image and audio files are returned as image/audio content; any other file type is returned as an embedded resource. Only works within allowed directories.",
+        "description_hash": "2a5acb4ec2a244de7039ed29b3c212492f5352f4925beb66f268a2c3995a70c2",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "read_media_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "data": {
+                        "type": "string"
+                      },
+                      "mimeType": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "enum": [
+                          "image",
+                          "audio"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "data",
+                      "mimeType"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "resource": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "blob": {
+                            "type": "string"
+                          },
+                          "mimeType": {
+                            "type": "string"
+                          },
+                          "uri": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uri",
+                          "blob"
+                        ],
+                        "type": "object"
+                      },
+                      "type": {
+                        "const": "resource",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "resource"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c3e75a7d4e4bd6911fa21e7a3dfd29a13253847806e2f840a20e474afaa80517",
+        "title": "Read Media File"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
+        "description_hash": "0af41d3555fad09e711a3600797ffad55420e3a58b3b1db6286bad4e0a74ced7",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "paths": {
+              "description": "Array of file paths to read. Each path must be a string pointing to a valid file within allowed directories.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "paths"
+          ],
+          "type": "object"
+        },
+        "name": "read_multiple_files",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "e33001b8d3c59a392539941ea3ce0fb40beba8cbbe687f40d850eeee50515aa8",
+        "title": "Read Multiple Files"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Read the complete contents of a file from the file system as text. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Use the 'head' parameter to read only the first N lines of a file, or the 'tail' parameter to read only the last N lines of a file. Operates on the file as text regardless of extension. Only works within allowed directories.",
+        "description_hash": "a7cd25e7cff3300d98ff37567d9eac32fd23a65660bc3926a346577621fedd51",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "head": {
+              "description": "If provided, returns only the first N lines of the file",
+              "type": "number"
+            },
+            "path": {
+              "type": "string"
+            },
+            "tail": {
+              "description": "If provided, returns only the last N lines of the file",
+              "type": "number"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "name": "read_text_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "c265d71cd9245cc9cab370c13acc7a1e1dd91e80f159d4d0e4580319b3a94dd3",
+        "title": "Read Text File"
+      },
+      {
+        "annotations": {
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Recursively search for files and directories matching a pattern. The patterns should be glob-style patterns that match paths relative to the working directory. Use pattern like '*.ext' to match files in current directory, and '**/*.ext' to match files in all subdirectories. Returns full paths to all matching items. Great for finding files when you don't know their exact location. Only searches within allowed directories.",
+        "description_hash": "287d002188b0962036fb6be5d7087ec463e14e76809ef0b7dde878b7f47ac69e",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "excludePatterns": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "pattern"
+          ],
+          "type": "object"
+        },
+        "name": "search_files",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "a74c2fc96644af87bfd207a08d775b426ecfdca13d9baebfcbd5b46b41590aa4",
+        "title": "Search Files"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Handles text content with proper encoding. Only works within allowed directories.",
+        "description_hash": "f26109c30283a0292f884b3cd58c2b972fd70b14e6c34687febb2d38e4184316",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "type": "object"
+        },
+        "name": "write_file",
+        "outputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "e4b3deed1a39fc2a5b990b319b17e1f19c84c891a770c219d97d9cdefe6181cf",
+        "title": "Write File"
+      }
+    ]
+  },
+  "surface_hash": "a30f948c10d0f66b92ba002b6523963854da3c665168703c7712be1e6beddd9a"
+}
