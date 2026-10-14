@@ -305,7 +305,13 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
-- **Phase 3.3** — the `sensitive_target` exemption gains evidence on non-tool surfaces: a resource
+- **Phase 3.5** — done (0.5.0). The path exemption is scoped to its family at the leaf, so a
+  credential-shaped URI or parameter name cannot launder another family's path (threat A8).
+- **Phase 3.4** — done (0.5.0). Held-out v2 false-positive fixes: path and credential evidence both
+  decided by token match on the parameter name (split on snake_case and camelCase, one shared
+  splitter), and `exfil_sink` narrowed to a URL or address governed by a transmission verb, so a
+  citation no longer fires. Held-out v2 scored 33/49 under 3.3 and published as it stood.
+- **Phase 3.3** — done. The `sensitive_target` exemption gains evidence on non-tool surfaces: a resource
   URI's scheme and path segments, a prompt argument's name, and for a prompt its own arguments'
   evidence. Before it, prompt and resource elements carried no path or credential context at all,
   so a resource that legitimately *is* a credential path flagged for describing itself. The URI

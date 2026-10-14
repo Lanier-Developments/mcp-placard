@@ -300,6 +300,5 @@ someone who never saw the negation guard — that guard validated on samples its
 not write. The four weak classes showed detectors that had learned the synthetic corpus's
 phrasing rather than the class; the structural rules above are the response. Ruleset 3.1
 baseline: 0 false positives on 388 benign strings; synthetic 34 of 34; lifted 2 of 2;
-held-out v1 35 of 35 as regression. Held-out v2 (roughly 50 samples, vocabulary variety)
-will be scored once, and the difference between v1 and v2 is the honest measure of whether
-3.1 generalised.
+held-out v1 35 of 35 as regression. Held-out v2 (49 samples, vocabulary variety) was then
+scored once under ruleset 3.3: 33 of 49. See the next section.
