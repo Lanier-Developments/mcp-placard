@@ -12,7 +12,7 @@ from __future__ import annotations
 
 __all__ = ["MANIFEST_VERSION", "RULESET_VERSION", "__version__"]
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 #: Schema version stamped into every manifest this build writes. Bumped when the
 #: manifest layout changes in a way older readers cannot handle. Phase 1 wrote
@@ -41,4 +41,13 @@ MANIFEST_VERSION = "2.2"
 #: 3.5 scopes the path exemption to the family a parameter name describes, closing the
 #: exemption-laundering hole token matching widened: a parameter named to establish path
 #: handling may name only what it is demonstrably about.
-RULESET_VERSION = "3.5"
+#:
+#: 3.6 (Chief's rulings of 2026-10-14, from the Sep 23 taxonomy): ``concealment`` gains
+#: the affirmative-suppression rule — concealment stated positively, where the verb
+#: carries the negation; the adjacency defect is fixed in both classes, allowing up to
+#: two intervening words between a qualifier and its noun, inside the fixed priority
+#: phrases, and between "from" and an audience noun; and the override referent is the
+#: full cross product of the qualifiers and nouns the list already carried. ``override``
+#: otherwise stops where it stands: invalidation framings and referent paraphrase stay
+#: misses by ruling.
+RULESET_VERSION = "3.6"

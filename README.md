@@ -44,8 +44,9 @@ rate ratcheted at zero on 388 real strings ([`docs/INJECTION.md`](docs/INJECTION
 re-analyses any manifest produced under an older ruleset before comparing, so a Placard upgrade
 never produces findings on a server that did not change. Phase 4 shipped SARIF output and the
 GitHub Action below (v0.4.0). v0.5.0 added rulesets 3.4 and 3.5 (false-positive fixes from the
-held-out v2 review), the held-out v2 score, and merge-gate CI. Manifest signing (Phase 5) is not
-yet built.
+held-out v2 review), the held-out v2 score, and merge-gate CI. v0.6.0 ships ruleset 3.6: the
+`concealment` affirmative-suppression rule and the adjacency fix in both weak classes, from the
+Sep 23 miss taxonomy as ruled on 2026-10-14. Manifest signing (Phase 5) is not yet built.
 
 **What do popular servers expose?** [`docs/INDEX.md`](docs/INDEX.md) is a published index of the
 blast radius of nine widely used public MCP servers at pinned versions, rendered from committed
@@ -106,11 +107,23 @@ with structural rules (a hierarchy referent plus an invalidator in one sentence;
 concealment audience; tool ownership rather than the word "server"; any paired custom tag), and v1
 was retired into the regression corpus at 35/35. On v2, the structural rewrite generalised for
 `markup_smuggling` (60% to 100%) and `cross_scope` (60% to 71%). It did not for `override` (0% to
-14%) or `concealment` (60% to 14%), which is worse on new vocabulary than the phrase rules it
-replaced. Those two classes are the open work, and until they are fixed **do not rely on Placard to
-catch an override or a concealment instruction on first sight**: on unseen vocabulary it found
-1 of 7 in each class. Treat the baseline diff as the defence for those two. A description that
-starts saying something new is flagged by `description_hash` whether or not any heuristic fires.
+14%) or `concealment` (60% to 14%).
+
+Ruleset 3.6 (v0.6.0) is the ruled response to those two classes: `concealment` gained the
+affirmative-suppression rule — every earlier rule modelled a *negated* instruction to disclose,
+and six of v2's eight concealment misses were suppression stated positively — and both classes
+gained a bounded two-word adjacency gap. Rerun once under 3.6 as a **labelled diagnostic, not a
+measurement** (the rules were developed against v2's misses), v2 reads 40/49, `concealment` 5/7,
+`override` 4/7. **3.6's real headline is the held-out v3 score, and there is none yet**: v3 will
+be authored independently of the rules and of v1/v2, and until it is scored, 3.6's
+generalisation is unmeasured and the table above stands as the published record.
+
+In use: **do not rely on Placard to catch an `override` instruction on first sight** — by ruling
+it is published as it stands, and its remaining misses are paraphrase, where the attacker picks
+the words. `concealment` now models both halves of its class (negated disclosure and affirmative
+suppression), but whether that generalises is unmeasured until v3; treat it accordingly. The
+baseline diff is the defence for both: a description that starts saying something new is flagged
+by `description_hash` whether or not any heuristic fires.
 See [Known limits](docs/INJECTION.md#known-limits).
 
 v2 also added the first coverage of prompt and resource surfaces (14/21, 66%) and a benign set:

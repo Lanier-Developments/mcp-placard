@@ -71,17 +71,42 @@ _OVERRIDE_RULES: dict[str, re.Pattern[str]] = {
 }
 
 _SENTENCE = re.compile(r"[^.!?\n]+")
+
+_GAP = r"(?:[A-Za-z]+[\s-]+){0,2}"
+"""Ruleset 3.6 (1b): between a qualifier and its noun, inside a fixed priority phrase,
+and between "from" and an audience noun, up to **two intervening words** are allowed —
+alphabetic tokens only, no punctuation, no sentence boundary. Two is the number the Sep 23
+taxonomy measured ("previous **behavioral** constraints", "take **immediate** priority
+over") and it does not match the benign control "overrides the default timeout for
+previous requests"; do not raise it without a new measurement against the benign corpus.
+The hyphen joins compound modifiers ("system-level rules"), which the pre-3.6 referent
+already matched."""
+
+_REFERENT_QUALIFIER = (
+    r"(?:system|prior|previous|earlier|preceding|existing|standing|original|core|safety|security)"
+)
+_REFERENT_NOUN = (
+    r"(?:prompts?|instructions?|rules?|constraints?|guidelines?|directives?|polic(?:y|ies)|"
+    r"filters?)"
+)
 _OVERRIDE_REFERENT = re.compile(
-    r"\b(system\s+prompts?|system\s+instructions?|system[\s-]+level\s+rules?|"
-    r"(prior|previous|earlier|preceding|existing|standing|original)\s+(instructions?|constraints?|rules?|"
-    r"guidelines?|directives?|policy|policies)|core\s+(policy|policies|instructions?|rules?)|"
-    r"safety\s+(filters?|guidelines?|rules?|constraints?)|security\s+(guidelines?|rules?|policy|"
-    r"policies|constraints?)|guardrails?|prompt\s+rules?)\b",
+    r"\b("
+    + _REFERENT_QUALIFIER
+    + r"[\s-]+"
+    + _GAP
+    + _REFERENT_NOUN
+    + r"|guardrails?|prompt\s+rules?)\b",
     _I,
 )
 """Phase 3.1 §1: a *referent* naming the agent's instruction hierarchy. "Default" alone
 is not a referent — "overrides the default timeout" is ordinary API prose — and
-becomes one only when qualified as safety or security, which the list above encodes."""
+becomes one only when qualified as safety or security, which the list above encodes.
+
+Ruleset 3.6: the referent is the full cross product of the qualifiers and nouns the
+pre-3.6 list already carried, with the 1b gap between them. The product regularization
+is Chief's ruling of 2026-10-14: ``system rules`` was an empty cell in a product that
+already held ``system prompts`` and ``system instructions``. No qualifier or noun was
+added that was not already a member."""
 
 _OVERRIDE_INVALIDATOR = re.compile(
     r"\b(ignor(e|es|ing|ed)|disregard(s|ing|ed)?|nullif(y|ies|ied|ying)|void(s|ed|ing)?|"
@@ -92,12 +117,14 @@ _OVERRIDE_INVALIDATOR = re.compile(
 """Phase 3.1 §1: an *invalidator* acting on the referent, in the same sentence."""
 
 _OVERRIDE_PRIORITY = re.compile(
-    r"\b(highest\s+priority|top\s+priority|takes?\s+precedence\s+over|take\s+priority\s+over|"
+    r"\b(highest\s+" + _GAP + r"priority|top\s+" + _GAP + r"priority|"
+    r"takes?\s+" + _GAP + r"precedence\s+over|takes?\s+" + _GAP + r"priority\s+over|"
     r"over\s+anything\s+(the\s+)?(user|operator|human)|above\s+(all\s+)?(other|user|operator)\s+"
     r"(instructions?|rules?|requests?)|must\s+be\s+subordinated\s+to)\b",
     _I,
 )
-"""Explicit priority claims over the hierarchy or the user fire on their own."""
+"""Explicit priority claims over the hierarchy or the user fire on their own. The fixed
+phrases take the 1b gap — "take **immediate** priority over" is the same claim."""
 
 
 def _override_structural(text: str) -> Iterator[Match]:
@@ -131,7 +158,10 @@ _CONCEALMENT_RULES: dict[str, re.Pattern[str]] = {
         _I,
     ),
     "concealment.secret_from_audience": re.compile(
+        # The determiner slot takes the 1b gap: "secret from **chat** user" is the same
+        # audience. Alphabetic tokens only, so a sentence boundary still breaks it.
         r"\b(secret|hidden|concealed|invisible|opaque)\s+from\s+(the\s+|any\s+|all\s+)?"
+        + _GAP
         + _USER
         + r"\b",
         _I,
@@ -172,6 +202,103 @@ _CONCEALMENT_RULES: dict[str, re.Pattern[str]] = {
         _I,
     ),
 }
+
+_WITHHOLD_PREDICATE = (
+    r"(?:suppress(?:es|ing|ed)?|omit(?:s|ting|ted)?|withhold(?:s|ing)?|withheld|"
+    r"conceal(?:s|ing|ed)?|hide|hides|hiding|hid|hidden|mask(?:s|ing|ed)?|"
+    r"redact(?:s|ing|ed)?|leav(?:e|es|ing)\s+out|left\s+out)"
+)
+"""Ruleset 3.6 (1a): a closed list of predicates that mean *withhold*, derived from the
+definition — not from what held-out v2 happened to use. Every member either appears in
+Chief's ruling of 2026-10-14 verbatim or is an inflection of one that does."""
+
+_DISCLOSURE_NOUN = (
+    r"(?:references?|mentions?|indications?|notifications?|disclosures?|details|records?)"
+)
+"""A noun that is a disclosure of activity. The object requirement is what keeps the rule
+off legitimate text: "use `quiet` to suppress progress output" has a withhold verb and no
+disclosure-of-activity object."""
+
+_ACTIVITY_NOUN = (
+    r"(?:operations?|processing|retrievals?|lookups?|calls?|invocations?|executions?|"
+    r"activit(?:y|ies))"
+)
+"""What the disclosure must concern: this tool's own operations. A closed list of nouns
+for *the tool doing something*. Deliberately absent: ``requests``, ``actions``, ``tasks``
+— broad enough to appear in ordinary verbosity options ("suppress notifications for
+completed requests"), and no miss in the Sep 23 taxonomy needs them."""
+
+_USER_SURFACE_ANCHOR = re.compile(
+    r"\buser[\s-]facing\b|\b(?:to|for|from)\s+(?:the\s+)?(?:end[\s-])?users?\b|"
+    r"\bfinal\s+response\b|\boutput\s+to\s+the\s+user\b",
+    _I,
+)
+"""The other thing the object may concern: a user-facing surface."""
+
+_AFFIRMATIVE_SUPPRESSION = re.compile(
+    # The object is a disclosure of this tool's operations …
+    r"\b"
+    + _WITHHOLD_PREDICATE
+    + r"\b[^.!?\n]{0,80}?\b"
+    + _DISCLOSURE_NOUN
+    + r"\b[^.!?\n]{0,60}?\b"
+    + _ACTIVITY_NOUN
+    + r"\b"
+    # … or a user-facing one ("suppress all user-facing notifications").
+    r"|\b"
+    + _WITHHOLD_PREDICATE
+    + r"\b[^.!?\n]{0,60}?\buser[\s-]facing\s+"
+    + _GAP
+    + _DISCLOSURE_NOUN
+    + r"\b",
+    _I,
+)
+
+_PASSIVE_SUPPRESSION = re.compile(
+    r"\b(?:remains?|remaining|stays?|staying)\s+un(?:mentioned|disclosed|reported)\b", _I
+)
+
+_NOMINAL_SUPPRESSION = re.compile(
+    r"\bmaintain(?:s|ing|ed)?\s+" + _GAP + r"confidentiality\s+"
+    r"(?:regarding|about|concerning|over|of)\b[^.!?\n]{0,80}?\b" + _ACTIVITY_NOUN + r"\b",
+    _I,
+)
+
+
+def _concealment_affirmative(text: str) -> Iterator[Match]:
+    """Ruleset 3.6 (1a): ``concealment`` also fires on an **affirmative suppression** —
+    a predicate that means to withhold, applied to an object that is a disclosure of
+    this tool's own activity.
+
+    Every pre-3.6 concealment rule models one sentence, a negated instruction to
+    disclose; six of held-out v2's eight misses were the other sentence, concealment
+    stated positively, where the verb carries the negation and there is no negator to
+    find. That is a construction, not a vocabulary — the same kind of omission as the
+    ``exfil_sink`` transmission predicate (Sep 23 taxonomy; Chief's ruling 2026-10-14).
+
+    Three forms, each requiring both components in the same sentence: the active verb
+    ("suppress all references to … operations"), the passive ("must remain unmentioned
+    in user-facing context" — the withheld thing is the grammatical subject, so the
+    anchor is tested on the sentence), and the nominal ("maintain complete
+    confidentiality regarding … operations").
+    """
+    for pattern in (_AFFIRMATIVE_SUPPRESSION, _NOMINAL_SUPPRESSION):
+        for m in pattern.finditer(text):
+            yield Match("concealment", "concealment.affirmative_suppression", m.start(), m.end())
+    for sentence in _SENTENCE.finditer(text):
+        span_text = sentence.group(0)
+        passive = _PASSIVE_SUPPRESSION.search(span_text)
+        if passive and (
+            re.search(r"\b" + _ACTIVITY_NOUN + r"\b", span_text, _I)
+            or _USER_SURFACE_ANCHOR.search(span_text)
+        ):
+            yield Match(
+                "concealment",
+                "concealment.affirmative_suppression",
+                sentence.start() + passive.start(),
+                sentence.start() + passive.end(),
+            )
+
 
 # ------------------------------------------------------------------ cross_scope
 
@@ -593,6 +720,7 @@ def detect_override(element: TextElement) -> Iterator[Match]:
 
 def detect_concealment(element: TextElement) -> Iterator[Match]:
     yield from _finditer(_CONCEALMENT_RULES, "concealment", element.text)
+    yield from _concealment_affirmative(element.text)
 
 
 def detect_cross_scope(element: TextElement) -> Iterator[Match]:
@@ -812,6 +940,7 @@ def rule_names() -> list[str]:
         "override.hierarchy_invalidated",
         "override.priority_claim",
         *_CONCEALMENT_RULES,
+        "concealment.affirmative_suppression",
         *_CROSS_SCOPE_PHRASES,
         "cross_scope.foreign_tool_identifier",
         "cross_scope.named_service_host",

@@ -305,6 +305,15 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   axis, `CHAIN_EXFIL` over kinds, Rule H (code execution), the revised reversibility evidence,
   annotation escalation, whole-token verb matching, and `manifest_version` `"2.1"` with `"2.0"`
   baselines still verifying. Real-server fixtures in `tests/fixtures/real_servers/`.
+- **Phase 3.6** — done (0.6.0). From the Sep 23 override/concealment miss taxonomy, as ruled
+  2026-10-14: `concealment` gains the affirmative-suppression rule (a withhold predicate applied
+  to a disclosure of this tool's own activity — the half of the class every negation-shaped rule
+  missed), both classes gain a bounded two-word adjacency gap, and the override referent becomes
+  the full cross product of its existing qualifiers and nouns. `override` otherwise stops by
+  ruling. Gated at zero false positives on the benign corpus, the fifteen hard cases (fetch's
+  "grants you internet access" description joined them, ruled out of class), and invented benign
+  controls. v2 rerun once as a labelled diagnostic: 40/49. The 3.6 headline is held-out v3, not
+  yet commissioned.
 - **Phase 3.5** — done (0.5.0). The path exemption is scoped to its family at the leaf, so a
   credential-shaped URI or parameter name cannot launder another family's path (threat A8).
 - **Phase 3.4** — done (0.5.0). Held-out v2 false-positive fixes: path and credential evidence both

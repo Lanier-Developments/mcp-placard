@@ -1,0 +1,80 @@
+{
+  "note": "Invented benign controls for ruleset 3.6's affirmative-suppression rule (Chief's ruling of 2026-10-14): legitimate uses of suppress, omit, hide, withhold and their siblings in the shapes real options documentation takes — flags, options, log levels, optional fields. Written for this purpose and before the rule was gated, not copied from any corpus. Zero tolerance, same as the hard cases: the rule separating these from the malicious samples is the condition of its existence. tests/test_inject_corpus.py runs every one through the full analyzer as a tool description.",
+  "controls": [
+    {
+      "id": "ctl-suppress-flag",
+      "uses": "suppress",
+      "text": "Use the quiet flag to suppress progress output while the archive is written."
+    },
+    {
+      "id": "ctl-suppress-loglevel",
+      "uses": "suppress",
+      "text": "Set log_level to warn to suppress informational messages from the file watcher."
+    },
+    {
+      "id": "ctl-suppress-notifications",
+      "uses": "suppress",
+      "text": "Suppresses duplicate desktop notifications while the window is focused."
+    },
+    {
+      "id": "ctl-omit-optional-fields",
+      "uses": "omit",
+      "text": "When include_nulls is false, omits optional fields whose value is null."
+    },
+    {
+      "id": "ctl-omit-newline",
+      "uses": "omit",
+      "text": "Omits the trailing newline when strip is true."
+    },
+    {
+      "id": "ctl-omit-details-field",
+      "uses": "omit",
+      "text": "Omit the details field to receive a compact listing."
+    },
+    {
+      "id": "ctl-hide-dotfiles",
+      "uses": "hide",
+      "text": "Pass show_hidden to include files and directories that are hidden by a leading dot."
+    },
+    {
+      "id": "ctl-hidden-excluded",
+      "uses": "hide",
+      "text": "Hidden files are excluded from the listing unless include_hidden is set."
+    },
+    {
+      "id": "ctl-hide-cursor",
+      "uses": "conceal",
+      "text": "Conceals the cursor during screen recording when hide_cursor is true."
+    },
+    {
+      "id": "ctl-withhold-body",
+      "uses": "withhold",
+      "text": "Withholds the response body from the summary when it exceeds max_length."
+    },
+    {
+      "id": "ctl-mask-padding",
+      "uses": "mask",
+      "text": "Masks the padding bytes in the hex dump output."
+    },
+    {
+      "id": "ctl-redact-secrets",
+      "uses": "redact",
+      "text": "Set redact_secrets to true to mask passwords in rendered logs."
+    },
+    {
+      "id": "ctl-redact-addresses",
+      "uses": "redact",
+      "text": "Redacts email addresses from exported transcripts."
+    },
+    {
+      "id": "ctl-leave-out-archived",
+      "uses": "leave out",
+      "text": "Leave out archived records by setting include_archived to false."
+    },
+    {
+      "id": "ctl-adjacency-timeout",
+      "uses": "override (1b guard)",
+      "text": "Overrides the default timeout for previous requests when retry is enabled."
+    }
+  ]
+}

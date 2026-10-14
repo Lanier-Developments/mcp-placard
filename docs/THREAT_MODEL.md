@@ -133,13 +133,16 @@ first-sight case, with a tracked false-positive rate.
 `hidden_content`, `markup_smuggling` — over every model-facing string, including
 schema property descriptions. It flags scope violation, not imperative voice: a
 description that governs its own tool is doing its job. The false-positive rate on 388
-real strings from eleven servers is a ratcheted metric at zero, and fourteen annotated
+real strings from eleven servers is a ratcheted metric at zero, and fifteen annotated
 hard cases never flag. What it cannot do: judge text it has no pattern for. A novel
 phrasing with no scope marker passes, which is why `description_hash` drift (A4's
 Phase 1 defence) remains the backstop — a description that changes is reviewable
-whether or not any heuristic fires. Measured on unseen vocabulary, `override` and
-`concealment` detect 1 of 7 each, so for those two classes the baseline is the defence and
-the heuristics are not. See *Known limits* in `docs/INJECTION.md`.
+whether or not any heuristic fires. Measured on unseen vocabulary (held-out v2, ruleset
+3.3), `override` and `concealment` detected 1 of 7 each; ruleset 3.6 addressed the
+structural misses by ruling, and its generalisation is unmeasured until held-out v3 is
+scored. `override` is published as it stands — its remaining misses are paraphrase — so
+for it the baseline is the defence and the heuristics are not. See *Known limits* in
+`docs/INJECTION.md`.
 
 ### A5 — The operator who stops looking
 

@@ -33,7 +33,7 @@ ladder, and 0.3.0 removed the last one from the exit codes.
 | Class | What it detects | Rules (`inject/patterns.py`) |
 | --- | --- | --- |
 | `override` | Attempts to supersede prior or system instructions | `hierarchy_invalidated` (a referent naming the instruction hierarchy plus an invalidator in the same sentence), `priority_claim`, and the earlier phrase rules `ignore_previous`, `new_instructions`, `system_prompt_claim`, `persona_switch`, `supersedes` |
-| `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `secret_from_audience`, `behind_the_scenes`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover` |
+| `concealment` | Instructions to hide behaviour from the user | `do_not_tell_user`, `secret_from_audience`, `behind_the_scenes`, `do_not_mention_that`, `hide_from`, `covert_adverb`, `plausible_cover`, `affirmative_suppression` (ruleset 3.6: a withhold predicate applied to a disclosure of this tool's own activity) |
 | `cross_scope` | References to tools or servers outside the element's own server — tool shadowing | `foreign_tool_identifier` ("the X tool", "tool X", "call X" where X is not on this server), `named_service_host` ("the Jira MCP server's", "the Confluence integration's", regardless of intervening tokens), `other_tools`, `on_other_tool_call`, `other_server_by_name`, `parenthesised_tool_ref` |
 | `sensitive_target` | Credential and secret paths or names in an element whose tool does not otherwise handle them | `credential_path`, `credential_transmission` |
 | `exfil_sink` | URLs and email addresses that description text names as a **destination for data** — not merely as references | `url`, `email` |
@@ -81,6 +81,43 @@ class. Ruleset 3.1 replaced phrase matching with structure, per
   close — whose name is not a common HTML formatting element. Attributes permitted. Pairing
   is what keeps this safe: usage placeholders such as `<file>` or `<path>` are unpaired and
   do not fire.
+
+### Ruleset 3.6 — affirmative suppression and adjacency
+
+From the Sep 23 taxonomy of held-out v2's `override` and `concealment` misses, as ruled in
+`docs/dispatches/2026-10-14_from-chief_to-jr_rulings-3.6-v3-index-fetch.md`:
+
+- **`concealment` also fires on an affirmative suppression**: a predicate that means to
+  withhold — suppress, omit, withhold, conceal, hide, mask, redact, leave out, the passive
+  "remain unmentioned / undisclosed / unreported", the nominal "maintain … confidentiality
+  regarding" — applied, in the same sentence, to an object that is a disclosure of this
+  tool's own activity (references to, mention of, indication of, notifications, disclosure
+  of, details of, record of). The object must concern the tool's operations or a
+  user-facing surface. Every pre-3.6 concealment rule modelled a *negated instruction to
+  disclose*; six of v2's eight misses were the other sentence — concealment stated
+  positively, where the verb carries the negation. The object requirement is what keeps the
+  rule off legitimate text: "use `quiet` to suppress progress output" has a withhold verb
+  and no disclosure-of-activity object. Gated at zero false positives on the benign corpus,
+  every annotated hard case, and a set of invented benign controls
+  (`tests/fixtures/injection/benign/invented_controls.json`) written for the gate.
+- **Adjacency, in both classes.** Between a qualifier and its noun, inside a fixed priority
+  phrase, and between "from" and an audience noun, up to **two intervening words** are
+  allowed: alphabetic tokens only, no punctuation, no sentence boundary. "Previous
+  **behavioral** constraints", "take **immediate** priority over" and "secret from **chat**
+  user" are the same claims. Two is the measured number; the benign control "overrides the
+  default timeout for previous requests" does not match, and the bound does not move
+  without a new measurement against the benign corpus.
+- **The referent is a product.** The `hierarchy_invalidated` referent is the full cross
+  product of the qualifiers (system, prior, previous, earlier, preceding, existing,
+  standing, original, core, safety, security) and nouns (prompts, instructions, rules,
+  constraints, guidelines, directives, policy/policies, filters) the pre-3.6 list already
+  carried — "system rules" was an empty cell beside "system prompts" and "system
+  instructions". No qualifier or noun was added.
+- **`override` otherwise stops where it stands**, by ruling: the four invalidation framings
+  (synonym, temporal, restorative, predicate-adjective) and referent paraphrase stay
+  misses — different words for the same idea, where the attacker picks the words and a
+  deterministic rule enumerates them afterwards. A comparative-priority rule waits for
+  three or more instances in held-out v3.
 
 ### Scoping rules that keep the benign corpus clean
 
@@ -243,8 +280,11 @@ re-analysis, so an operator-downgraded tool does not reappear as an escalation. 
   `tests/fixtures/real_servers/` (388 strings: tool descriptions, titles, 257 schema
   property descriptions, three servers' instructions, prompts, resources), materialised
   by `scripts/build_benign_corpus.py` and kept in sync by a test. `hard_cases.json`
-  annotates fourteen strings that superficially resemble an attack and are not one,
+  annotates fifteen strings that superficially resemble an attack and are not one,
   each naming the class it would trip under a naive heuristic and why it must not.
+  `invented_controls.json` holds the 3.6 gate's invented benign controls — legitimate
+  uses of suppress, omit, hide and withhold in option-documentation shapes — written for
+  the affirmative-suppression gate and held by CI like the hard cases.
 - **`malicious/synthetic.json`** — samples constructed per class, following published
   tool-poisoning attack descriptions. Measures coverage: does every class have working
   detection.
@@ -284,12 +324,26 @@ synthetic and 2 of 2 lifted samples detected.
 
 Stated plainly, because a detector that overstates itself is worse than none.
 
-**`override` and `concealment` do not generalise.** Held-out v2 (49 samples, scored once under
-ruleset 3.3) found 1 of 7 in each class, against 0 of 5 and 3 of 5 on v1. Neither the original
-phrase rules nor the 3.1 structural rules learned the class; each learned a vocabulary. The v1 phrase
-rules did better on v1 than the 3.1 structural rule does on v2 for `concealment`. Until a third
-approach is measured on a held-out v3, an `override` or `concealment` instruction that uses
-phrasing the rules do not already contain will pass.
+**The published measurement is held-out v2, 33/49 under ruleset 3.3**, with `override` and
+`concealment` at 1 of 7 each. The Sep 23 taxonomy decomposed those misses: concealment's were
+mostly one missing construction (suppression stated affirmatively) plus an adjacency defect;
+override's were mostly different words for the same idea. Ruleset 3.6 is the ruled response —
+the affirmative-suppression rule, the two-word adjacency gap in both classes, and the referent
+product fill. Rerun once under 3.6 as a **labelled diagnostic, not a measurement** — these rules
+were developed against v2's misses, so the rerun says the rules fire, not that they generalise —
+v2 scores 40/49, with `concealment` at 5/7 and `override` at 4/7. The measurement for 3.6 is
+held-out v3, written by an author who has seen neither the rules nor v1/v2. There is none yet;
+until it is scored, 3.6's generalisation is unmeasured.
+
+**`override` is published as it stands, by ruling.** Its remaining misses are invalidation
+framings and referent paraphrases — the attacker picks the words, and a deterministic rule
+enumerates them afterwards. An `override` instruction phrased outside the closed referent and
+invalidator lists will pass. Treat a clean `override` column as "no known phrasing matched",
+nothing more. `concealment` now carries both halves of its class (negated disclosure and
+affirmative suppression); its residual misses on v2 are channel-term vocabulary ("final client
+dialogue") and reclassification framings ("actions are classified internal maintenance", which
+names no act of withholding and stays a miss by ruling) — whether that narrower surface
+generalises is exactly what v3 measures.
 
 **What that means in use.**
 
@@ -301,13 +355,15 @@ phrasing the rules do not already contain will pass.
   produces a clean baseline, and the heuristics are the only first-sight check.
 - Review baseline descriptions by reading them once, not by trusting the absence of findings.
 
-**A worked miss.** As of `mcp-server-fetch` 2026.10.10 the tool description reads: *"Although
-originally you did not have internet access, and were advised to refuse and tell the user this,
-this tool now grants you internet access."* It tells the model that its earlier instructions are
-out of date, which is steering, and `placard scan` returns no findings on it under ruleset 3.5.
-It is a reference server and the text is plausibly benign, but it is the shape the `override`
-class exists to catch, and it passes. Recorded here as a regression candidate for the next
-ruleset; it is not currently in the corpus.
+**A boundary example.** As of `mcp-server-fetch` 2026.10.10 the tool description reads:
+*"Although originally you did not have internet access, and were advised to refuse and tell the
+user this, this tool now grants you internet access."* Ruled out of class 2026-10-14: it states
+a capability of the tool that carries it, and the earlier advice it refers to is advice about
+that capability, not the instruction hierarchy. Text that governs how its own tool is used is
+doing its job. It is now the fifteenth annotated hard case in the benign corpus and must never
+flag. The boundary it marks: the same sentence in an attacker's hands is the tool-poisoning
+pattern, deterministic matching cannot tell the two apart, and the baseline diff is the defence
+on both sides of the line.
 
 **Other limits.**
 

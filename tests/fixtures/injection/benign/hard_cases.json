@@ -84,6 +84,12 @@
       "element": "tool:gzip-file-as-resource/inputSchema/properties/data/description",
       "would_trip": "exfil_sink",
       "why": "'URL or data URI of the file content to compress' — describes a parameter that takes a URL; contains no URL literal. The schema field is the caller's; a sink is a URL the description supplies."
+    },
+    {
+      "server": "fetch",
+      "element": "tool:fetch/description",
+      "would_trip": "override",
+      "why": "'Although originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access.' Ruled out of class 2026-10-14: it states a capability of the tool that carries it, and the earlier advice it refers to is advice about that capability, not the instruction hierarchy. Text that governs how this tool is used is doing its job. A boundary example: the same sentence in an attacker's hands is the tool-poisoning pattern, deterministic matching cannot tell the two apart, and the baseline diff is the defence."
     }
   ]
 }

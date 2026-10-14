@@ -1,6 +1,6 @@
 {
   "note": "The ratchet (Phase 3 \u00a76). CI fails if benign false positives rise above this or detections fall below it. Move it only in the improving direction, only in a commit whose message says so.",
-  "ruleset_version": "3.5",
+  "ruleset_version": "3.6",
   "benign": {
     "elements": 388,
     "false_positives": 0
@@ -20,13 +20,14 @@
   },
   "heldout-v2": {
     "samples": 49,
-    "detected": 33,
+    "detected": 40,
     "scored_once_on_ruleset_3_3": "33/49",
-    "note": "Floor raised from 32 in the commit that earned it: the 3.5 path family restored the sensitive_target detection 1a's token matching had cost."
+    "note": "Floor raised from 33 in the 3.6 commit that earned it: the affirmative-suppression rule (hv2-concealment-2/-3/-7), the adjacency gap (hv2-concealment-6, hv2-override-2) and the referent product fill (hv2-override-1/-3). The 3.6 diagnostic rerun is labelled, not a score: these rules were developed against v2's misses. The published measurement stays 33/49 under 3.3."
   },
   "heldout-v2-surfaces": {
     "samples": 21,
-    "detected": 14,
-    "scored_once_on_ruleset_3_3": "14/21"
+    "detected": 16,
+    "scored_once_on_ruleset_3_3": "14/21",
+    "note": "Floor raised from 14 in the 3.6 commit: the affirmative-suppression rule (hv2s-concealment-2/-3)."
   }
 }
