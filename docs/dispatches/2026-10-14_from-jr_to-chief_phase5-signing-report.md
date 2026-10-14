@@ -90,6 +90,13 @@ unchanged.
    .placard/trusted_keys/lanier-release.pub`) completes the proof with a signature made
    on one machine and verified on the other. Mac can run that in a minute; I did not
    claim it done.
+   *(Closed same day: Mac ran it on cloudmac-1 — Ubuntu x86_64, py3.12, placard 0.7.0
+   installed editable from the merged checkout with the signing extra. Result:
+   `index/manifests/fetch.json: intact — surface_hash 8eb8d596…` and
+   `index/manifests/fetch.json.sig: signature verifies under trusted key
+   48e31e7790c21fca`, exit 0. The signature was produced on macOS arm64 (py3.14); the
+   canonical serializer is proven stable across the same pair of machines as the
+   Oct 13 report, now for the signed payload specifically.)*
 3. **One thing in section 3 that did not fit the code as written, resolved in its
    spirit:** standalone `verify` cannot know which placard.toml label to expect — the
    manifest does not carry it. So `verify` binds `server`, `manifest_version` and
