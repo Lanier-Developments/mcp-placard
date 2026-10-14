@@ -33,6 +33,10 @@ reason = "Review comments reference a file; nothing is written to it."
 
 [report.level]
 injection = "error"
+
+[signing]
+required = false
+trusted_keys = [".placard/trusted_keys/lanier.pub"]
 ```
 """
 
@@ -53,7 +57,9 @@ from .transport.target import TransportChoice
 
 SarifLevel = Literal["error", "warning", "note", "none"]
 
-FindingCategory = Literal["escalation", "prompt", "removal", "injection", "incomplete", "chain"]
+FindingCategory = Literal[
+    "escalation", "prompt", "removal", "injection", "incomplete", "signature", "chain"
+]
 
 
 class _Strict(BaseModel):
@@ -158,6 +164,7 @@ class ReportLevel(_Strict):
     removal: SarifLevel = "note"
     chain: SarifLevel = "error"
     incomplete: SarifLevel = "warning"
+    signature: SarifLevel = "error"
 
     def for_category(self, category: FindingCategory) -> SarifLevel:
         value: SarifLevel = getattr(self, category)
@@ -168,11 +175,29 @@ class ReportConfig(_Strict):
     level: ReportLevel = Field(default_factory=ReportLevel)
 
 
+class SigningConfig(_Strict):
+    """Phase 5. With ``required = false`` (the default) existing users see no change
+    and no bit is ever set. With ``required = true``, ``check`` fails any server
+    whose baseline has no valid signature from a trusted key — and requiring
+    signatures without the ``[signing]`` extra installed, or with no trusted keys
+    listed, is a configuration error, never a skip.
+
+    Key distribution is not solved by code: if ``trusted_keys`` and the baselines
+    live in the same repository under the same review, someone who can commit can
+    replace both. Protect the key list by a different control — see
+    ``docs/SIGNING.md``."""
+
+    required: bool = False
+    trusted_keys: list[str] = Field(default_factory=list)
+    """Paths to PEM public keys, relative to the config file."""
+
+
 class PlacardConfig(_Strict):
     defaults: Defaults = Field(default_factory=Defaults)
     server: list[ServerConfig] = Field(default_factory=list)
     override: list[OverrideConfig] = Field(default_factory=list)
     report: ReportConfig = Field(default_factory=ReportConfig)
+    signing: SigningConfig = Field(default_factory=SigningConfig)
 
     @model_validator(mode="after")
     def _consistent(self) -> PlacardConfig:

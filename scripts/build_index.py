@@ -316,14 +316,60 @@ def render() -> None:
     print(f"wrote {INDEX_MD.relative_to(REPO_ROOT)}")
 
 
+TRUSTED_KEY = REPO_ROOT / ".placard" / "trusted_keys" / "lanier-release.pub"
+"""The Lanier release key the committed index manifests are signed with (Phase 5
+demonstration). The private key is never in the repository and never in CI."""
+
+
+def signature_problems() -> list[str]:
+    """Why any committed index manifest's signature fails, empty when all nine
+    verify. Re-analysis cannot break these — only the surface is signed — but a
+    rescan that changes a surface invalidates its signature until the key holder
+    re-signs, which is the point."""
+    from mcp_placard.errors import SignatureError, UsageError
+    from mcp_placard.manifest.io import load_manifest
+    from mcp_placard.signing import (
+        load_public_key_raw,
+        load_signature,
+        sig_path,
+        verify_manifest_signature,
+    )
+
+    try:
+        raw = load_public_key_raw(TRUSTED_KEY)
+    except UsageError as exc:
+        return [str(exc)]
+    problems: list[str] = []
+    for server in load_servers():
+        path = MANIFEST_DIR / f"{server['id']}.json"
+        try:
+            manifest = load_manifest(path)
+            envelope = load_signature(sig_path(path))
+            verify_manifest_signature(
+                manifest, envelope, [raw], source=sig_path(path).name, label=server["id"]
+            )
+        except SignatureError as exc:
+            problems.append(str(exc))
+    return problems
+
+
 def check() -> int:
     expected = render_text()
     actual = INDEX_MD.read_text(encoding="utf-8") if INDEX_MD.exists() else ""
+    status = 0
     if expected == actual:
         print("docs/INDEX.md is current")
-        return 0
-    sys.stderr.write("docs/INDEX.md is stale; run `python scripts/build_index.py render`\n")
-    return 1
+    else:
+        sys.stderr.write("docs/INDEX.md is stale; run `python scripts/build_index.py render`\n")
+        status = 1
+    problems = signature_problems()
+    if problems:
+        for problem in problems:
+            sys.stderr.write(f"signature: {problem}\n")
+        status = 1
+    else:
+        print("all manifest signatures verify under the release key")
+    return status
 
 
 def main() -> int:

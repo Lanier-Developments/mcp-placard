@@ -34,7 +34,7 @@ inputs:
 
 outputs:
   exit-code:
-    description: "The raw bitmask: 1 escalation, 2 prompt change, 4 removal, 8 injection, 16 incomplete."
+    description: "The raw bitmask: 1 escalation, 2 prompt change, 4 removal, 8 injection, 16 incomplete, 32 unsigned baseline."
     value: ${{ steps.check.outputs.exit-code }}
   escalation:
     description: "true when bit 1 is set."
@@ -51,6 +51,9 @@ outputs:
   incomplete:
     description: "true when bit 16 is set — a configured server could not be scanned."
     value: ${{ steps.check.outputs.incomplete }}
+  signature:
+    description: "true when bit 32 is set — [signing].required and a baseline is unsigned or badly signed."
+    value: ${{ steps.check.outputs.signature }}
 
 runs:
   using: "composite"
@@ -93,7 +96,7 @@ runs:
         import json
         o = json.load(open("placard-outputs.json"))
         print(f"exit-code={o['exit_code']}")
-        for k in ("escalation", "prompt", "removal", "injection", "incomplete"):
+        for k in ("escalation", "prompt", "removal", "injection", "incomplete", "signature"):
             print(f"{k}={'true' if o[k] else 'false'}")
         print(f"fail={'true' if o['fail'] else 'false'}")
         PY

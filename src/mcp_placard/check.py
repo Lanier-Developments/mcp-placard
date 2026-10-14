@@ -8,11 +8,14 @@ summary and the SARIF log. Approving a change means committing the new manifest 
 a pull request, which is a code review of exactly what changed. ``baseline`` never
 runs in CI; approving a capability change is a human commit, by design.
 
-``check`` adds one bit ``diff`` cannot: **incomplete**, 16, when a configured server
-could not be scanned. ``check`` scans before it diffs, and a server that cannot be
+``check`` adds two bits ``diff`` cannot: **incomplete**, 16, when a configured server
+could not be scanned (``check`` scans before it diffs, and a server that cannot be
 scanned has no representation in ``diff``'s bits; reporting nothing would pass the
-gate on a server it never looked at. A server with no baseline yet is reported, not
-failed, and sets no bit — first adoption should not be a red build.
+gate on a server it never looked at), and **unsigned**, 32, when ``[signing].required``
+and a baseline has no valid signature from a trusted key (Phase 5, fail closed — the
+signature is checked against the committed baseline, the approval record, never the
+fresh scan). A server with no baseline yet is reported, not failed, and sets no
+bit — first adoption should not be a red build.
 
 Credentials named in the configuration are resolved from the environment here,
 handed to the transport, and dropped. They reach no manifest, no report, no output
@@ -37,7 +40,10 @@ from .errors import (
     EXIT_INCOMPLETE,
     EXIT_INJECTION,
     EXIT_REMOVED,
+    EXIT_UNSIGNED,
     PlacardError,
+    SignatureError,
+    UsageError,
 )
 from .manifest import build_manifest, load_manifest, write_manifest
 from .manifest.models import Manifest
@@ -52,9 +58,18 @@ CATEGORY_BITS: dict[FindingCategory, int] = {
     "removal": EXIT_REMOVED,
     "injection": EXIT_INJECTION,
     "incomplete": EXIT_INCOMPLETE,
+    "signature": EXIT_UNSIGNED,
 }
-DEFAULT_FAIL_ON: tuple[FindingCategory, ...] = ("escalation", "prompt", "injection", "incomplete")
-"""What fails the gate unless configured otherwise: everything but removal."""
+DEFAULT_FAIL_ON: tuple[FindingCategory, ...] = (
+    "escalation",
+    "prompt",
+    "injection",
+    "incomplete",
+    "signature",
+)
+"""What fails the gate unless configured otherwise: everything but removal. The
+``signature`` bit exists only under ``[signing].required = true``, so listing it here
+changes nothing for configurations that do not sign."""
 
 
 def scan_server(
@@ -88,6 +103,7 @@ class ServerOutcome:
     baseline_present: bool = False
     status: int = 0
     error: str | None = None
+    signature_error: str | None = None
     manifest: Manifest | None = None
     report: Report | None = None
 
@@ -137,6 +153,7 @@ class CheckResult:
                     "baseline_present": o.baseline_present,
                     "baseline": str(o.baseline_path),
                     "error": o.error,
+                    "signature_error": o.signature_error,
                 }
                 for o in self.outcomes
             ],
@@ -163,6 +180,8 @@ class CheckResult:
             else:
                 bits = ", ".join(decode_bits(o.status)) or "no findings"
                 result = bits
+                if o.signature_error is not None:
+                    result += f" — {_e(o.signature_error)}"
                 status = str(o.status)
             lines.append(f"| {_e(o.name)} | {status} | `{_e(str(o.baseline_path))}` | {result} |")
         lines.append("")
@@ -192,6 +211,40 @@ def _relative(path: Path, root: Path) -> str:
         return str(path)
 
 
+def _load_trusted_keys(config: PlacardConfig, root: Path) -> list[bytes]:
+    """The raw trusted public keys, when ``[signing].required`` — resolved eagerly so
+    a misconfiguration (no keys listed, a missing key file, or the extra not
+    installed) is a usage error before any server is scanned, never a skip."""
+    from .signing import load_public_key_raw
+
+    if not config.signing.trusted_keys:
+        raise UsageError(
+            "[signing].required is true but trusted_keys is empty; a gate that trusts "
+            "no key can admit nothing"
+        )
+    return [load_public_key_raw((root / entry).resolve()) for entry in config.signing.trusted_keys]
+
+
+def _signature_failure(
+    manifest: Manifest, baseline_path: Path, trusted: list[bytes], label: str
+) -> str | None:
+    """Why this baseline's signature does not authenticate, or ``None`` when it does.
+    A missing ``.sig`` is a failure like any other: required means required."""
+    from .signing import load_signature, sig_path, verify_manifest_signature
+
+    signature_file = sig_path(baseline_path)
+    if not signature_file.is_file():
+        return f"no signature file at {signature_file.name}"
+    try:
+        envelope = load_signature(signature_file)
+        verify_manifest_signature(
+            manifest, envelope, trusted, source=signature_file.name, label=label
+        )
+    except SignatureError as exc:
+        return str(exc)
+    return None
+
+
 def run_check(
     config: PlacardConfig,
     *,
@@ -200,6 +253,7 @@ def run_check(
     environ: Mapping[str, str] | None = None,
 ) -> CheckResult:
     """Scan and diff every configured server (or the named subset)."""
+    trusted = _load_trusted_keys(config, root) if config.signing.required else None
     result = CheckResult()
     servers = [s for s in config.server if not only or s.name in only]
     for server in servers:
@@ -232,6 +286,13 @@ def run_check(
             outcome.error = str(exc)
             continue
         outcome.status = outcome.report.status or 0
+        if trusted is not None:
+            # The signature authenticates the *approval record*: it is checked
+            # against the committed baseline, not the fresh scan.
+            failure = _signature_failure(baseline, baseline_path, trusted, server.name)
+            if failure is not None:
+                outcome.status |= EXIT_UNSIGNED
+                outcome.signature_error = failure
     return result
 
 

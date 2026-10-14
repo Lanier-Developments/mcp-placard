@@ -207,8 +207,11 @@ Named explicitly, because an unstated limit reads as a covered case.
 - **Transport and endpoint authenticity.** TLS validation is the HTTP client's job.
   A scan of an impostor endpoint produces an accurate manifest *of the impostor*.
 - **Manifest provenance.** `verify` proves a manifest is internally consistent, not
-  that it came from the server it claims to describe, and not that nobody
-  regenerated it. Signing is Phase 5.
+  that it came from the server it claims to describe. Phase 5 adds detached Ed25519
+  signatures over the surface (`docs/SIGNING.md`): with `[signing].required`, a
+  regenerated baseline no longer passes without the approver's key. Rollback to a
+  validly signed older baseline, a compromised key, and endpoint authenticity remain
+  outside it.
 - **Prompt-injection defence at runtime.** Placard can flag a description that
   looks like an injection. It cannot stop a model from complying with one.
 - **Non-MCP capability.** Tools an agent has outside MCP are not enumerated.
@@ -306,8 +309,13 @@ Accepted, and worth stating.
    Phase 3 narrow this, and neither closes it.
 2. **Fixture regeneration.** Anyone able to commit a regenerated baseline can make
    any drift disappear. Mitigated by review and by the regeneration command being
-   documented as deliberate; Phase 5 signing raises the cost.
-3. **Manifests are unsigned.** `verify` proves self-consistency, nothing more.
+   documented as deliberate. Phase 5 signing raises the cost — from anyone with
+   commit access to anyone with commit access *and* the approver's key — when the
+   trusted keys are protected by a different control than the baselines
+   (`docs/SIGNING.md`); where they are not, this limit stands as written.
+3. **Signatures authenticate the baseline, not the server, and only forward.** A
+   validly signed older baseline can be restored (no freshness), there is no
+   revocation in 0.7.0, and an unsigned configuration behaves exactly as before.
 4. **`capabilities_hash` can move without the server changing.** Some capability
    flags are derived by the server's SDK from the negotiated protocol version, so a
    client SDK upgrade can still shift this hash. `capabilities` is split out of
@@ -355,4 +363,4 @@ Accepted, and worth stating.
 | A8 exemption laundered via a parameter name or URI | path family scoped to the leaf | 1 | **3.5** |
 | Manifest tampering | `verify` | 1 | 1 |
 | Classification tampering | `verify` — `classification_hash` | 1 | **2** |
-| Manifest forgery | signing | — | **5** |
+| Manifest forgery | detached Ed25519 signature over the surface, `check` bit 32 | — | **covered (5)** — rollback and key compromise stated in `docs/SIGNING.md` |

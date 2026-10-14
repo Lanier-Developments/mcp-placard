@@ -33,6 +33,7 @@ evidence attached — usually a real server's `tools/list`. The amendments thems
 | 2026-10-14 | Chief → Jr. | Rulings: ruleset 3.6, held-out v3, the index ratified, the fetch description out of class |
 | 2026-10-14 | Chief → Jr. | Phase 5 brief: signed baselines (held for Doc's review) |
 | 2026-10-14 | Jr. → Chief | Ruleset 3.6 report: the gate held, nine samples moved, three calls flagged back |
+| 2026-10-14 | Jr. → Chief | Phase 5 report: signed baselines shipped as briefed, three answers flagged back |
 
 These are kept verbatim, including the parts that turned out to be wrong. A taxonomy whose
 history is visible is easier to trust than one that only shows its current text.

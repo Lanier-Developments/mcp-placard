@@ -46,6 +46,15 @@ def test_a_hostile_tool_name_cannot_inject_markup(build_index) -> None:
     assert build_index._safe("x`](http://evil)<script>") == "xhttpevilscript"
 
 
+def test_every_index_manifest_signature_verifies_under_the_release_key(build_index) -> None:
+    """Phase 5 demonstration: the nine committed manifests are signed with the Lanier
+    release key (`.placard/trusted_keys/lanier-release.pub`), label-bound to their
+    server ids. Re-analysis cannot break these — only the surface is signed — and a
+    rescan that changes a surface invalidates its signature until the key holder
+    re-signs."""
+    assert build_index.signature_problems() == []
+
+
 def test_every_stored_manifest_carries_the_current_ruleset(build_index) -> None:
     """The index must not go stale silently (Chief's ruling of 2026-10-14): the page
     records its ruleset, and before this gate nothing failed when the ruleset moved.

@@ -40,6 +40,7 @@ CATEGORY_TITLES: dict[FindingCategory, str] = {
     "removal": "Tool removed (bit 4)",
     "injection": "Injection finding (bit 8)",
     "incomplete": "Incomplete (bit 16)",
+    "signature": "Unsigned or badly signed baseline (bit 32)",
     "chain": "Exfiltration chain",
 }
 
@@ -242,6 +243,7 @@ def decode_bits(status: int) -> list[FindingCategory]:
         EXIT_INCOMPLETE,
         EXIT_INJECTION,
         EXIT_REMOVED,
+        EXIT_UNSIGNED,
     )
 
     bits: list[tuple[int, FindingCategory]] = [
@@ -250,5 +252,6 @@ def decode_bits(status: int) -> list[FindingCategory]:
         (EXIT_REMOVED, "removal"),
         (EXIT_INJECTION, "injection"),
         (EXIT_INCOMPLETE, "incomplete"),
+        (EXIT_UNSIGNED, "signature"),
     ]
     return [category for bit, category in bits if status & bit]
