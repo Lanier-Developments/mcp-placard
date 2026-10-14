@@ -1,0 +1,138 @@
+{
+  "capabilities": {
+    "prompts": {
+      "listChanged": false
+    },
+    "resources": {
+      "listChanged": false,
+      "subscribe": false
+    },
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "8a180b4934ffbe3e88a01b1e1c9786601f8e336989e4f893a32fc36dc86e70c9",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "query-docs"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "resolve-library-id"
+    }
+  ],
+  "classification_hash": "929dd44a2c950ffb40d6afcead87fe6c2df0498725518d278e6d1373dcd2ec5a",
+  "environment": {
+    "protocol_version": "2026-07-28",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "instructions": "Use this server to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service — even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer — your training data may not reflect recent changes. Prefer this over web search for library docs.\n\nDo not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.",
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "description": "Context7 provides up-to-date documentation and code examples for libraries and frameworks.",
+      "icons": [
+        {
+          "mimeType": "image/png",
+          "src": "https://context7.com/context7-icon-green.png"
+        }
+      ],
+      "name": "Context7",
+      "version": "4.4.1",
+      "websiteUrl": "https://context7.com"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": true
+        },
+        "description": "Retrieves and queries up-to-date documentation and code examples from Context7 for any programming library or framework.\n\nYou must call 'Resolve Context7 Library ID' tool first to obtain the exact Context7-compatible library ID required to use this tool, UNLESS the user explicitly provides a library ID in the format '/org/project' or '/org/project/version' in their query.\n\nDo not call this tool more than 3 times per question.\n\nIf you know the programming language the user is working in, pass it as `language` so the results match their setup.",
+        "description_hash": "c1615e15176621eced05b78cd0e6dd39127f9dc3e0b03eeedb2ff7c518b97690",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "language": {
+              "description": "Programming language the user is writing code in, such as 'Python', 'TypeScript', 'Go', or 'C#'. Ranks code examples in that language first. Leave it out when the language is unknown or does not apply.",
+              "type": "string"
+            },
+            "libraryId": {
+              "description": "Exact Context7-compatible library ID (e.g., '/mongodb/docs', '/vercel/next.js', '/supabase/supabase', '/vercel/next.js/v16.2.9') retrieved from 'resolve-library-id' or directly from user query in the format '/org/project' or '/org/project/version'.",
+              "type": "string"
+            },
+            "query": {
+              "description": "What to look up in the library's documentation, scoped to a single concept. Be specific and include relevant details, but keep each query to one topic — if the user's question spans multiple distinct concepts, make a separate call per concept instead of combining them, unless the question is about how the concepts interact. Good: 'How to set up authentication with JWT in Express.js' or 'React useEffect cleanup function examples'. Bad (too vague): 'auth' or 'hooks'. Bad (too broad): 'routing and auth and caching in Next.js'. The query is sent to the Context7 API for processing. Do not include any sensitive or confidential information such as API keys, passwords, credentials, personal data, or proprietary code in your query.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "libraryId",
+            "query"
+          ],
+          "type": "object"
+        },
+        "name": "query-docs",
+        "schema_hash": "6de42261733299e7ae8815e320222feeb3a2e91e0f25f32728af5ad13b2452c1",
+        "title": "Query Documentation"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": true
+        },
+        "description": "Resolves a package/product name to a Context7-compatible library ID and returns matching libraries.\n\nYou MUST call this function before 'Query Documentation' tool to obtain a valid Context7-compatible library ID UNLESS the user explicitly provides a library ID in the format '/org/project' or '/org/project/version' in their query.\n\nEach result includes:\n- Library ID: Context7-compatible identifier (format: /org/project)\n- Name: Library or package name\n- Description: Short summary\n- Code Snippets: Number of available code examples\n- Source Reputation: Authority indicator (High, Medium, Low, or Unknown)\n- Benchmark Score: Quality indicator (100 is the highest score)\n- Versions: List of versions if available. Use one of those versions if the user provides a version in their query. The format of the version is /org/project/version.\n\nFor best results, select libraries based on name match, source reputation, snippet coverage, benchmark score, and relevance to your use case.\n\nSelection Process:\n1. Analyze the query to understand what library/package the user is looking for\n2. Return the most relevant match based on:\n- Name similarity to the query (exact matches prioritized)\n- Description relevance to the query's intent\n- Documentation coverage (prioritize libraries with higher Code Snippet counts)\n- Source reputation (consider libraries with High or Medium reputation more authoritative)\n- Benchmark Score: Quality indicator (100 is the highest score)\n\nResponse Format:\n- Return the selected library ID in a clearly marked section\n- Provide a brief explanation for why this library was chosen\n- If multiple good matches exist, acknowledge this but proceed with the most relevant one\n- If no good matches exist, clearly state this and suggest query refinements\n\nFor ambiguous queries, request clarification before proceeding with a best-guess match.\n\nIMPORTANT: Do not call this tool more than 3 times per question. If you cannot find what you need after 3 calls, use the best result you have.",
+        "description_hash": "1ed313b9c2c5767a1b5411a9b8f2cbfc2ef20751d9559a187664c4bbe15cf3db",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "properties": {
+            "libraryName": {
+              "description": "Library name to search for and retrieve a Context7-compatible library ID. Use the official library name with proper punctuation — e.g., 'Next.js' instead of 'nextjs', 'Customer.io' instead of 'customerio', 'Three.js' instead of 'threejs'.",
+              "type": "string"
+            },
+            "query": {
+              "description": "What to look up in the library's documentation. This is used to rank library results by relevance to what the user is trying to accomplish. The query is sent to the Context7 API for processing. Do not include any sensitive or confidential information such as API keys, passwords, credentials, personal data, or proprietary code in your query.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query",
+            "libraryName"
+          ],
+          "type": "object"
+        },
+        "name": "resolve-library-id",
+        "schema_hash": "ff2f303df2072ada223b45bd44955411763b5b6513f9a680400872732fe976b6",
+        "title": "Resolve Context7 Library ID"
+      }
+    ]
+  },
+  "surface_hash": "45f236e13d93969edf22931395e7d7e1fac88ddbea2349cead6a3dbdddd6e538"
+}

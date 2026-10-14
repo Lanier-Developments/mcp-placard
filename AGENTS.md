@@ -333,8 +333,10 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   hash-pinned install from its own checkout, the self-gate replaced by the action, environment
   isolation at launch with a temporary `HOME`, and header redaction. `docs/ACTION.md`.
   Ruleset 3.2 rode along: the own-name exemption matches the whole declared name only.
-- **Phase 5** — manifest signing, and a published index of blast radii for widely used public MCP
-  servers.
+- **Phase 5** — manifest signing (not built), and a published index of blast radii for widely used
+  public MCP servers (built: `docs/INDEX.md`, `index/servers.toml`, `index/manifests/`,
+  `scripts/build_index.py`; nine servers at pinned versions, servers needing credentials or a hosted
+  endpoint excluded).
 - **Phase 6** (proposed, Amendment 2 §9) — scan a client configuration (`mcp.json`,
   `claude_desktop_config.json`) as a unit and report the blast radius of the *agent*. Across 11
   real servers the true single-server chain count was 0; the nearest real chain was filesystem

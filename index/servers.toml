@@ -1,0 +1,83 @@
+# Servers in the published blast-radius index (docs/INDEX.md).
+#
+# Every entry is pinned to an exact version so a re-run on another machine scans the
+# same bytes. Bump a pin deliberately, re-run scripts/build_index.py, and read the diff
+# of index/manifests/ before committing: a changed surface_hash is the whole point.
+#
+# ecosystem = "npm" installs <package>@<version>; "pypi" installs <package>==<version>.
+# bin       = executable the package provides.
+# args      = extra command-line arguments. "{sandbox}" expands to an empty temporary
+#             directory, so a server that wants a directory or repository is scanned
+#             against nothing of the scanner's own.
+
+[[server]]
+id = "everything"
+ecosystem = "npm"
+package = "@modelcontextprotocol/server-everything"
+version = "1.0.0"
+bin = "mcp-server-everything"
+args = []
+
+[[server]]
+id = "filesystem"
+ecosystem = "npm"
+package = "@modelcontextprotocol/server-filesystem"
+version = "1.0.0"
+bin = "mcp-server-filesystem"
+args = ["{sandbox}"]
+
+[[server]]
+id = "memory"
+ecosystem = "npm"
+package = "@modelcontextprotocol/server-memory"
+version = "1.0.0"
+bin = "mcp-server-memory"
+args = []
+
+[[server]]
+id = "sequential-thinking"
+ecosystem = "npm"
+package = "@modelcontextprotocol/server-sequential-thinking"
+version = "1.0.0"
+bin = "mcp-server-sequential-thinking"
+args = []
+
+[[server]]
+id = "playwright"
+ecosystem = "npm"
+package = "@playwright/mcp"
+version = "0.0.83"
+bin = "playwright-mcp"
+args = ["--headless"]
+
+[[server]]
+id = "context7"
+ecosystem = "npm"
+package = "@upstash/context7-mcp"
+version = "4.4.1"
+bin = "context7-mcp"
+args = []
+
+[[server]]
+id = "fetch"
+ecosystem = "pypi"
+package = "mcp-server-fetch"
+version = "2026.10.10"
+bin = "mcp-server-fetch"
+args = []
+
+[[server]]
+id = "time"
+ecosystem = "pypi"
+package = "mcp-server-time"
+version = "2026.10.10"
+bin = "mcp-server-time"
+args = []
+
+[[server]]
+id = "git"
+ecosystem = "pypi"
+package = "mcp-server-git"
+version = "2026.10.10"
+bin = "mcp-server-git"
+args = ["--repository", "{sandbox}"]
