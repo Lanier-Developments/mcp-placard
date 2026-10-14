@@ -137,7 +137,9 @@ real strings from eleven servers is a ratcheted metric at zero, and fourteen ann
 hard cases never flag. What it cannot do: judge text it has no pattern for. A novel
 phrasing with no scope marker passes, which is why `description_hash` drift (A4's
 Phase 1 defence) remains the backstop — a description that changes is reviewable
-whether or not any heuristic fires. `docs/INJECTION.md`.
+whether or not any heuristic fires. Measured on unseen vocabulary, `override` and
+`concealment` detect 1 of 7 each, so for those two classes the baseline is the defence and
+the heuristics are not. See *Known limits* in `docs/INJECTION.md`.
 
 ### A5 — The operator who stops looking
 

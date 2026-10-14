@@ -103,7 +103,11 @@ concealment audience; tool ownership rather than the word "server"; any paired c
 was retired into the regression corpus at 35/35. On v2, the structural rewrite generalised for
 `markup_smuggling` (60% to 100%) and `cross_scope` (60% to 71%). It did not for `override` (0% to
 14%) or `concealment` (60% to 14%), which is worse on new vocabulary than the phrase rules it
-replaced. Those two classes are the open work.
+replaced. Those two classes are the open work, and until they are fixed **do not rely on Placard to
+catch an override or a concealment instruction on first sight**: on unseen vocabulary it found
+1 of 7 in each class. Treat the baseline diff as the defence for those two. A description that
+starts saying something new is flagged by `description_hash` whether or not any heuristic fires.
+See [Known limits](docs/INJECTION.md#known-limits).
 
 v2 also added the first coverage of prompt and resource surfaces (14/21, 66%) and a benign set:
 6 of its 15 samples fired, three of them artefacts of how a sample is built and three real
