@@ -79,10 +79,14 @@ Pinned as unit tests in `tests/test_inject_patterns.py`:
    list and it is the first thing to revisit if v3 shows a miss shaped like "omit any record
    of these actions".
 2. **The hyphen in the 1b gap.** "No punctuation" read strictly would drop "system-level
-   rules", which the pre-3.6 referent already matched. The gap token is
-   `[A-Za-z]+` joined by whitespace **or a hyphen**, so compound modifiers ("signed-in user",
-   "system-level rules") count as words and sentence punctuation still breaks the span. Flagged
-   because the ruling's letter says "no punctuation".
+   rules", which the pre-3.6 referent already matched. The gap is `(?:[A-Za-z]+[\s-]+){0,2}`:
+   the hyphen is a permitted *joiner* between gap tokens, and **each alphabetic part of a
+   hyphenated compound consumes one slot of the two-word budget** — "hidden from any
+   **signed-in** user" matches because "signed" and "in" are exactly two tokens, while
+   "secret from the **signed-in chat** user" is three and does not. Sentence punctuation
+   still breaks the span. Flagged because the ruling's letter says "no punctuation".
+   *(Corrected same day: this item originally said compound modifiers "count as words",
+   which misstated the budget — a compound counts per part, not as one word.)*
 3. **A residual of the audience-slot gap, reported rather than tightened away.** "Files marked
    private are hidden from **other** users of the share" — a real permissions idiom — now
    matches `secret_from_audience` ("other" is an intervening word). It is not in the benign
