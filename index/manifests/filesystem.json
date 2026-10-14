@@ -63,6 +63,14 @@
     {
       "citations": [
         {
+          "evidence": "/properties/edits: content-carrying field 'edits'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
           "evidence": "/properties/path: unconstrained destination path with content-carrying sibling 'edits', no concurrency token present anywhere in the schema",
           "kinds": [
             "write"
@@ -70,14 +78,6 @@
           "rule": "Rule D",
           "signal": "schema_shape",
           "tier": "R5"
-        },
-        {
-          "evidence": "/properties/edits: content-carrying field 'edits'",
-          "kinds": [
-            "write"
-          ],
-          "signal": "schema_shape",
-          "tier": "R1"
         },
         {
           "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
@@ -254,6 +254,14 @@
     {
       "citations": [
         {
+          "evidence": "/properties/content: content-carrying field 'content'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
           "evidence": "/properties/path: unconstrained destination path with content-carrying sibling 'content', no concurrency token present anywhere in the schema",
           "kinds": [
             "write"
@@ -261,14 +269,6 @@
           "rule": "Rule D",
           "signal": "schema_shape",
           "tier": "R5"
-        },
-        {
-          "evidence": "/properties/content: content-carrying field 'content'",
-          "kinds": [
-            "write"
-          ],
-          "signal": "schema_shape",
-          "tier": "R1"
         },
         {
           "evidence": "tool name 'write_file': 'write' verb, corroborating only",
@@ -297,14 +297,14 @@
       "tool": "write_file"
     }
   ],
-  "classification_hash": "629e8df9c0352a79d733d99b7741559b1f81cc42625cf73e26a99ebcb6da2d14",
+  "classification_hash": "59d23323a9724e5fa6ffc60af9bf4a95e05ea5afe757909b8782624708a17ec8",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.5",
+  "ruleset_version": "3.6",
   "surface": {
     "prompts": [],
     "resource_templates": [],

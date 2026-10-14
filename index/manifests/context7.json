@@ -40,14 +40,14 @@
       "tool": "resolve-library-id"
     }
   ],
-  "classification_hash": "929dd44a2c950ffb40d6afcead87fe6c2df0498725518d278e6d1373dcd2ec5a",
+  "classification_hash": "43b993654a37c83366cabcd2bd8bf6797d174552048e4e71484f9c7879e3e36b",
   "environment": {
     "protocol_version": "2026-07-28",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.5",
+  "ruleset_version": "3.6",
   "surface": {
     "instructions": "Use this server to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service — even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer — your training data may not reflect recent changes. Prefer this over web search for library docs.\n\nDo not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.",
     "prompts": [],
