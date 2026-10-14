@@ -47,7 +47,7 @@ in tests runs against fixtures and a local mock server.
 | `placard verify <manifest.json>` | Recompute and check manifest hashes |
 | `placard report <manifest> [--against <baseline>] --format markdown\|sarif` | Render for humans or code scanning; refuses a manifest that fails `verify` |
 | `placard baseline --config placard.toml` | Scan every configured server and write its baseline — the approval record. Never in CI |
-| `placard check --config placard.toml` | Scan, diff each server against its baseline, exit with the OR'd bitmask (+16 incomplete); writes summary, SARIF, outputs |
+| `placard check --config placard.toml` | Scan, diff each server against its baseline, exit with the OR'd bitmask (+16 incomplete, +32 unsigned); writes summary, SARIF, outputs |
 
 `<target>` accepts a stdio command string or an HTTP(S) URL. Transport is inferred; `--transport`
 overrides.
@@ -194,8 +194,9 @@ A change in `kinds` alone is not a diff finding (not yet — see Phase 6).
 
 | Code | Condition |
 | --- | --- |
-| 0 | Every recorded hash matches its content |
-| 1 | At least one recorded hash does not match — the manifest was edited after it was produced |
+| 0 | Every recorded hash matches its content (and, when a `.sig` or `--pubkey` is present, the signature checks pass) |
+| 1 | At least one recorded hash does not match — the manifest was edited after it was produced. Always wins over 2: integrity before authenticity |
+| 2 | A signature is present or required (`--pubkey`) and is missing or invalid (Phase 5, `docs/SIGNING.md`) |
 | 64 | Usage or configuration error (unreadable file, malformed JSON, unsupported `manifest_version`) |
 
 ### `baseline`
@@ -206,13 +207,14 @@ A change in `kinds` alone is not a diff finding (not yet — see Phase 6).
 | 3 | At least one server could not be scanned (the others are still written) |
 | 64 | Usage or configuration error |
 
-### `check` — `diff`'s bitmask plus one bit
+### `check` — `diff`'s bitmask plus two bits
 
 | Bit | Value | Category |
 | --- | --- | --- |
 | 0-3 | 1, 2, 4, 8 | As `diff`, OR'd across every configured server |
 | 4 | 16 | Incomplete — one or more configured servers could not be scanned. `check` scans before it diffs, and a server it never looked at has no representation in `diff`'s bits; reporting nothing would be fail-open in a security gate. `diff` never sets this bit |
-| — | 64 | Usage or configuration error |
+| 5 | 32 | Unsigned — `[signing].required` and a baseline's signature is missing, malformed, from an untrusted key, or bound to another server or label (Phase 5). Fail closed; `diff` never sets this bit. The combined mask now reaches 63 |
+| — | 64 | Usage or configuration error — including `required = true` with no trusted keys or without the `[signing]` extra |
 
 A server with no baseline yet is reported, not failed, and sets no bit. The exit status is always the
 full bitmask; `--fail-on` only decides the `fail` value written to `--outputs`, which is what the
@@ -228,7 +230,7 @@ GitHub Action gates on.
 | 102 | The `--against` baseline fails `verify` |
 
 Codes `100`-`109` are `report`'s; nothing else claims them, and the range sits clear of the finding
-bits (up to 31) and of 64.
+bits (up to 63 since Phase 5 added bit 32) and of 64.
 
 ### History
 
@@ -342,10 +344,15 @@ own mock server and diffs the result against a checked-in manifest — the tool 
   hash-pinned install from its own checkout, the self-gate replaced by the action, environment
   isolation at launch with a temporary `HOME`, and header redaction. `docs/ACTION.md`.
   Ruleset 3.2 rode along: the own-name exemption matches the whole declared name only.
-- **Phase 5** — manifest signing (not built), and a published index of blast radii for widely used
-  public MCP servers (built: `docs/INDEX.md`, `index/servers.toml`, `index/manifests/`,
-  `scripts/build_index.py`; nine servers at pinned versions, servers needing credentials or a hosted
-  endpoint excluded).
+- **Phase 5** — done (0.6.0 + 0.7.0). The published index of blast radii (`docs/INDEX.md`,
+  `index/servers.toml`, `index/manifests/`, `scripts/build_index.py`; nine servers at pinned
+  versions, servers needing credentials or a hosted endpoint excluded; `reanalyze` mode and a
+  ruleset-staleness gate ride with 0.6.0), and manifest signing (0.7.0): detached Ed25519 `.sig`
+  over `{server, label, manifest_version, surface_hash}` only — never classification, so a ruleset
+  bump is never a re-approval — `keygen`/`sign`/`verify --pubkey`, `[signing]` config (default
+  off), `verify` exit 2, `check` bit 32, the index manifests signed with the Lanier release key as
+  the demonstration. Key distribution is explicitly not solved by code; rollback, no revocation and
+  no Sigstore are stated limits (`docs/SIGNING.md`).
 - **Phase 6** (proposed, Amendment 2 §9) — scan a client configuration (`mcp.json`,
   `claude_desktop_config.json`) as a unit and report the blast radius of the *agent*. Across 11
   real servers the true single-server chain count was 0; the nearest real chain was filesystem

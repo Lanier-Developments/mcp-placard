@@ -33,7 +33,12 @@ Code    Command(s)    Condition
                        element. Never silenceable by tier configuration
 ``4``   ``diff``       bit 2 — tool removed
 ``8``   ``diff``       bit 3 — injection finding new in this diff
+``32``  ``check``      bit 5 — unsigned or badly signed baseline, under
+                       ``[signing].required`` (Phase 5). ``check``'s mask now
+                       reaches 63; ``diff`` never sets 16 or 32
 ``1``   ``verify``     a recorded hash does not match its content
+``2``   ``verify``     a signature is present or required and is missing or invalid
+                       (Phase 5); a hash failure still exits 1 first
 ``3``   ``scan``       server unreachable, or enumeration failed after handshake
 ``64``  all            usage or configuration error — exclusive, never OR'd
 ======  ============  =================================================================
@@ -66,6 +71,7 @@ from .errors import (
     EXIT_USAGE,
     HashMismatchError,
     PlacardError,
+    SignatureError,
     UsageError,
 )
 from .inject.render import stderr_line
@@ -241,12 +247,24 @@ def verify(
         Path,
         typer.Argument(metavar="MANIFEST", help="The manifest to check."),
     ],
+    pubkey: Annotated[
+        Path | None,
+        typer.Option(
+            "--pubkey",
+            help="A PEM Ed25519 public key. With it, the detached signature beside the "
+            "manifest must exist and verify; a missing or invalid one exits 2.",
+        ),
+    ] = None,
 ) -> None:
-    """Recompute a manifest's hashes and report any that disagree with its content.
+    """Recompute a manifest's hashes and report any that disagree with its content;
+    with a ``.sig`` beside the manifest or a ``--pubkey``, check the signature too.
 
-    Exits 0 when intact, 1 when any hash does not match. A mismatch means the file
-    was edited after it was produced.
+    Exits 0 when intact, 1 when any hash does not match, 2 when a signature is
+    present or required and is missing or invalid (Phase 5). A hash failure exits 1
+    first: authenticating tampered content answers the wrong question.
     """
+    from .signing import load_signature, payload_binds, sig_path
+
     manifest = load_manifest(manifest_path)
     mismatches = hash_mismatches(manifest)
     if mismatches:
@@ -256,6 +274,92 @@ def verify(
     _err(
         f"{manifest_path}: intact — manifest_version {manifest.manifest_version}, "
         f"surface_hash {manifest.surface_hash}, {tools} tool(s) verified"
+    )
+
+    signature_file = sig_path(manifest_path)
+    if pubkey is None and not signature_file.is_file():
+        return
+    if not signature_file.is_file():
+        raise SignatureError(
+            f"{signature_file}: --pubkey was given, so a signature is required, and there is none"
+        )
+    envelope = load_signature(signature_file)
+    payload_binds(manifest, envelope, source=str(signature_file))
+    if pubkey is None:
+        _err(
+            f"{signature_file}: present and binds this manifest (key id "
+            f"{envelope.key_id}); pass --pubkey to authenticate it"
+        )
+        return
+    from .signing import load_public_key_raw, verify_manifest_signature
+
+    key_id = verify_manifest_signature(
+        manifest, envelope, [load_public_key_raw(pubkey)], source=str(signature_file)
+    )
+    _err(f"{signature_file}: signature verifies under trusted key {key_id}")
+
+
+@app.command()
+def keygen(
+    out: Annotated[
+        Path,
+        typer.Option("--out", help="Key stem: writes <stem>.key (mode 0600) and <stem>.pub."),
+    ],
+) -> None:
+    """Generate an Ed25519 signing keypair (Phase 5).
+
+    Refuses to overwrite either file: silently replacing a signing key is the event
+    signing exists to make loud. The private key belongs with the approver, never in
+    the repository and never in CI — see docs/SIGNING.md.
+    """
+    from .signing import generate_keypair, key_fingerprint, load_public_key_raw
+
+    key_path, pub_path = generate_keypair(out)
+    fingerprint = key_fingerprint(load_public_key_raw(pub_path))
+    _err(f"wrote {key_path} (mode 0600) and {pub_path}; key id {fingerprint}")
+
+
+@app.command()
+def sign(
+    manifest_path: Annotated[
+        Path,
+        typer.Argument(metavar="MANIFEST", help="The manifest (baseline) to sign."),
+    ],
+    key: Annotated[
+        Path,
+        typer.Option(
+            "--key",
+            help="PEM Ed25519 private key. A key file readable by group or other is refused.",
+        ),
+    ],
+    label: Annotated[
+        str | None,
+        typer.Option(
+            "--label",
+            help="The name this baseline has in placard.toml, bound into the signed "
+            "payload so a signature cannot be moved between servers. Defaults to the "
+            "server's declared name.",
+        ),
+    ] = None,
+) -> None:
+    """Verify the manifest, then write a detached ``.sig`` beside it (Phase 5).
+
+    Approval stays a separate, deliberate act: ``baseline`` does not sign, and this
+    command refuses a manifest whose hashes do not match — signing tampered data
+    would authenticate exactly what signing exists to prevent.
+    """
+    from .signing import sig_path, sign_manifest, write_signature
+
+    manifest = load_manifest(manifest_path)
+    mismatches = hash_mismatches(manifest)
+    if mismatches:
+        raise HashMismatchError(mismatches)
+    envelope = sign_manifest(manifest, key_path=key, label=label or manifest.surface.server.name)
+    out = sig_path(manifest_path)
+    write_signature(envelope, out)
+    _err(
+        f"wrote {out} — key id {envelope['key_id']}, label "
+        f"{envelope['payload']['label']!r}, surface_hash {manifest.surface_hash}"
     )
 
 

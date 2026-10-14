@@ -45,8 +45,15 @@ scanned has no representation in ``diff``'s bits; reporting nothing would pass t
 gate on a server it never looked at — fail-open, in a security gate. ``diff`` never
 sets this bit: it compares two files and cannot be incomplete."""
 
-CHECK_FINDING_BITS: tuple[int, ...] = (*DIFF_FINDING_BITS, EXIT_INCOMPLETE)
-"""Every bit ``check`` may set: ``diff``'s four plus incomplete, 0-31."""
+EXIT_UNSIGNED = 32
+"""Bit 5 — ``check`` only, Phase 5: ``[signing].required`` is true and a server's
+baseline has no valid signature from a trusted key — missing, malformed, unverifiable,
+or signed by an unknown key, all the same bit, because every one of them means the
+approval record is not authenticated. Fail closed: nothing about a signature is ever
+a skip when signatures are required. ``diff`` never sets this bit."""
+
+CHECK_FINDING_BITS: tuple[int, ...] = (*DIFF_FINDING_BITS, EXIT_INCOMPLETE, EXIT_UNSIGNED)
+"""Every bit ``check`` may set: ``diff``'s four plus incomplete and unsigned, 0-63."""
 
 # ---- report ------------------------------------------------------------------------
 EXIT_REPORT_VERIFY_FAILED = 101
@@ -66,6 +73,11 @@ EXIT_HASH_MISMATCH = 1
 with ``EXIT_ESCALATION`` and nothing else — read a code only in the context of the
 command that produced it."""
 
+EXIT_SIGNATURE_INVALID = 2
+"""``verify``, Phase 5: a signature is present or required and is missing or invalid.
+A manifest that fails its hashes still exits 1 first — integrity before authenticity,
+because a signature check on tampered content answers the wrong question."""
+
 # ---- all commands ------------------------------------------------------------------
 EXIT_USAGE = 64
 """Usage or configuration error, every command. Exclusive: never combined with a
@@ -74,7 +86,7 @@ finding bit. Moved from 10 in 0.3.0 because 10 collides with ``8 | 2``."""
 EXIT_REPORT_RESERVED = range(100, 110)
 """Reserved for ``report``. Nothing in ``scan``, ``diff``, ``verify``, ``baseline``, or
 ``check`` may claim a code in this range; it sits clear of the finding bits (up to
-31) and of ``64``. ``report`` claims 101 and 102 so far."""
+63 since Phase 5 added bit 32) and of ``64``. ``report`` claims 101 and 102 so far."""
 
 
 class PlacardError(Exception):
@@ -151,3 +163,21 @@ class HashMismatchError(ManifestError):
         self.mismatches = list(mismatches)
         joined = "; ".join(self.mismatches)
         super().__init__(f"manifest hash verification failed: {joined}")
+
+
+class SignatureError(PlacardError):
+    """A signature is present or required and is missing or invalid (Phase 5).
+
+    One class for every failure — malformed envelope, unknown version or algorithm,
+    payload that does not bind the manifest, untrusted ``key_id``, or a signature
+    that does not verify — because when signatures are required, all of them mean
+    the same thing: this approval record is not authenticated. Fail closed.
+    """
+
+    exit_code = EXIT_SIGNATURE_INVALID
+
+
+class SigningUnavailableError(UsageError):
+    """Signing was asked for and the optional ``cryptography`` extra is not
+    installed. A configuration error (64), never a skip: ``required = true`` without
+    the means to verify must not pass the gate."""

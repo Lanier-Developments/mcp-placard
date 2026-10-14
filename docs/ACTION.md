@@ -61,7 +61,7 @@ pinned, with build isolation off. PyPI is never trusted for Placard.
 | Input | Default | Meaning |
 | --- | --- | --- |
 | `config` | `placard.toml` | The configuration file |
-| `fail-on` | `escalation,prompt,injection,incomplete` | Categories that fail the job. `removal` is off by default: a tool going away shrinks the blast radius |
+| `fail-on` | `escalation,prompt,injection,incomplete,signature` | Categories that fail the job. `removal` is off by default: a tool going away shrinks the blast radius. `signature` exists only under `[signing].required` (docs/SIGNING.md) |
 | `sarif` | `true` | Upload the SARIF log to code scanning (needs `security-events: write`) |
 | `summary` | `true` | Write the Markdown report to the step summary |
 | `python-version` | `3.12` | Python to run Placard with |
@@ -70,8 +70,8 @@ pinned, with build isolation off. PyPI is never trusted for Placard.
 
 | Output | Meaning |
 | --- | --- |
-| `exit-code` | The raw bitmask: 1 escalation, 2 prompt change, 4 removal, 8 injection, 16 incomplete |
-| `escalation`, `prompt`, `removal`, `injection`, `incomplete` | `true` when that bit is set |
+| `exit-code` | The raw bitmask: 1 escalation, 2 prompt change, 4 removal, 8 injection, 16 incomplete, 32 unsigned baseline |
+| `escalation`, `prompt`, `removal`, `injection`, `incomplete`, `signature` | `true` when that bit is set |
 
 A downstream step can route a prompt change to one reviewer group and an escalation
 to another:

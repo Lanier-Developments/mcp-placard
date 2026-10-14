@@ -176,6 +176,78 @@ def test_an_unknown_fail_on_category_is_a_usage_error(tmp_path: Path, run) -> No
     assert run("check", "--config", str(config), "--fail-on", "escalation,bogus") == EXIT_USAGE
 
 
+# ------------------------------------------------------------- signing (Phase 5)
+
+
+_SIGNING = '[signing]\nrequired = true\ntrusted_keys = ["approver.pub"]\n'
+
+
+def _signing_setup(tmp_path: Path, run) -> Path:  # type: ignore[no-untyped-def]
+    """A baselined server under ``[signing].required`` with a generated keypair."""
+    config = _config(tmp_path, _mock("a"), extra=_SIGNING)
+    run("keygen", "--out", str(tmp_path / "approver"))
+    assert run("baseline", "--config", str(config)) == EXIT_OK
+    return config
+
+
+def test_a_signed_baseline_passes_and_an_unsigned_one_sets_bit_32(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    from mcp_placard.errors import EXIT_UNSIGNED
+
+    config = _signing_setup(tmp_path, run)
+    baseline = tmp_path / "baselines" / "a.json"
+    # baseline never signs: required = true with no .sig is the failure it exists for.
+    result = run_check(load_config(config), root=tmp_path)
+    assert result.status == EXIT_UNSIGNED
+    assert result.outputs(list(DEFAULT_FAIL_ON))["signature"] is True
+    assert result.outputs(list(DEFAULT_FAIL_ON))["fail"] is True
+    assert "no signature file" in result.markdown()
+    # Approval is a separate, deliberate act — and once taken, the gate opens.
+    assert (
+        run("sign", str(baseline), "--key", str(tmp_path / "approver.key"), "--label", "a")
+        == EXIT_OK
+    )
+    assert run_check(load_config(config), root=tmp_path).status == EXIT_OK
+
+
+def test_a_signature_from_an_untrusted_key_sets_bit_32(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    from mcp_placard.errors import EXIT_UNSIGNED
+
+    config = _signing_setup(tmp_path, run)
+    run("keygen", "--out", str(tmp_path / "impostor"))
+    baseline = tmp_path / "baselines" / "a.json"
+    run("sign", str(baseline), "--key", str(tmp_path / "impostor.key"), "--label", "a")
+    result = run_check(load_config(config), root=tmp_path)
+    assert result.status == EXIT_UNSIGNED
+    assert "not in the trusted keys" in result.markdown()
+
+
+def test_a_signature_bound_to_another_label_sets_bit_32(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    from mcp_placard.errors import EXIT_UNSIGNED
+
+    config = _signing_setup(tmp_path, run)
+    baseline = tmp_path / "baselines" / "a.json"
+    run("sign", str(baseline), "--key", str(tmp_path / "approver.key"), "--label", "other")
+    assert run_check(load_config(config), root=tmp_path).status == EXIT_UNSIGNED
+
+
+def test_required_false_with_no_signature_is_no_change_from_today(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    config = _config(tmp_path, _mock("a"))
+    assert run("baseline", "--config", str(config)) == EXIT_OK
+    result = run_check(load_config(config), root=tmp_path)
+    assert result.status == EXIT_OK
+    assert result.outputs(list(DEFAULT_FAIL_ON))["signature"] is False
+
+
+def test_required_with_no_trusted_keys_is_a_configuration_error(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    config = _config(tmp_path, _mock("a"), extra="[signing]\nrequired = true\ntrusted_keys = []\n")
+    assert run("check", "--config", str(config)) == EXIT_USAGE
+
+
+def test_required_with_a_missing_key_file_is_a_configuration_error(tmp_path: Path, run) -> None:  # type: ignore[no-untyped-def]
+    config = _config(tmp_path, _mock("a"), extra=_SIGNING)  # approver.pub never created
+    assert run("check", "--config", str(config)) == EXIT_USAGE
+
+
 # --------------------------------------------------------------- redaction
 
 

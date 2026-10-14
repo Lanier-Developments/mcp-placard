@@ -46,7 +46,16 @@ never produces findings on a server that did not change. Phase 4 shipped SARIF o
 GitHub Action below (v0.4.0). v0.5.0 added rulesets 3.4 and 3.5 (false-positive fixes from the
 held-out v2 review), the held-out v2 score, and merge-gate CI. v0.6.0 ships ruleset 3.6: the
 `concealment` affirmative-suppression rule and the adjacency fix in both weak classes, from the
-Sep 23 miss taxonomy as ruled on 2026-10-14. Manifest signing (Phase 5) is not yet built.
+Sep 23 miss taxonomy as ruled on 2026-10-14. v0.7.0 completes Phase 5 with **signed baselines**:
+detached Ed25519 signatures over the surface only, so a ruleset upgrade is never a re-approval.
+With `[signing].required`, `check` fails any baseline without a valid signature from a trusted key
+(bit 32), and `verify --pubkey` authenticates a single manifest (exit 2 on a bad or missing
+signature). A signature proves a key holder approved this surface for this server — nothing more —
+and it only helps when the trusted keys are protected by a different control than the baselines;
+[`docs/SIGNING.md`](docs/SIGNING.md) states the limits (rollback, no revocation, no Sigstore)
+plainly. The nine index manifests are signed with the Lanier release key, committed at
+[`.placard/trusted_keys/lanier-release.pub`](.placard/trusted_keys/lanier-release.pub),
+fingerprint (key id) `48e31e7790c21fca`.
 
 **What do popular servers expose?** [`docs/INDEX.md`](docs/INDEX.md) is a published index of the
 blast radius of nine widely used public MCP servers at pinned versions, rendered from committed
