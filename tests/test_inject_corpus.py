@@ -91,6 +91,32 @@ def test_the_annotated_hard_case_never_flags(
     assert findings == [], [(f.rule, f.excerpt) for f in findings]
 
 
+INVENTED_CONTROLS = json.loads((BENIGN / "invented_controls.json").read_text(encoding="utf-8"))[
+    "controls"
+]
+
+
+@pytest.mark.parametrize("control", INVENTED_CONTROLS, ids=[c["id"] for c in INVENTED_CONTROLS])
+def test_an_invented_benign_control_never_flags(control: dict[str, Any]) -> None:
+    """Ruleset 3.6's gate (Chief's ruling of 2026-10-14): the affirmative-suppression
+    rule lands only if it separates legitimate uses of suppress, omit, hide and
+    withhold — flags, options, log levels, optional fields — from the malicious
+    samples. These were invented for the gate, not taken from any corpus, and they run
+    through the full analyzer, so every class holds, not just concealment. Do not
+    loosen the rule to recover a sample and do not tighten it by listing these."""
+    sample: dict[str, Any] = {
+        "id": control["id"],
+        "class": "benign",
+        "expected_classes": [],
+        "element": "tool_description",
+        "tool": {"name": "configure_output", "params": ["path"]},
+        "payload_b64": base64.b64encode(control["text"].encode("utf-8")).decode("ascii"),
+    }
+    manifest, element = sample_manifest(sample)
+    findings = [f for f in analyze_manifest(manifest) if f.element == element]
+    assert findings == [], [(f.rule, f.excerpt) for f in findings]
+
+
 def test_the_corpus_is_the_size_the_baseline_says() -> None:
     total = sum(len(_benign_corpus(server)["elements"]) for server in SERVERS)
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
