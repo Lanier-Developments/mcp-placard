@@ -1,0 +1,1605 @@
+{
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "capabilities_hash": "46f63fd549bb6c2798199069f8f6ed94023dd8adca19f886f85548b0ed21ae06",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_click"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_close"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "browser_console_messages"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_drag"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/data: content-carrying field 'data'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_drop"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_emulate_media"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        },
+        {
+          "evidence": "tool name 'browser_evaluate' carries token 'evaluate'",
+          "kinds": [
+            "read_sensitive",
+            "egress",
+            "write",
+            "destructive",
+            "code_exec"
+          ],
+          "rule": "Rule H",
+          "signal": "code_execution",
+          "tier": "R5"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "read_sensitive",
+        "egress",
+        "write",
+        "destructive",
+        "code_exec"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "browser_evaluate"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_file_upload"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_fill_form"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/text: content-carrying field 'text'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "tier": "R1",
+      "tool": "browser_find"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_handle_dialog"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_hover"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/url: caller-influenced outbound target, no recognized host pin",
+          "kinds": [
+            "egress"
+          ],
+          "rule": "Rule A",
+          "signal": "schema_shape",
+          "tier": "R4"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "egress",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R4",
+      "tool": "browser_navigate"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_navigate_back"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "browser_network_request"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "browser_network_requests"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_press_key"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_resize"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        },
+        {
+          "evidence": "tool name 'browser_run_code_unsafe' carries token 'unsafe'; /properties/code: caller-supplied code parameter 'code'",
+          "kinds": [
+            "read_sensitive",
+            "egress",
+            "write",
+            "destructive",
+            "code_exec"
+          ],
+          "rule": "Rule H",
+          "signal": "code_execution",
+          "tier": "R5"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "read_sensitive",
+        "egress",
+        "write",
+        "destructive",
+        "code_exec"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R5",
+      "tool": "browser_run_code_unsafe"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_select_option"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "browser_snapshot"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/url: caller-influenced outbound target, no recognized host pin",
+          "kinds": [
+            "egress"
+          ],
+          "rule": "Rule A",
+          "signal": "schema_shape",
+          "tier": "R4"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "egress",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R4",
+      "tool": "browser_tabs"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "browser_take_screenshot"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/text: content-carrying field 'text'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write",
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "browser_type"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/text: content-carrying field 'text'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "tier": "R1",
+      "tool": "browser_wait_for"
+    }
+  ],
+  "classification_hash": "bb80a61edff2869171713d20e20c071eb112b9761e45c2f6b857ed9b3fa4b13f",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [
+    {
+      "kind": "chain_exfil",
+      "scope": "Evaluates tools only. Resources and prompts are enumerated but unclassified in Phase 2, so a chain whose read half is a resource — mail or file contents exposed as a resource alongside an egress tool — is not detected here.",
+      "summary": "server exposes a sensitive read (browser_evaluate, browser_run_code_unsafe) alongside an egress tool (browser_evaluate, browser_navigate, browser_run_code_unsafe, browser_tabs) — a complete exfiltration chain; browser_evaluate, browser_run_code_unsafe carries both halves alone",
+      "tools": [
+        "browser_evaluate",
+        "browser_navigate",
+        "browser_run_code_unsafe",
+        "browser_tabs"
+      ]
+    }
+  ],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "Playwright",
+      "version": "1.64.0-alpha-1790635538000"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Click"
+        },
+        "description": "Perform click on a web page",
+        "description_hash": "7d464021edd2ee01b2e8beb7b7abd3ca32ee3d91e4bc6e8b3c59b4dde91c5aed",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "button": {
+              "description": "Button to click, defaults to left",
+              "enum": [
+                "left",
+                "right",
+                "middle"
+              ],
+              "type": "string"
+            },
+            "doubleClick": {
+              "description": "Whether to perform a double click instead of a single click",
+              "type": "boolean"
+            },
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "modifiers": {
+              "description": "Modifier keys to press",
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "type": "object"
+        },
+        "name": "browser_click",
+        "schema_hash": "7fed82f52ae7018670d967e4429b63501948c80de2df2e9279ce4c103694d0d3"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Close browser"
+        },
+        "description": "Close the page",
+        "description_hash": "ffec1bd2ccca32938176cb8ea383abffdefa1dc99b6ac485ef737de273af1f83",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "name": "browser_close",
+        "schema_hash": "71fc596a20f27da3dec80050e5d1f553eba34aea24c2853b853488a811e6b892"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Get console messages"
+        },
+        "description": "Returns all console messages",
+        "description_hash": "2a0262a2876e6e49bf544d3f6171a93b5fefd89520ccbae26241cd1068613404",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "all": {
+              "description": "Return all console messages since the beginning of the session, not just since the last navigation. Defaults to false.",
+              "type": "boolean"
+            },
+            "filename": {
+              "description": "File name to save the console messages to. Relative file names are resolved against the workspace root. If not provided, messages are returned as text.",
+              "type": "string"
+            },
+            "level": {
+              "default": "info",
+              "description": "Level of the console messages to return. Each level includes the messages of more severe levels. Defaults to \"info\".",
+              "enum": [
+                "error",
+                "warning",
+                "info",
+                "debug"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "type": "object"
+        },
+        "name": "browser_console_messages",
+        "schema_hash": "0d6cacf9f20123a6a4559c2bb05816020528d6529e6c1cb14520ea00fb9e23ef"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Drag mouse"
+        },
+        "description": "Perform drag and drop between two elements",
+        "description_hash": "62cae5e529c727db636861f9a2496b41aa114678a6de455b1a611f58f9ceda32",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "endElement": {
+              "description": "Human-readable target element description used to obtain the permission to interact with the element",
+              "type": "string"
+            },
+            "endTarget": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            },
+            "startElement": {
+              "description": "Human-readable source element description used to obtain the permission to interact with the element",
+              "type": "string"
+            },
+            "startTarget": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "startTarget",
+            "endTarget"
+          ],
+          "type": "object"
+        },
+        "name": "browser_drag",
+        "schema_hash": "3dcca018f0b0e9341fee3c91b5420f82557a59a9d9763699e90970b2bd3ed1cb"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Drop files or data onto an element"
+        },
+        "description": "Drop files or MIME-typed data onto an element, as if dragged from outside the page. At least one of \"paths\" or \"data\" must be provided.",
+        "description_hash": "66607a19d796c944d9664187618a8e1aaa9ee2e11174ea269dbda15ef3b97ee4",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Data to drop, as a map of MIME type to string value (e.g. {\"text/plain\": \"hello\", \"text/uri-list\": \"https://example.com\"}).",
+              "propertyNames": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "paths": {
+              "description": "Absolute paths to files to drop onto the element.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "type": "object"
+        },
+        "name": "browser_drop",
+        "schema_hash": "2f2a2c904744c935fc66547031c43b43466e86043f6c306624b536867b18d8e8"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Emulate media features"
+        },
+        "description": "Emulate CSS media features for the page, for example switch between the light and dark color scheme. Omitted parameters are left unchanged; null clears an override.",
+        "description_hash": "39890b858e78de41fc9cd4fbff8df062ebacecbb29ce25776a2e5244b257fee0",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "colorScheme": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "light",
+                    "dark"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Emulates the prefers-color-scheme media feature"
+            },
+            "contrast": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "more",
+                    "no-preference"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Emulates the prefers-contrast media feature"
+            },
+            "forcedColors": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "none"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Emulates the forced-colors media feature"
+            },
+            "media": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "screen",
+                    "print"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Changes the CSS media type of the page"
+            },
+            "reducedMotion": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "reduce",
+                    "no-preference"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Emulates the prefers-reduced-motion media feature"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_emulate_media",
+        "schema_hash": "3b4bcf539a7e561f0e7e233035d5e616d295c9fe0bd5d3c165120b305d2edaeb"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Evaluate JavaScript"
+        },
+        "description": "Evaluate JavaScript expression on page or element",
+        "description_hash": "04247cdeb33f691278fc55f138d15149bc2fbc15972c5f2b6f4c043a3b1270bb",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "filename": {
+              "description": "File name to save the result to. Relative file names are resolved against the workspace root. If not provided, result is returned as text.",
+              "type": "string"
+            },
+            "function": {
+              "description": "() => { /* code */ } or (element) => { /* code */ } when element is provided",
+              "type": "string"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "function"
+          ],
+          "type": "object"
+        },
+        "name": "browser_evaluate",
+        "schema_hash": "04a3962dec15576f5ad84707db0251b84868e4d7dd4a5cf5e5e0ded786fc7d03"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Upload files"
+        },
+        "description": "Upload one or multiple files",
+        "description_hash": "914a6c1a65a65487ec06041b8f405b281f4cfa656342f0c9c38a3c3e31213687",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "paths": {
+              "description": "The absolute paths to the files to upload. Can be single file or multiple files. If omitted, file chooser is cancelled.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_file_upload",
+        "schema_hash": "c76aede191ef1e3bdd09ff177419a1e77a0e1f3f676bdd7c8053ac78e6a80086"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Fill form"
+        },
+        "description": "Fill multiple form fields",
+        "description_hash": "771d85163e8e8994d00922881c58346a2951c0085beb11fff9da4ff5930f39eb",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "fields": {
+              "description": "Fields to fill in",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "element": {
+                    "description": "Human-readable element description used to obtain permission to interact with the element",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Human-readable field name",
+                    "type": "string"
+                  },
+                  "target": {
+                    "description": "Exact target element reference from the page snapshot, or a unique element selector",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "Type of the field",
+                    "enum": [
+                      "textbox",
+                      "checkbox",
+                      "radio",
+                      "combobox",
+                      "slider"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "Value to fill in the field. If the field is a checkbox, the value should be `true` or `false`. If the field is a combobox, the value should be the text of the option.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "target",
+                  "name",
+                  "type",
+                  "value"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "fields"
+          ],
+          "type": "object"
+        },
+        "name": "browser_fill_form",
+        "schema_hash": "c991223a68247bd517c0fa1b61db444178ff6ad546e7214936d29b8de4c2f2ee"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Find in page snapshot"
+        },
+        "description": "Search the accessibility snapshot of the current page for text or a regular expression. Returns matching snapshot nodes with a few lines of surrounding context (like search snippets), each shown under its path from the root of the tree, which is cheaper than capturing the whole snapshot when you only need to locate an element and its ref.",
+        "description_hash": "e8bdb86d96e0429028a07ba7ff062194d4f0dc1c63f5cf2ed88b7341e7d18fec",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "filename": {
+              "description": "Save results to a file instead of returning them in the response. Relative file names are resolved against the workspace root.",
+              "type": "string"
+            },
+            "regex": {
+              "description": "Regular expression to search for in the page snapshot. Matching is case-sensitive by default; wrap the pattern in slashes to add flags, e.g. \"/error/i\" for case-insensitive. Provide either text or regex, not both.",
+              "type": "string"
+            },
+            "text": {
+              "description": "Plain text to search for in the page snapshot (case-insensitive substring match). Provide either text or regex, not both.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_find",
+        "schema_hash": "2b9b6144beac985c2387fb2920ce7516e296a69466282be73ca1b13238b3ad39"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Handle a dialog"
+        },
+        "description": "Handle a dialog",
+        "description_hash": "f3a6532912c5a270c56b130bc9bbfb1900f47a1139fdda0c092c3edc4d8b2cc8",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "accept": {
+              "description": "Whether to accept the dialog.",
+              "type": "boolean"
+            },
+            "promptText": {
+              "description": "The text of the prompt in case of a prompt dialog.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "accept"
+          ],
+          "type": "object"
+        },
+        "name": "browser_handle_dialog",
+        "schema_hash": "2d4cacf71e9fd7f902bebbc84f106614b891c2654de32b71b1f0d629a10d8b5c"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Hover mouse"
+        },
+        "description": "Hover over element on page",
+        "description_hash": "e8324a0a522bca4d40bc10854ebabd806676abf765313bcb48d3923d3e0a1cc0",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target"
+          ],
+          "type": "object"
+        },
+        "name": "browser_hover",
+        "schema_hash": "3b0a5a3333d051dba9f6b023c341eef00f0e5264bef37bc0a11f83156937e803"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Navigate to a URL"
+        },
+        "description": "Navigate to a URL",
+        "description_hash": "c47ab66fe06057eac7d17f9233c88a8293d91f4c7c1bc92c233d08de01bb5ad6",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "description": "The URL to navigate to",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
+        "name": "browser_navigate",
+        "schema_hash": "2165538e098634780eec628947d795a2619b4d2e3cef0e36d3084ac46abb94f7"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Go back"
+        },
+        "description": "Go back to the previous page in the history",
+        "description_hash": "e2df2fafb8ca0a695b2bcef478ca29898e1c5ee46cd9e1214d09052737ad9bf1",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {},
+          "type": "object"
+        },
+        "name": "browser_navigate_back",
+        "schema_hash": "71fc596a20f27da3dec80050e5d1f553eba34aea24c2853b853488a811e6b892"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Show network request details"
+        },
+        "description": "Returns full details (headers and body) of a single network request, or a single part if `part` is set. Use the number from browser_network_requests.",
+        "description_hash": "275a3c1fb570d85aae6643feee176b829e275ed78755e232ef60338b273eddb2",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "filename": {
+              "description": "File name to save the result to. Relative file names are resolved against the workspace root. If not provided, output is returned as text.",
+              "type": "string"
+            },
+            "index": {
+              "description": "1-based index of the request, as printed by browser_network_requests.",
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "part": {
+              "description": "Return only this part of the request. Omit to return full details.",
+              "enum": [
+                "request-headers",
+                "request-body",
+                "response-headers",
+                "response-body"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "index"
+          ],
+          "type": "object"
+        },
+        "name": "browser_network_request",
+        "schema_hash": "f0dbfd6ba87b3b7739e5b0aa6fa8c0d981aa214128eb3c1a8891caa46bd60b30"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "List network requests"
+        },
+        "description": "Returns a numbered list of network requests since loading the page. Use browser_network_request with the number to get full details.",
+        "description_hash": "b82cacad2791246ae875f7be18c5a432970a24f9469bcc7763c56f3957b162d6",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "filename": {
+              "description": "File name to save the network requests to. Relative file names are resolved against the workspace root. If not provided, requests are returned as text.",
+              "type": "string"
+            },
+            "filter": {
+              "description": "Only return requests whose URL matches this regexp (e.g. \"/api/.*user\").",
+              "type": "string"
+            },
+            "static": {
+              "default": false,
+              "description": "Whether to include successful static resources like images, fonts, scripts, etc. Defaults to false.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "static"
+          ],
+          "type": "object"
+        },
+        "name": "browser_network_requests",
+        "schema_hash": "f0e092b47371409844c10f16cf3d282705cdb0bad2aedfe46e02dd40cae4fe7f"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Press a key"
+        },
+        "description": "Press a key on the keyboard",
+        "description_hash": "86b62b7dfb1d29cb849d8c599faf04b1f531dbbea31c5a9e58020a3fd9b4d4c4",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "description": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object"
+        },
+        "name": "browser_press_key",
+        "schema_hash": "57a7f701ebf865e5a7a759c15e8d04bca12cb756c2e3f4ae7280070bb6e310e2"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Resize browser window"
+        },
+        "description": "Resize the browser window",
+        "description_hash": "2532274341b2ef4716cc5a0e1c782c14f6a3dee2fe716e7f2a3a0ce80ddddd32",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "description": "Height of the browser window",
+              "type": "number"
+            },
+            "width": {
+              "description": "Width of the browser window",
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "type": "object"
+        },
+        "name": "browser_resize",
+        "schema_hash": "4a80d1f511092cf5e94b689f81afd36ec42b0ac74a510f7220a7c9987af00b84"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Run Playwright code (unsafe)"
+        },
+        "description": "Run a Playwright code snippet. Unsafe: executes arbitrary JavaScript in the Playwright server process and is RCE-equivalent.",
+        "description_hash": "f04f2520590c706a774fb2bfb1556f81047ea302d8c709d93facdd061f262580",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "A JavaScript function containing Playwright code to execute. It will be invoked with a single argument, page, which you can use for any page interaction. For example: `async (page) => { await page.getByRole('button', { name: 'Submit' }).click(); return await page.title(); }`",
+              "type": "string"
+            },
+            "filename": {
+              "description": "Load code from the specified file. Relative file names are resolved against the workspace root. If both code and filename are provided, code will be ignored.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_run_code_unsafe",
+        "schema_hash": "6a9943c16c5666a93c77010063b536f864936fc22606c48e7bb3a36b5b7fd444"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Select option"
+        },
+        "description": "Select an option in a dropdown",
+        "description_hash": "eb1a78927b0c9c55913b027799dccf321c758d370d0dc9fcf33c3e1901a057c9",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            },
+            "values": {
+              "description": "Array of values to select in the dropdown. This can be a single value or multiple values.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "target",
+            "values"
+          ],
+          "type": "object"
+        },
+        "name": "browser_select_option",
+        "schema_hash": "03b097752bdb41817ec0a6a259062598e5c85c1a8c7106d0f2fde506321096bd"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Page snapshot"
+        },
+        "description": "Capture accessibility snapshot of the current page, this is better than screenshot",
+        "description_hash": "22833ef78f0c2789c081d77d28adce060395b354a6dbcb3fdc324b8b6ab98274",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "boxes": {
+              "description": "Include each element's bounding box as [box=x,y,width,height] in the snapshot. Coordinates are viewport-relative, in CSS pixels (Element.getBoundingClientRect)",
+              "type": "boolean"
+            },
+            "depth": {
+              "description": "Limit the depth of the snapshot tree",
+              "type": "number"
+            },
+            "filename": {
+              "description": "Save snapshot to a file instead of returning it in the response. Relative file names are resolved against the workspace root.",
+              "type": "string"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_snapshot",
+        "schema_hash": "1d7650f3b9f3612bbb4f1511c77944e7b9ed6e98c9e012926a243c58f016df6f"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Manage tabs"
+        },
+        "description": "List, create, close, or select a browser tab.",
+        "description_hash": "8da21efae81d7dc8075fcaea1fdb3cb17dd4f571d2cbae421b6312312e93314b",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "action": {
+              "description": "Operation to perform",
+              "enum": [
+                "list",
+                "new",
+                "close",
+                "select"
+              ],
+              "type": "string"
+            },
+            "index": {
+              "description": "Tab index, used for close/select. If omitted for close, current tab is closed.",
+              "type": "number"
+            },
+            "url": {
+              "description": "URL to navigate to in the new tab, used for new.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "type": "object"
+        },
+        "name": "browser_tabs",
+        "schema_hash": "268e0f3eca6295e0fef99d2ef85adfbd3d843c054087817fe96e02ccd8145711"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Take a screenshot"
+        },
+        "description": "Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.",
+        "description_hash": "f6b6ec720971f93e707340ae7bd2ea22899c5f27b0ea6b16c3b6920083ca7e6d",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "filename": {
+              "description": "File name to save the screenshot to. Relative file names are resolved against the workspace root. If not specified, the screenshot is saved into the output directory as `page-{timestamp}.{png|jpeg|webp}`.",
+              "type": "string"
+            },
+            "fullPage": {
+              "description": "When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots.",
+              "type": "boolean"
+            },
+            "scale": {
+              "default": "css",
+              "description": "Image resolution scale. \"css\" produces a screenshot sized in CSS pixels (smaller, consistent across devices). \"device\" produces a high-resolution screenshot using device pixels (larger, accounts for the device pixel ratio). Default is css.",
+              "enum": [
+                "css",
+                "device"
+              ],
+              "type": "string"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            },
+            "type": {
+              "description": "Image format for the screenshot. If unset, inferred from the filename extension, otherwise png.",
+              "enum": [
+                "png",
+                "jpeg",
+                "webp"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "scale"
+          ],
+          "type": "object"
+        },
+        "name": "browser_take_screenshot",
+        "schema_hash": "78dcb99cc226d741aa8c11a11ee0df62e15a9f9ab9db1a1ce4fdc5512d323d96"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false,
+          "title": "Type text"
+        },
+        "description": "Type text into editable element",
+        "description_hash": "ec69f99a6bd0b8c2faa171c824d8791677e45878742babf62161e5c77c8158e9",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "element": {
+              "description": "Human-readable element description used to obtain permission to interact with the element",
+              "type": "string"
+            },
+            "slowly": {
+              "description": "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.",
+              "type": "boolean"
+            },
+            "submit": {
+              "description": "Whether to submit entered text (press Enter after)",
+              "type": "boolean"
+            },
+            "target": {
+              "description": "Exact target element reference from the page snapshot, or a unique element selector",
+              "type": "string"
+            },
+            "text": {
+              "description": "Text to type into the element",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target",
+            "text"
+          ],
+          "type": "object"
+        },
+        "name": "browser_type",
+        "schema_hash": "ed892740ebc14bb2a49467c08b8bb02717d50f1f3ef8ed06d51abf5ebb3249da"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": true,
+          "readOnlyHint": true,
+          "title": "Wait for"
+        },
+        "description": "Wait for text to appear or disappear or a specified time to pass",
+        "description_hash": "1a33fccf390170eccd5f98080fb7b25cbf9fa108a07003c254e6418eecbb6521",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "description": "The text to wait for",
+              "type": "string"
+            },
+            "textGone": {
+              "description": "The text to wait for to disappear",
+              "type": "string"
+            },
+            "time": {
+              "description": "The time to wait in seconds, at most 30",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "name": "browser_wait_for",
+        "schema_hash": "2be69e4c5c98bdcc6ed1011ffbd26974c79e686a4ebaed211adc84ebe2638c6e"
+      }
+    ]
+  },
+  "surface_hash": "dfae257aa9523af42a066141eb0eefdefa8037f58e2639dcdbf863701687e9dd"
+}

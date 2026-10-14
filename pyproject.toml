@@ -89,6 +89,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "ANN"]
+# Release tooling: fixed argument lists built from the repo's own pin file, and rendered
+# markdown prose whose line length is not code style.
+"scripts/build_index.py" = ["S603", "S607", "E501"]
 
 [tool.mypy]
 python_version = "3.11"

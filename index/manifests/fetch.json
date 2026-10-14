@@ -1,0 +1,123 @@
+{
+  "capabilities": {
+    "experimental": {},
+    "prompts": {
+      "listChanged": false
+    },
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "20e06f1ac7cdb99ee75e5893a32abca88cec32638f8069790d7b3d3296763e70",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "/properties/url: caller-influenced outbound target, no recognized host pin",
+          "kinds": [
+            "egress"
+          ],
+          "rule": "Rule A",
+          "signal": "schema_shape",
+          "tier": "R4"
+        }
+      ],
+      "disagreements": [
+        {
+          "annotation": "readOnlyHint",
+          "declared": true,
+          "inferred_tier": "R4",
+          "reading": "The server claims safety its schema does not support."
+        }
+      ],
+      "kinds": [
+        "egress"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R4",
+      "tool": "fetch"
+    }
+  ],
+  "classification_hash": "19e36aaa7b4ac6414e69da317c1af4d187c7769fe1068bf4d94b8676a41cc345",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [
+      {
+        "arguments": [
+          {
+            "description": "URL to fetch",
+            "name": "url",
+            "required": true
+          }
+        ],
+        "description": "Fetch a URL and extract its contents as markdown",
+        "name": "fetch"
+      }
+    ],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "mcp-fetch",
+      "version": "2026.10.10"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": true
+        },
+        "description": "Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+        "description_hash": "b5e5efbd3ff0d4dcbd32d22c88b867a16cb54040b02262eef30d9194224285f7",
+        "inputSchema": {
+          "description": "Parameters for fetching a URL.",
+          "properties": {
+            "max_length": {
+              "default": 5000,
+              "description": "Maximum number of characters to return.",
+              "maximum": 999999,
+              "minimum": 1,
+              "title": "Max Length",
+              "type": "integer"
+            },
+            "raw": {
+              "default": false,
+              "description": "Get the actual HTML content of the requested page, without simplification.",
+              "title": "Raw",
+              "type": "boolean"
+            },
+            "start_index": {
+              "default": 0,
+              "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+              "minimum": 0,
+              "title": "Start Index",
+              "type": "integer"
+            },
+            "url": {
+              "description": "URL to fetch",
+              "format": "uri",
+              "minLength": 1,
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "title": "Fetch",
+          "type": "object"
+        },
+        "name": "fetch",
+        "schema_hash": "a1a4acd64b232052caef5ef214b01c10faf26d6ec1dd0721f2ddd78ff56cdba4"
+      }
+    ]
+  },
+  "surface_hash": "8eb8d5964de9c3c7aa27ab5da86536fc2ce6ab252af660d9eccaae1b362e8b26"
+}

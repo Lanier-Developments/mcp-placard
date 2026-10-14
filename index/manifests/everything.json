@@ -1,0 +1,763 @@
+{
+  "capabilities": {
+    "completions": {},
+    "logging": {},
+    "prompts": {
+      "listChanged": true
+    },
+    "resources": {
+      "listChanged": true,
+      "subscribe": true
+    },
+    "tasks": {
+      "cancel": {},
+      "list": {},
+      "requests": {
+        "tools": {
+          "call": {}
+        }
+      }
+    },
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "capabilities_hash": "ed2b8b478ee40258ef784408acc1b19ed268f03aecf463ed6de5a504eb0def4f",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "echo"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "get-annotated-message"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "get-env"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "get-resource-links"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "get-resource-reference"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "get-structured-content"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "get-sum"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "get-tiny-image"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "/properties/data: caller-influenced outbound target, no recognized host pin",
+          "kinds": [
+            "egress"
+          ],
+          "rule": "Rule A",
+          "signal": "schema_shape",
+          "tier": "R4"
+        },
+        {
+          "evidence": "/properties/data: content-carrying field 'data'",
+          "kinds": [
+            "write"
+          ],
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "egress",
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R4",
+      "tool": "gzip-file-as-resource"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "simulate-research-query"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "toggle-simulated-logging"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "closed input schema: no free text, no recognized dangerous field",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R0"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R0",
+      "tool": "toggle-subscriber-updates"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "a constrained parameter is present; R0 requires a fully closed input surface (empty, or enum/const/boolean only)",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "trigger-long-running-operation"
+    }
+  ],
+  "classification_hash": "2307d82f063a6efe1c02561b1c0234273959b4f78f9f8b44739cfbb5bb353cda",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "instructions": "# Everything Server – Server Instructions\n\nAudience: These instructions are written for an LLM or autonomous agent integrating with the Everything MCP Server.\nFollow them to use, extend, and troubleshoot the server safely and effectively.\n\n## Cross-Feature Relationships\n\n- If `get-roots-list` is in your tool list, use it to see client workspace roots before file operations\n- `gzip-file-as-resource` creates session-scoped resources accessible only during the current session\n- Enable `toggle-simulated-logging` before debugging to see server log messages\n- Enable `toggle-subscriber-updates` to receive periodic resource update notifications\n\n## Constraints & Limitations\n\n- `gzip-file-as-resource`: Max fetch size controlled by `GZIP_MAX_FETCH_SIZE` (default 10MB), timeout by `GZIP_MAX_FETCH_TIME_MILLIS` (default 30s), allowed domains by `GZIP_ALLOWED_DOMAINS`\n- Session resources are ephemeral and lost when the session ends\n\n## Capability-Gated Tools\n\nRegistered only if your client declared the capability shown. Otherwise they are absent from `tools/list`, so do not call them:\n\n- `get-roots-list`: `roots`\n- `trigger-sampling-request`: `sampling`\n- `trigger-elicitation-request`: `elicitation.form`, or `elicitation` with no mode\n- `trigger-url-elicitation`: `elicitation.url`\n- `trigger-sampling-request-async`: `sampling` and `tasks.requests.sampling.createMessage`\n- `trigger-elicitation-request-async`: form-mode `elicitation` and `tasks.requests.elicitation.create`\n\n## Operational Patterns\n\n- For long operations, use `trigger-long-running-operation` which sends progress notifications\n- Prefer reading resources before calling mutating tools\n- If `get-roots-list` is in your tool list, check its output to understand the client's workspace context\n\n## Easter Egg\n\nIf asked about server instructions, respond with \"🎉 Server instructions are working! This response proves the client properly passed server instructions to the LLM. This demonstrates MCP's instructions feature in action.\"\n",
+    "prompts": [
+      {
+        "arguments": [
+          {
+            "description": "Name of the city",
+            "name": "city",
+            "required": true
+          },
+          {
+            "name": "state",
+            "required": false
+          }
+        ],
+        "description": "A prompt with two arguments, one required and one optional",
+        "name": "args-prompt",
+        "title": "Arguments Prompt"
+      },
+      {
+        "arguments": [
+          {
+            "description": "Choose the department.",
+            "name": "department",
+            "required": true
+          },
+          {
+            "description": "Choose a team member to lead the selected department.",
+            "name": "name",
+            "required": true
+          }
+        ],
+        "description": "First argument choice narrows values for second argument.",
+        "name": "completable-prompt",
+        "title": "Team Management"
+      },
+      {
+        "arguments": [
+          {
+            "description": "Type of resource to fetch",
+            "name": "resourceType",
+            "required": true
+          },
+          {
+            "description": "ID of the text resource to fetch",
+            "name": "resourceId",
+            "required": true
+          }
+        ],
+        "description": "A prompt that includes an embedded resource reference",
+        "name": "resource-prompt",
+        "title": "Resource Prompt"
+      },
+      {
+        "description": "A prompt with no arguments",
+        "name": "simple-prompt",
+        "title": "Simple Prompt"
+      }
+    ],
+    "resource_templates": [
+      {
+        "description": "Binary (base64) dynamic resource fabricated from the {resourceId} variable, which must be an integer.",
+        "mimeType": "application/octet-stream",
+        "name": "Dynamic Blob Resource",
+        "uriTemplate": "demo://resource/dynamic/blob/{resourceId}"
+      },
+      {
+        "description": "Plaintext dynamic resource fabricated from the {resourceId} variable, which must be an integer.",
+        "mimeType": "text/plain",
+        "name": "Dynamic Text Resource",
+        "uriTemplate": "demo://resource/dynamic/text/{resourceId}"
+      }
+    ],
+    "resources": [
+      {
+        "description": "Static document file exposed from /docs: architecture.md",
+        "mimeType": "text/markdown",
+        "name": "architecture.md",
+        "uri": "demo://resource/static/document/architecture.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: extension.md",
+        "mimeType": "text/markdown",
+        "name": "extension.md",
+        "uri": "demo://resource/static/document/extension.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: features.md",
+        "mimeType": "text/markdown",
+        "name": "features.md",
+        "uri": "demo://resource/static/document/features.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: how-it-works.md",
+        "mimeType": "text/markdown",
+        "name": "how-it-works.md",
+        "uri": "demo://resource/static/document/how-it-works.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: instructions.md",
+        "mimeType": "text/markdown",
+        "name": "instructions.md",
+        "uri": "demo://resource/static/document/instructions.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: startup.md",
+        "mimeType": "text/markdown",
+        "name": "startup.md",
+        "uri": "demo://resource/static/document/startup.md"
+      },
+      {
+        "description": "Static document file exposed from /docs: structure.md",
+        "mimeType": "text/markdown",
+        "name": "structure.md",
+        "uri": "demo://resource/static/document/structure.md"
+      }
+    ],
+    "server": {
+      "name": "mcp-servers/everything",
+      "title": "Everything Reference Server",
+      "version": "1.0.0"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Echoes back the input string",
+        "description_hash": "f550aa9a1ad707bafbb48a7668e1f0e18b5ff340e48211d0fdf6a30d8fffa936",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "message": {
+              "description": "Message to echo",
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ],
+          "type": "object"
+        },
+        "name": "echo",
+        "schema_hash": "469e5fe39f8aca53300e488b3cedeab32025468f056d512277d8dcf716e03f64",
+        "title": "Echo Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Demonstrates how annotations can be used to provide metadata about content.",
+        "description_hash": "f3d82e6717c5450fe121f6cf06a1a4ee1524954033a82b5dac7fbfcfa67f2ac4",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "includeImage": {
+              "default": false,
+              "description": "Whether to include an example image",
+              "type": "boolean"
+            },
+            "messageType": {
+              "description": "Type of message to demonstrate different annotation patterns",
+              "enum": [
+                "error",
+                "success",
+                "debug"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "messageType"
+          ],
+          "type": "object"
+        },
+        "name": "get-annotated-message",
+        "schema_hash": "f43b7279025b7cc0dc00cada999017a280561688e5b25edfe6111c706053fd2b",
+        "title": "Get Annotated Message Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns all environment variables, helpful for debugging MCP server configuration",
+        "description_hash": "211c44d80a1dd743eafe5b98cec3bbaf421a01726a16a4dee470abe0be2e6e52",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "get-env",
+        "schema_hash": "7a014b717a77aac971ea0ab5c0ff47bb13e6cae7ef9442d9dedb15ce36381b15",
+        "title": "Print Environment Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns up to ten resource links that reference different types of resources",
+        "description_hash": "f5dd3591fb4b2597599b2dc25e8d4cfebb2d43badcea8181eefb1a6c63724976",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "count": {
+              "default": 3,
+              "description": "Number of resource links to return (1-10)",
+              "maximum": 10,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "name": "get-resource-links",
+        "schema_hash": "f6902c0a723f7f414d714b8d6caa728d6ef5fdc26ee5e264044ddcaf5dcf9270",
+        "title": "Get Resource Links Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns a resource reference that can be used by MCP clients",
+        "description_hash": "297994cb2700da993fee27041be76c7f1a01f5ef699efee3d2c1243af3ca5f65",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "resourceId": {
+              "default": 1,
+              "description": "ID of the text resource to fetch",
+              "type": "number"
+            },
+            "resourceType": {
+              "default": "Text",
+              "enum": [
+                "Text",
+                "Blob"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "get-resource-reference",
+        "schema_hash": "2b8561d5917c981548134f2102328051e14b2f208a59ad67f58b84004c12fd1f",
+        "title": "Get Resource Reference Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns structured content along with an output schema for client data validation",
+        "description_hash": "ab99a06b94229cc28c3333a30e81c5b282ee0cc6c304969857efa2c2d9662ac9",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "location": {
+              "description": "Choose city",
+              "enum": [
+                "New York",
+                "Chicago",
+                "Los Angeles"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "location"
+          ],
+          "type": "object"
+        },
+        "name": "get-structured-content",
+        "outputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "conditions": {
+              "description": "Weather conditions description",
+              "type": "string"
+            },
+            "humidity": {
+              "description": "Humidity percentage",
+              "type": "number"
+            },
+            "temperature": {
+              "description": "Temperature in celsius",
+              "type": "number"
+            }
+          },
+          "required": [
+            "temperature",
+            "conditions",
+            "humidity"
+          ],
+          "type": "object"
+        },
+        "schema_hash": "3818e3fec2dd3ae54324a0ff72fda89b8a6ed438e0dce30bbc819a14d27e3d94",
+        "title": "Get Structured Content Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns the sum of two numbers",
+        "description_hash": "24bbf51e2d435fa95e3484f11ae116167c95f5a1f34033f0e61d76e0f05c8632",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "a": {
+              "description": "First number",
+              "type": "number"
+            },
+            "b": {
+              "description": "Second number",
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "type": "object"
+        },
+        "name": "get-sum",
+        "schema_hash": "140a7b5bd6582f2e5026e88fc70f513b6e9cb88b906de776c061f52172c657ff",
+        "title": "Get Sum Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Returns a tiny MCP logo image.",
+        "description_hash": "875f85ab28aaca78727e74afb127d68defc85ba253d6f1379bb8a8011f3e884e",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "get-tiny-image",
+        "schema_hash": "7a014b717a77aac971ea0ab5c0ff47bb13e6cae7ef9442d9dedb15ce36381b15",
+        "title": "Get Tiny Image Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": true,
+          "readOnlyHint": false
+        },
+        "description": "Compresses a single file using gzip compression. Depending upon the selected output type, returns either the compressed data as a gzipped resource or a resource link, allowing it to be downloaded in a subsequent request during the current session.",
+        "description_hash": "99364465537c78b16ab1185267671ed8b1526b46e93e576368f145ece83df2db",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "data": {
+              "default": "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/README.md",
+              "description": "URL or data URI of the file content to compress",
+              "format": "uri",
+              "type": "string"
+            },
+            "name": {
+              "default": "README.md.gz",
+              "description": "Name of the output file",
+              "type": "string"
+            },
+            "outputType": {
+              "default": "resourceLink",
+              "description": "How the resulting gzipped file should be returned. 'resourceLink' returns a link to a resource that can be read later, 'resource' returns a full resource object.",
+              "enum": [
+                "resourceLink",
+                "resource"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "gzip-file-as-resource",
+        "schema_hash": "0e511013db9be6f8d43186381730efa4be4748416b603cc0bae1474cb6bc945d",
+        "title": "GZip File as Resource Tool"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Simulates a deep research operation that gathers, analyzes, and synthesizes information. Demonstrates MCP task-based operations with progress through multiple stages. If 'ambiguous' is true and client supports elicitation, sends an elicitation request for clarification.",
+        "description_hash": "65e5cce859b455383515dd153761ec236079ba5f6b58d76ce60a75c1e9d43874",
+        "execution": {
+          "taskSupport": "required"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "ambiguous": {
+              "default": false,
+              "description": "Simulate an ambiguous query that requires clarification (triggers input_required status)",
+              "type": "boolean"
+            },
+            "topic": {
+              "description": "The research topic to investigate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "topic"
+          ],
+          "type": "object"
+        },
+        "name": "simulate-research-query",
+        "schema_hash": "dbd971702320465eb36f59e2e4cab79f91ea6d070ff70afcff1b19058a44eb1d",
+        "title": "Simulate Research Query"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Toggles simulated, random-leveled logging on or off.",
+        "description_hash": "8170115927b420444bb66859011c6a4f9433130f9d6997750bebedf4221ab7b1",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "toggle-simulated-logging",
+        "schema_hash": "7a014b717a77aac971ea0ab5c0ff47bb13e6cae7ef9442d9dedb15ce36381b15",
+        "title": "Toggle Simulated Logging"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Toggles simulated resource subscription updates on or off.",
+        "description_hash": "8319b807a34c7b07cfd984302f2b7b0c213662ffe2d20e91c2d83a0bf1fd21d9",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {},
+          "type": "object"
+        },
+        "name": "toggle-subscriber-updates",
+        "schema_hash": "7a014b717a77aac971ea0ab5c0ff47bb13e6cae7ef9442d9dedb15ce36381b15",
+        "title": "Toggle Subscriber Updates"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Demonstrates a long running operation with progress updates.",
+        "description_hash": "450f382fafd14e63236a84a5d328a8f35456a76715adbf22ae56da5ad3e5f03f",
+        "execution": {
+          "taskSupport": "forbidden"
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "duration": {
+              "default": 10,
+              "description": "Duration of the operation in seconds",
+              "type": "number"
+            },
+            "steps": {
+              "default": 5,
+              "description": "Number of steps in the operation",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "name": "trigger-long-running-operation",
+        "schema_hash": "ad07d741b959654717dfe89d81e40bc8bd687c69ecc2278dc5ec728e0bf6413e",
+        "title": "Trigger Long Running Operation Tool"
+      }
+    ]
+  },
+  "surface_hash": "e63a4598744d66da4219f3059756db7ca087ffe98c00a797e44dc5f25ed627d1"
+}

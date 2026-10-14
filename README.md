@@ -47,6 +47,10 @@ GitHub Action below (v0.4.0). v0.5.0 added rulesets 3.4 and 3.5 (false-positive 
 held-out v2 review), the held-out v2 score, and merge-gate CI. Manifest signing (Phase 5) is not
 yet built.
 
+**What do popular servers expose?** [`docs/INDEX.md`](docs/INDEX.md) is a published index of the
+blast radius of nine widely used public MCP servers at pinned versions, rendered from committed
+manifests and reproducible with `scripts/build_index.py`.
+
 **In CI, Placard is a GitHub Action.** `placard.toml` names the servers a repository depends on;
 committed baseline manifests are the approval record; the action scans each server in an isolated
 environment, diffs it against its baseline, writes a step summary and a SARIF log for code

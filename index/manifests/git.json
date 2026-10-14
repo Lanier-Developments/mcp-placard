@@ -1,0 +1,680 @@
+{
+  "capabilities": {
+    "experimental": {},
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "capabilities_hash": "67b71872b734256a931872d166e92f4e137528d97beed2de69b9d427b1215d20",
+  "classification": [
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'git_add': 'add' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "git_add"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_branch"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'git_checkout': 'checkout' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "git_checkout"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'git_commit': 'commit' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "git_commit"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'git_create_branch': 'create' verb, corroborating only",
+          "kinds": [
+            "write"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "write"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "git_create_branch"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_diff"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_diff_staged"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_diff_unstaged"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_log"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        },
+        {
+          "evidence": "tool name 'git_reset': 'reset' verb, corroborating only",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "tool_name_verb",
+          "tier": "R3"
+        },
+        {
+          "evidence": "server declares destructiveHint: true — a claim against interest, trusted as a floor of R3",
+          "kinds": [
+            "destructive"
+          ],
+          "signal": "declared_annotations",
+          "tier": "R3"
+        }
+      ],
+      "disagreements": [],
+      "kinds": [
+        "destructive"
+      ],
+      "reversibility": "unverifiable",
+      "tier": "R3",
+      "tool": "git_reset"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_show"
+    },
+    {
+      "citations": [
+        {
+          "evidence": "unconstrained free-text parameter present; R0 requires a closed input surface",
+          "rule": "Rule B",
+          "signal": "schema_shape",
+          "tier": "R1"
+        }
+      ],
+      "disagreements": [],
+      "tier": "R1",
+      "tool": "git_status"
+    }
+  ],
+  "classification_hash": "466a2ff45bd09cc76c40df8ccff497ba10eceeecaf40ec85945fbe3e226093b5",
+  "environment": {
+    "protocol_version": "2025-11-25",
+    "sdk_version": "2.3.0"
+  },
+  "findings": [],
+  "manifest_version": "2.2",
+  "ruleset_version": "3.5",
+  "surface": {
+    "prompts": [],
+    "resource_templates": [],
+    "resources": [],
+    "server": {
+      "name": "mcp-git",
+      "version": "2026.10.10"
+    },
+    "tools": [
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Adds file contents to the staging area",
+        "description_hash": "63a3fcab5ef606c31226534328ed217c0c5c375ed428256600eb43f9613feb78",
+        "inputSchema": {
+          "properties": {
+            "files": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "title": "Files",
+              "type": "array"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "files"
+          ],
+          "title": "GitAdd",
+          "type": "object"
+        },
+        "name": "git_add",
+        "schema_hash": "bcca48730b12740da64f7a0c898574eb9bb3aa7679dcf0bd8ac8b9889b6254fa"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "List Git branches",
+        "description_hash": "66e4ef57f7e4eaacde42c12f4503c6daac5ddc06b1f205410945029760226a23",
+        "inputSchema": {
+          "properties": {
+            "branch_type": {
+              "description": "Whether to list local branches ('local'), remote branches ('remote') or all branches('all').",
+              "title": "Branch Type",
+              "type": "string"
+            },
+            "contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "The commit sha that branch should contain. Do not pass anything to this param if no commit sha is specified",
+              "title": "Contains"
+            },
+            "not_contains": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "The commit sha that branch should NOT contain. Do not pass anything to this param if no commit sha is specified",
+              "title": "Not Contains"
+            },
+            "repo_path": {
+              "description": "The path to the Git repository.",
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "branch_type"
+          ],
+          "title": "GitBranch",
+          "type": "object"
+        },
+        "name": "git_branch",
+        "schema_hash": "57d04063c4a36858343773eb6928ffd7a2e52a4d95545a310845d8facdc0211c"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Switches branches",
+        "description_hash": "1764f2137b70764a42aa4ef06fe68f1658bf81d896bdd92b636303a75ed3d948",
+        "inputSchema": {
+          "properties": {
+            "branch_name": {
+              "title": "Branch Name",
+              "type": "string"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "branch_name"
+          ],
+          "title": "GitCheckout",
+          "type": "object"
+        },
+        "name": "git_checkout",
+        "schema_hash": "516dc2e905ce6d79254be1035b338c26992f1c8e66a4e5d88d7b6a7485833969"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Records changes to the repository",
+        "description_hash": "acc2ab5eeaabdf5faf56f596b8fec5d49d2546c654639cc1e3c6f1b31fc81695",
+        "inputSchema": {
+          "properties": {
+            "message": {
+              "title": "Message",
+              "type": "string"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "message"
+          ],
+          "title": "GitCommit",
+          "type": "object"
+        },
+        "name": "git_commit",
+        "schema_hash": "292f379542fc33ea01f62648f50aab4b07518bb7614f79895e9a77639043f3c3"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Creates a new branch from an optional base branch",
+        "description_hash": "4dbdc6c993626b65f67fa0c394da2084fcf55b3e125c192d51c54379b6d7d359",
+        "inputSchema": {
+          "properties": {
+            "base_branch": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Base Branch"
+            },
+            "branch_name": {
+              "title": "Branch Name",
+              "type": "string"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "branch_name"
+          ],
+          "title": "GitCreateBranch",
+          "type": "object"
+        },
+        "name": "git_create_branch",
+        "schema_hash": "a729d00b7ca12f742eace3e299d98df0290c382a2fa54033f487aaefa787b0ed"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows differences between branches or commits",
+        "description_hash": "e04e0b0169eeae6131e83e03f81f76b46d8108970f2bf65896638f067a036a7a",
+        "inputSchema": {
+          "properties": {
+            "context_lines": {
+              "default": 3,
+              "title": "Context Lines",
+              "type": "integer"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            },
+            "target": {
+              "title": "Target",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "target"
+          ],
+          "title": "GitDiff",
+          "type": "object"
+        },
+        "name": "git_diff",
+        "schema_hash": "3028417740cd7f02a8ada0da7f65571b0a98309b3b308c5226ad40dbeeea2eb0"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows changes that are staged for commit",
+        "description_hash": "9c8034a6c14eedf096d4736483d1223ed512c0bc35f5c9485167f631fe61fa05",
+        "inputSchema": {
+          "properties": {
+            "context_lines": {
+              "default": 3,
+              "title": "Context Lines",
+              "type": "integer"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path"
+          ],
+          "title": "GitDiffStaged",
+          "type": "object"
+        },
+        "name": "git_diff_staged",
+        "schema_hash": "edcbb5d9ac0831c9d613d55e28fc6e5a446313ce413a7bb6fba7ba11d5cc6d5b"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows changes in the working directory that are not yet staged",
+        "description_hash": "a54eb8e9b7d3d6e83b00093cf280b69b5f8dce528683404d8e80a0fbb0fcc14f",
+        "inputSchema": {
+          "properties": {
+            "context_lines": {
+              "default": 3,
+              "title": "Context Lines",
+              "type": "integer"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path"
+          ],
+          "title": "GitDiffUnstaged",
+          "type": "object"
+        },
+        "name": "git_diff_unstaged",
+        "schema_hash": "f6d9cece66ac042e727f712545825c152c5d6dc39c944dc99c3319b3464bd5db"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows the commit logs",
+        "description_hash": "462df1609677f94c767ff83f4805248419ce089497cc8b15c3dafdbb2d9556ff",
+        "inputSchema": {
+          "properties": {
+            "end_timestamp": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "End timestamp for filtering commits. Accepts: ISO 8601 format (e.g., '2024-01-15T14:30:25'), relative dates (e.g., '2 weeks ago', 'yesterday'), or absolute dates (e.g., '2024-01-15', 'Jan 15 2024')",
+              "title": "End Timestamp"
+            },
+            "max_count": {
+              "default": 10,
+              "title": "Max Count",
+              "type": "integer"
+            },
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            },
+            "start_timestamp": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Start timestamp for filtering commits. Accepts: ISO 8601 format (e.g., '2024-01-15T14:30:25'), relative dates (e.g., '2 weeks ago', 'yesterday'), or absolute dates (e.g., '2024-01-15', 'Jan 15 2024')",
+              "title": "Start Timestamp"
+            }
+          },
+          "required": [
+            "repo_path"
+          ],
+          "title": "GitLog",
+          "type": "object"
+        },
+        "name": "git_log",
+        "schema_hash": "6a12081f35d8069ddca7d1e70de8c4181cbb0475098b23cb24b13f8ad385240e"
+      },
+      {
+        "annotations": {
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": false
+        },
+        "description": "Unstages all staged changes",
+        "description_hash": "6b041b5cf2cadbb9c9f80975921e2edf8f262fbde743c1d5b0277d23dd1cf4e3",
+        "inputSchema": {
+          "properties": {
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path"
+          ],
+          "title": "GitReset",
+          "type": "object"
+        },
+        "name": "git_reset",
+        "schema_hash": "5e4fc873d15789835f724f59e69d268a2d3cb614605712363eb16549ce0c6563"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows the contents of a commit, or of a file or directory given as <revision>:<path>",
+        "description_hash": "dd997c295c16c1558bc9179fc919f55f194c3317ce77fef765f2bc564f9be017",
+        "inputSchema": {
+          "properties": {
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            },
+            "revision": {
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path",
+            "revision"
+          ],
+          "title": "GitShow",
+          "type": "object"
+        },
+        "name": "git_show",
+        "schema_hash": "5ba0f464a65a0e4d67c6944e157bdf9fc35447b568ac17f11db31e7adc4716f4"
+      },
+      {
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false,
+          "readOnlyHint": true
+        },
+        "description": "Shows the working tree status",
+        "description_hash": "740f85faf30cca3f3ec970fab6c9962dc9fa4a2c399129d2ba4864a661ce4f04",
+        "inputSchema": {
+          "properties": {
+            "repo_path": {
+              "title": "Repo Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repo_path"
+          ],
+          "title": "GitStatus",
+          "type": "object"
+        },
+        "name": "git_status",
+        "schema_hash": "e3eb0910a0b7d725877173b42aa54849c5a978932a2192e3f814a9d92794db25"
+      }
+    ]
+  },
+  "surface_hash": "6a3c60771ec5f720024a9c7a74c1173f53400025a74a8833368b046e0ca8de90"
+}
