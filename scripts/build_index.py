@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Build the published blast-radius index (docs/INDEX.md) from pinned public MCP servers.
 
-    python scripts/build_index.py scan   # install pins, scan each server, write manifests, render
-    python scripts/build_index.py render # re-render docs/INDEX.md from stored manifests (no network)
-    python scripts/build_index.py check  # exit 1 if docs/INDEX.md is not what the manifests render
+    python scripts/build_index.py scan      # install pins, scan each server, write manifests, render
+    python scripts/build_index.py render    # re-render docs/INDEX.md from stored manifests (no network)
+    python scripts/build_index.py check     # exit 1 if docs/INDEX.md is not what the manifests render
+    python scripts/build_index.py reanalyze # re-analyse stored surfaces under the current ruleset, render
 
 ``scan`` is the only mode that installs or launches anything. It installs each
 pinned package into a scratch directory (never the repository), then runs
@@ -15,15 +16,25 @@ run those servers.
 
 The index stores manifests under ``index/manifests/`` and renders from them, so
 ``render`` and ``check`` are deterministic and cheap enough for CI. A re-scan that
-changes a ``surface_hash`` shows up as a diff of a committed file; read it before
-committing (adversary A5 in docs/THREAT_MODEL.md applies here as it does to the
-self-gating fixture).
+changes a ``surface_hash`` shows up as a diff of a committed file — and ``scan``
+says so when it happens: a moved hash on an unchanged pin is reported, not
+committed; read it before committing (adversary A5 in docs/THREAT_MODEL.md
+applies here as it does to the self-gating fixture).
+
+``reanalyze`` exists so the index cannot go stale silently (Chief's ruling of
+2026-10-14, ratifying the index): it re-runs classification and injection
+analysis over each **stored** surface under the current ruleset — offline, the
+same re-analysis ``diff`` performs, so ``surface_hash`` cannot move — and
+re-renders the page. A test fails whenever a stored manifest's
+``ruleset_version`` is not this build's, so a ruleset bump is red until
+``reanalyze`` has been run, the same shape as the fixture-staleness gate.
 """
 
 from __future__ import annotations
 
 import argparse
 import collections
+import json
 import os
 import shlex
 import shutil
@@ -111,10 +122,12 @@ def scan(keep: bool) -> None:
         # A repository for the git server, and an empty directory for the filesystem one.
         subprocess.run(["git", "init", "-q", str(sandbox)], check=True)
         failures: list[str] = []
+        moved: list[str] = []
         for server in servers:
             args = [a.replace("{sandbox}", str(sandbox)) for a in server.get("args", [])]
             command = shlex.join(launch[server["id"]] + args)
             out = MANIFEST_DIR / f"{server['id']}.json"
+            previous_hash = _stored_surface_hash(out)
             result = subprocess.run(
                 [placard, "scan", command, "--timeout", "60", "--out", str(out)],
                 capture_output=True,
@@ -122,6 +135,13 @@ def scan(keep: bool) -> None:
                 env={**os.environ},
             )
             status = "ok" if result.returncode == 0 else f"exit {result.returncode}"
+            if (
+                result.returncode == 0
+                and previous_hash
+                and _stored_surface_hash(out) != previous_hash
+            ):
+                moved.append(server["id"])
+                status += "  surface_hash MOVED on an unchanged pin"
             print(f"{server['id']:<22} {status}")
             if result.returncode != 0:
                 failures.append(server["id"])
@@ -129,9 +149,52 @@ def scan(keep: bool) -> None:
                 sys.stderr.write(result.stderr[-600:])
         if failures:
             raise SystemExit(f"scan failed for: {', '.join(failures)}")
+        if moved:
+            sys.stderr.write(
+                f"surface_hash moved on an unchanged pin for: {', '.join(moved)}. That is a "
+                "finding in its own right, to be reported, not committed: read each manifest "
+                "diff before committing it (docs/THREAT_MODEL.md, adversary A5).\n"
+            )
     finally:
         if not keep:
             shutil.rmtree(cache, ignore_errors=True)
+    render()
+
+
+def _stored_surface_hash(path: Path) -> str | None:
+    """The committed manifest's ``surface_hash``, or None when no manifest is stored.
+    Read leniently: a scan must not fail because the previous file is unreadable."""
+    try:
+        return str(json.loads(path.read_text(encoding="utf-8"))["surface_hash"])
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+# ---------------------------------------------------------------------- reanalyze
+
+
+def reanalyze_manifests() -> None:
+    """Re-run the analysis over every stored surface under the current ruleset.
+
+    Offline by construction: the manifest carries the complete surface and analysis is
+    static, so this is the same re-analysis ``diff`` performs on a stale side.
+    ``surface_hash`` cannot move; ``ruleset_version``, the classification and the
+    injection findings may. Run it after any ruleset change, then read the diff —
+    judgement changes are reviewable events too, they are just Placard's rather than
+    the server's."""
+    from mcp_placard import RULESET_VERSION
+    from mcp_placard.analysis import reanalyze
+    from mcp_placard.manifest.io import load_manifest, write_manifest
+
+    for server in load_servers():
+        path = MANIFEST_DIR / f"{server['id']}.json"
+        if not path.exists():
+            raise SystemExit(f"missing {path.relative_to(REPO_ROOT)}; run `scan` first")
+        manifest = load_manifest(path)
+        before = manifest.ruleset_version
+        write_manifest(reanalyze(manifest), path)
+        note = "unchanged" if before == RULESET_VERSION else f"{before} -> {RULESET_VERSION}"
+        print(f"{server['id']:<22} ruleset {note}")
     render()
 
 
@@ -225,7 +288,9 @@ def render_text() -> str:
         "  path. It is the property worth a second look before connecting that server to an agent that",
         "  also holds credentials.",
         "- **Injection findings are first-sight heuristics with known gaps.** A `0` here does not mean a",
-        "  description is safe: `override` and `concealment` detected 1 of 7 each on held-out v2. See",
+        "  description is safe: on held-out v2 (the published measurement, ruleset 3.3) `override` and",
+        "  `concealment` detected 1 of 7 each; ruleset 3.6 addressed the structural misses and its",
+        "  generalisation is unmeasured until held-out v3 is scored. See",
         "  [Known limits](INJECTION.md#known-limits).",
         "- **Only the servers' own enumerations are scanned.** No tool was invoked. Servers that need",
         "  credentials or a hosted endpoint (GitHub, DeepWiki) are not in this index.",
@@ -234,8 +299,9 @@ def render_text() -> str:
         "",
         "```",
         "pip install -e '.[dev]'",
-        "python scripts/build_index.py scan     # installs pins in a scratch dir, rewrites the manifests",
-        "python scripts/build_index.py check    # fails if this page is not what the manifests render",
+        "python scripts/build_index.py scan      # installs pins in a scratch dir, rewrites the manifests",
+        "python scripts/build_index.py check     # fails if this page is not what the manifests render",
+        "python scripts/build_index.py reanalyze # after a ruleset change: re-analyse stored surfaces",
         "```",
         "",
         "Scanning launches each pinned server as your user. A moved `surface_hash` on an unchanged pin",
@@ -267,12 +333,18 @@ def main() -> int:
     scan_parser.add_argument("--keep", action="store_true", help="keep the scratch install dir")
     sub.add_parser("render", help="render docs/INDEX.md from stored manifests")
     sub.add_parser("check", help="exit 1 if docs/INDEX.md is stale")
+    sub.add_parser(
+        "reanalyze", help="re-analyse stored surfaces under the current ruleset, then render"
+    )
     args = parser.parse_args()
     if args.mode == "scan":
         scan(args.keep)
         return 0
     if args.mode == "render":
         render()
+        return 0
+    if args.mode == "reanalyze":
+        reanalyze_manifests()
         return 0
     return check()
 

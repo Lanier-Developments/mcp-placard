@@ -5,7 +5,7 @@ Placard classifies it. Every row is a scan of an exact pinned version; the manif
 committed under [`index/manifests/`](../index/manifests/) and this page is rendered from
 them by `scripts/build_index.py`, so anyone can re-run the scan and compare `surface_hash`.
 
-Ruleset **3.5**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-scoped, R4 egress, R5 irreversible; see
+Ruleset **3.6**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-scoped, R4 egress, R5 irreversible; see
 [`TAXONOMY.md`](TAXONOMY.md). Kinds: `read_sensitive`, `egress`, `write`, `destructive`,
 `code_exec`. Counts are tools, not risk scores.
 
@@ -34,7 +34,9 @@ Ruleset **3.5**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-sc
   path. It is the property worth a second look before connecting that server to an agent that
   also holds credentials.
 - **Injection findings are first-sight heuristics with known gaps.** A `0` here does not mean a
-  description is safe: `override` and `concealment` detected 1 of 7 each on held-out v2. See
+  description is safe: on held-out v2 (the published measurement, ruleset 3.3) `override` and
+  `concealment` detected 1 of 7 each; ruleset 3.6 addressed the structural misses and its
+  generalisation is unmeasured until held-out v3 is scored. See
   [Known limits](INJECTION.md#known-limits).
 - **Only the servers' own enumerations are scanned.** No tool was invoked. Servers that need
   credentials or a hosted endpoint (GitHub, DeepWiki) are not in this index.
@@ -43,8 +45,9 @@ Ruleset **3.5**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-sc
 
 ```
 pip install -e '.[dev]'
-python scripts/build_index.py scan     # installs pins in a scratch dir, rewrites the manifests
-python scripts/build_index.py check    # fails if this page is not what the manifests render
+python scripts/build_index.py scan      # installs pins in a scratch dir, rewrites the manifests
+python scripts/build_index.py check     # fails if this page is not what the manifests render
+python scripts/build_index.py reanalyze # after a ruleset change: re-analyse stored surfaces
 ```
 
 Scanning launches each pinned server as your user. A moved `surface_hash` on an unchanged pin

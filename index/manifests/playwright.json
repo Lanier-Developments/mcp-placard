@@ -606,7 +606,7 @@
       "tool": "browser_wait_for"
     }
   ],
-  "classification_hash": "bb80a61edff2869171713d20e20c071eb112b9761e45c2f6b857ed9b3fa4b13f",
+  "classification_hash": "4ef4735c8746db5f1c9f0da48a923a62e98d8ffe5d9af14370ce857d2523a9d5",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
@@ -625,7 +625,7 @@
     }
   ],
   "manifest_version": "2.2",
-  "ruleset_version": "3.5",
+  "ruleset_version": "3.6",
   "surface": {
     "prompts": [],
     "resource_templates": [],

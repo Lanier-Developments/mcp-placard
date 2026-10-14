@@ -34,14 +34,14 @@
       "tool": "get_current_time"
     }
   ],
-  "classification_hash": "f21110f2198d482169d912026a357caf3f02a94b75c70a9b54f0e0595ac6ddcc",
+  "classification_hash": "e367031657e0a13b5ad859d433100ea2b41805b340509c4ee67dc0f668934b95",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.5",
+  "ruleset_version": "3.6",
   "surface": {
     "prompts": [],
     "resource_templates": [],

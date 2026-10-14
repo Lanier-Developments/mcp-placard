@@ -44,3 +44,21 @@ def test_index_page_is_what_the_manifests_render(build_index) -> None:
 
 def test_a_hostile_tool_name_cannot_inject_markup(build_index) -> None:
     assert build_index._safe("x`](http://evil)<script>") == "xhttpevilscript"
+
+
+def test_every_stored_manifest_carries_the_current_ruleset(build_index) -> None:
+    """The index must not go stale silently (Chief's ruling of 2026-10-14): the page
+    records its ruleset, and before this gate nothing failed when the ruleset moved.
+    A ruleset bump is red here until ``build_index.py reanalyze`` has re-analysed every
+    stored surface — the same shape as the fixture-staleness gate."""
+    import json
+
+    from mcp_placard import RULESET_VERSION
+
+    for server in build_index.load_servers():
+        path = build_index.MANIFEST_DIR / f"{server['id']}.json"
+        document = json.loads(path.read_text(encoding="utf-8"))
+        assert document["ruleset_version"] == RULESET_VERSION, (
+            f"{server['id']} was analysed under ruleset {document['ruleset_version']}, this "
+            f"build's is {RULESET_VERSION}; run `python scripts/build_index.py reanalyze`"
+        )
