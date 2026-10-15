@@ -27,7 +27,7 @@ manifest, and fails CI when the next scan disagrees with the last one.
 **Placard never invokes a tool.** Enumeration and static analysis only. No code path may
 call `tools/call`; `scripts/check_no_tool_invocation.py` enforces that mechanically.
 
-## Status: Phases 1 through 4 complete
+## Status: Phases 1 through 5 complete
 
 `scan` classifies every tool on the R0-R5 ladder — schema shape, tool name, description, and
 declared-annotation signals combine as a monotonic maximum (never a weighted score), reconciled
