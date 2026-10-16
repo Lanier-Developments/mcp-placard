@@ -38,14 +38,14 @@
       "tool": "fetch"
     }
   ],
-  "classification_hash": "b317942d8997c9afb9fd616495bf3514186aaea221d02efdb955539698134d6f",
+  "classification_hash": "8f765b0920b8ed347d238eaa7fc9308a74ed715c1883ce87849a4b90f5e3d08d",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.6",
+  "ruleset_version": "3.7",
   "surface": {
     "prompts": [
       {

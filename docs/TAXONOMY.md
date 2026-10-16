@@ -26,9 +26,12 @@ kind axis, `CHAIN_EXFIL` over kinds, Rule H, the revised reversibility evidence,
 annotation escalation, and the sensitivity vocabulary. Amendment 3 (2026-09-18,
 `dispatches/2026-09-18_from-chief_to-jr_phase2.2-decisions.md`, adjudicating the Phase 2.1
 flag-backs) is folded in: `body` leaves Rule D's content list, `read_sensitive`
-means *returns*, and `asserted` requires a phrase. All source documents are retained
-as the original review record; this document is authoritative wherever they would
-otherwise be consulted separately.
+means *returns*, and `asserted` requires a phrase. Amendment 4 (2026-10-16,
+`dispatches/2026-10-16_from-mac_to-jr_str-replace-write-classification.md`, from the
+first server Placard gated in its own CI) is folded in: Rule D condition 2 gains the
+replacement-pair form — edit-by-substitution recognized as a construction, not a
+vocabulary. All source documents are retained as the original review record; this
+document is authoritative wherever they would otherwise be consulted separately.
 
 ## The tiers
 
@@ -230,6 +233,44 @@ evidence breaks the tie.
 > only. Conditions 2 and 3 are unaffected: a path with both a position sibling and a
 > content sibling is still a write, and a destination-named field is still a
 > destination whatever sits beside it.
+>
+> **Condition 2 — replacement-pair form (Amendment 4).** Content beside the path can
+> be stated as a substitution rather than carried in a named content field. Two
+> sibling string parameters whose tokenized names are identical except at exactly one
+> position, where the differing tokens are the opposition markers `old`/`new` (in
+> either order), form a *replacement pair*: the `old` member is a locator — an
+> address into the file by content, the analogue of a position-like field — and the
+> `new` member is the content to be placed there. The `new` member is
+> content-carrying by construction, and condition 2 applies exactly as if a content
+> list member were present: `str_replace(path, old_str, new_str)` is R5 on the same
+> evidence as `write_file(path, content)`. This matches a relation between two
+> names, never a name — `old_str`/`new_str`, `oldText`/`newText`, bare `old`/`new`
+> and every future same-stem spelling reduce to the one marker pair, which is why
+> the rule is not a vocabulary. `(find, replace)` and `(search, replace)` are
+> deliberately absent until a real server exhibits the shape, the same discipline as
+> the `asserted` standing decision above. A pair found *and* a position-like sibling
+> present is still a write — the pair is content, and the Amendment 3 §3.4 sentence
+> about content siblings carries over unchanged.
+>
+> *Reference-pair exclusion.* A pair whose shared stem contains a reference-denoting
+> token — `version`, `revision`, `ref`, `commit`, `sha`, `branch`, `tag`, `id`,
+> `etag` — names two references to state, not state:
+> `diff(path, old_version, new_version)` compares; it does not substitute. The
+> tokens are the reference vocabulary the concurrency-token list is already built
+> on, extended with VCS reference nouns. Closed list, Rule C philosophy.
+>
+> *Wrapper lift.* A parameter whose own subschema contains a valid replacement pair
+> — the `edits: [{oldText, newText}]` idiom — is itself content-carrying, whatever
+> the parameter is named. The official filesystem server's `edit_file` therefore
+> fires by construction rather than by the naming accident of `edits` sitting on the
+> content list. Sibling discipline is unchanged throughout: a pair split across
+> `anyOf`/`allOf` branches is not a pair.
+>
+> The replacement pair participates in condition 2 only. A pair with no path-like
+> sibling (`update_record(id, old_value, new_value)`) confers nothing on its own —
+> deliberate narrowness: recognizing bare pairs as writes is not needed to classify
+> a write-to-destination, and kinds on diff-adjacent tools are the false-positive
+> surface the reference exclusion cannot fully bound.
 
 An unguarded `write_note(path, content)` therefore lands at R5 on evidence, not on
 pessimism, while `update_record(id, body, if_match)` lands at R3 `verified`. Whether

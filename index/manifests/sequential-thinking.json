@@ -20,14 +20,14 @@
       "tool": "sequentialthinking"
     }
   ],
-  "classification_hash": "c1cf91df5c56bdbe2d32d4f9a78a79bf30507373e62d18d9efdded5e6f5bebd6",
+  "classification_hash": "fe6c6cbadf38f96cdb535d24601fc90f8c4e0e3a2fdf56ccb461bc792fd7b25f",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.6",
+  "ruleset_version": "3.7",
   "surface": {
     "prompts": [],
     "resource_templates": [],

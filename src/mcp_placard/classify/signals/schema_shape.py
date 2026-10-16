@@ -22,6 +22,12 @@ Amendment 2 changed two rules here after the first real-server batch:
   :func:`deferred_destination_clause`.
 * **Rule C's ``to``** is exempt when a sibling ``from`` exists and no content-carrying
   sibling does — edges and ranges have a ``from``; messages have a body.
+
+Amendment 4 (ruleset 3.7) extended Rule D's condition 2 with the replacement-pair
+form after the first server Placard gated in CI exposed `str_replace(path, old_str,
+new_str)` classifying R1: edit-by-substitution is a construction — a locator and a
+replacement addressed at a path — and is recognized as the *relation* between two
+sibling names (:data:`OPPOSITION_MARKERS`), never as a vocabulary of parameter names.
 """
 
 from __future__ import annotations
@@ -34,6 +40,7 @@ from ...manifest.models import Tier
 from ..candidates import Candidate
 from ..patterns import is_recognized_host_pinning_form
 from ..schema_walk import SchemaProperty, TraversalStatus, walk_schema
+from .verb import name_tokens
 
 JsonSchema = dict[str, Any]
 
@@ -116,6 +123,28 @@ DESTINATION_NAMED_FIELDS = frozenset(
 """Rule D, condition 3 (Amendment 2 §1): the parameter name itself denotes a
 destination. ``move_file(source, destination)`` is R5 on this alone, absent a
 concurrency token."""
+
+OPPOSITION_MARKERS = frozenset({("old", "new")})
+"""Rule D, condition 2 — replacement-pair form (Amendment 4). Two sibling string
+parameters whose tokenized names are identical except at one position, where the
+differing tokens are one of these marker pairs, specify the prior and next state of
+content at a destination: the ``old`` member is a locator (an address *into* the
+file by content, the analogue of :data:`POSITION_LIKE_FIELDS`), the ``new`` member
+is the content to be placed, and the ``new`` member is content-carrying by
+construction. This matches a *relation between two names*, never a parameter name:
+``old_str``/``new_str``, ``oldText``/``newText``, bare ``old``/``new`` and every
+future same-stem spelling all reduce to the one pair here. ``(find, replace)`` and
+``(search, replace)`` are deliberately absent until a real server exhibits the
+shape — the same discipline as the ``asserted``-reversibility standing decision."""
+
+REFERENCE_STEM_TOKENS = frozenset(
+    {"version", "revision", "ref", "commit", "sha", "branch", "tag", "id", "etag"}
+)
+"""Replacement-pair exclusion (Amendment 4): a pair whose shared stem contains one
+of these tokens names two *references* to state, not state —
+``diff(path, old_version, new_version)`` compares; it does not substitute. The
+tokens are the reference vocabulary :data:`CONCURRENCY_TOKEN_FIELDS` is already
+built on, extended with VCS reference nouns. Closed list, Rule C philosophy."""
 
 SENSITIVITY_EXPANDING_FIELDS = frozenset(
     {"include_secrets", "include_contact_details", "include_pii", "include_credentials"}
@@ -203,6 +232,87 @@ def has_guarded_write_token(properties: list[SchemaProperty]) -> bool:
     return False
 
 
+def _replacement_pair(name_a: str, name_b: str) -> tuple[str, str] | None:
+    """``(locator, replacement)`` when two names form a replacement pair
+    (Amendment 4), else ``None``.
+
+    Uses :func:`~.verb.name_tokens` — the shared snake/camel/kebab tokenizer — so
+    ``oldText``/``newText`` and ``old_str``/``new_str`` are the same construction.
+    Requiring the token sequences to differ at exactly one position is what keeps
+    single-token non-pairs (``query``/``limit``) from pairing: they do differ at one
+    position, but the differing tokens must also be a recognized marker pair.
+    """
+    tokens_a, tokens_b = name_tokens(name_a), name_tokens(name_b)
+    if len(tokens_a) != len(tokens_b):
+        return None
+    diffs = [i for i, (a, b) in enumerate(zip(tokens_a, tokens_b, strict=True)) if a != b]
+    if len(diffs) != 1:
+        return None
+    index = diffs[0]
+    stem = frozenset(tokens_a[:index] + tokens_a[index + 1 :])
+    if stem & REFERENCE_STEM_TOKENS:
+        return None
+    for old_marker, new_marker in OPPOSITION_MARKERS:
+        if (tokens_a[index], tokens_b[index]) == (old_marker, new_marker):
+            return (name_a, name_b)
+        if (tokens_a[index], tokens_b[index]) == (new_marker, old_marker):
+            return (name_b, name_a)
+    return None
+
+
+def _enclosing_property(pointer: str) -> tuple[str, str] | None:
+    """The property that owns a nested object, as ``(its parent pointer, its name)``.
+
+    ``/properties/edits/items`` → ``("", "edits")``: the ``edits`` property sits in
+    the root object. ``None`` for the root itself, which encloses nothing.
+    """
+    head, sep, tail = pointer.rpartition("/properties/")
+    if not sep:
+        return None
+    name = tail.split("/", 1)[0]
+    return (parent_pointer(f"{head}/properties/{name}"), name)
+
+
+@dataclass(frozen=True)
+class _SubstitutionEvidence:
+    pairs: dict[str, tuple[str, str]]
+    """Parent-object pointer → the first replacement pair found among its own
+    string properties."""
+
+    wrappers: dict[str, set[str]]
+    """Parent-object pointer → names of sibling properties whose *own* subschema
+    contains a replacement pair (Amendment 4's wrapper lift: ``edits: [{oldText,
+    newText}]`` makes ``edits`` content-carrying whatever it is named)."""
+
+
+def find_substitution_evidence(properties: list[SchemaProperty]) -> _SubstitutionEvidence:
+    """Locate every replacement pair (Amendment 4) and lift pair-bearing wrappers.
+
+    Sibling discipline is :func:`parent_pointer`'s, identical to Rules C and D:
+    a pair split across ``anyOf`` branches is not a pair.
+    """
+    strings_by_parent: dict[str, list[str]] = defaultdict(list)
+    for prop in properties:
+        if prop.subschema.get("type") == "string":
+            strings_by_parent[parent_pointer(prop.pointer)].append(prop.name)
+
+    pairs: dict[str, tuple[str, str]] = {}
+    wrappers: dict[str, set[str]] = defaultdict(set)
+    for parent, names in strings_by_parent.items():
+        ordered = sorted(set(names))
+        for i, name_a in enumerate(ordered):
+            for name_b in ordered[i + 1 :]:
+                pair = _replacement_pair(name_a, name_b)
+                if pair is None:
+                    continue
+                pairs.setdefault(parent, pair)
+                enclosing = _enclosing_property(parent)
+                if enclosing is not None:
+                    wrapper_parent, wrapper_name = enclosing
+                    wrappers[wrapper_parent].add(wrapper_name)
+    return _SubstitutionEvidence(pairs, dict(wrappers))
+
+
 def _outbound_target_candidate(prop: SchemaProperty) -> Candidate:
     """Rule A / Rule E: a URL-shaped field is R4 egress unless its ``pattern``
     matches one of Rule E's recognized host-pinning forms."""
@@ -253,6 +363,7 @@ def _analyze(input_schema: JsonSchema) -> _Analysis:
     deferred: Candidate | None = None
     siblings = sibling_names(result.properties)
     guarded = has_guarded_write_token(result.properties)
+    substitution = find_substitution_evidence(result.properties)
     has_unconstrained_free_text = False
     has_steering_field = False
 
@@ -342,6 +453,42 @@ def _analyze(input_schema: JsonSchema) -> _Analysis:
                             evidence=(
                                 f"{prop.pointer}: unconstrained destination path with "
                                 f"content-carrying sibling {content_siblings[0]!r}, no "
+                                "concurrency token present anywhere in the schema"
+                            ),
+                            rule="Rule D",
+                            kinds=frozenset({"write"}),
+                        )
+                    )
+                elif (pair := substitution.pairs.get(parent_pointer(prop.pointer))) is not None:
+                    # Amendment 4: condition 2, replacement-pair form. Checked
+                    # before the position exemption for the same reason a content
+                    # sibling is — a path with a position *and* content is a write.
+                    locator, replacement = pair
+                    candidates.append(
+                        Candidate(
+                            signal="schema_shape",
+                            tier="R5",
+                            evidence=(
+                                f"{prop.pointer}: unconstrained destination path with "
+                                f"replacement pair {locator!r}/{replacement!r}, no "
+                                "concurrency token present anywhere in the schema"
+                            ),
+                            rule="Rule D",
+                            kinds=frozenset({"write"}),
+                        )
+                    )
+                elif wrapper_names := sorted(
+                    own_siblings & substitution.wrappers.get(parent_pointer(prop.pointer), set())
+                ):
+                    # Amendment 4: the wrapper lift. `edits: [{oldText, newText}]`
+                    # is content beside the path whatever the wrapper is named.
+                    candidates.append(
+                        Candidate(
+                            signal="schema_shape",
+                            tier="R5",
+                            evidence=(
+                                f"{prop.pointer}: unconstrained destination path with "
+                                f"substitution-carrying sibling {wrapper_names[0]!r}, no "
                                 "concurrency token present anywhere in the schema"
                             ),
                             rule="Rule D",

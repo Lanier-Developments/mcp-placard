@@ -297,14 +297,14 @@
       "tool": "write_file"
     }
   ],
-  "classification_hash": "59d23323a9724e5fa6ffc60af9bf4a95e05ea5afe757909b8782624708a17ec8",
+  "classification_hash": "f47e370b2cd85863a4246fe96161104713ab60fc02d63d7d102956564cc55e5c",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.6",
+  "ruleset_version": "3.7",
   "surface": {
     "prompts": [],
     "resource_templates": [],

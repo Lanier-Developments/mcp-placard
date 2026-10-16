@@ -50,4 +50,13 @@ MANIFEST_VERSION = "2.2"
 #: full cross product of the qualifiers and nouns the list already carried. ``override``
 #: otherwise stops where it stands: invalidation framings and referent paraphrase stay
 #: misses by ruling.
-RULESET_VERSION = "3.6"
+#:
+#: 3.7 (Amendment 4, from the 2026-10-16 `str_replace` dispatch): Rule D condition 2
+#: gains the replacement-pair form — two sibling string parameters whose tokenized
+#: names differ at exactly one position by the opposition markers ``old``/``new``
+#: specify prior and next content at a destination, and the ``new`` member is
+#: content-carrying by construction; a reference-stem pair (``old_version``/
+#: ``new_version``) is a comparison and exempt; a parameter whose own subschema
+#: contains such a pair (``edits: [{oldText, newText}]``) is itself
+#: content-carrying, whatever it is named.
+RULESET_VERSION = "3.7"

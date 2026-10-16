@@ -232,14 +232,14 @@
       "tool": "git_status"
     }
   ],
-  "classification_hash": "c638544133bbba8f1eae57fa034d3f8b95b40882bf6e907f34c7f01339b880c8",
+  "classification_hash": "956df6c6b560e0dd06654317345e709911bbd6d796a2377eabbfd811fac3ce8d",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.6",
+  "ruleset_version": "3.7",
   "surface": {
     "prompts": [],
     "resource_templates": [],
