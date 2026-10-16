@@ -226,14 +226,14 @@
       "tool": "search_nodes"
     }
   ],
-  "classification_hash": "7ffcb3218abddec9439ff788f7d1ea2781d521973624e8ba709a611c8e9d590f",
+  "classification_hash": "76f1b5f40ae639a78574326f7b5eccfd9d49b2de85bf79715503014d5dfea9a4",
   "environment": {
     "protocol_version": "2025-11-25",
     "sdk_version": "2.3.0"
   },
   "findings": [],
   "manifest_version": "2.2",
-  "ruleset_version": "3.6",
+  "ruleset_version": "3.7",
   "surface": {
     "prompts": [],
     "resource_templates": [],

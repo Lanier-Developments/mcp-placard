@@ -5,7 +5,7 @@ Placard classifies it. Every row is a scan of an exact pinned version; the manif
 committed under [`index/manifests/`](../index/manifests/) and this page is rendered from
 them by `scripts/build_index.py`, so anyone can re-run the scan and compare `surface_hash`.
 
-Ruleset **3.6**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-scoped, R4 egress, R5 irreversible; see
+Ruleset **3.7**. Tiers: R0 inert, R1 read-scoped, R2 read-sensitive, R3 write-scoped, R4 egress, R5 irreversible; see
 [`TAXONOMY.md`](TAXONOMY.md). Kinds: `read_sensitive`, `egress`, `write`, `destructive`,
 `code_exec`. Counts are tools, not risk scores.
 

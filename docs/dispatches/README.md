@@ -34,6 +34,8 @@ evidence attached — usually a real server's `tools/list`. The amendments thems
 | 2026-10-14 | Chief → Jr. | Phase 5 brief: signed baselines (held for Doc's review) |
 | 2026-10-14 | Jr. → Chief | Ruleset 3.6 report: the gate held, nine samples moved, three calls flagged back |
 | 2026-10-14 | Jr. → Chief | Phase 5 report: signed baselines shipped as briefed, three answers flagged back |
+| 2026-10-16 | Mac → Jr. | `str_replace` is a write the classifier does not see: first finding from gating `mcp-local-filesystem` in CI |
+| 2026-10-16 | Jr. → Mac | The replacement pair (Amendment 4, ruleset 3.7): edit-by-substitution recognized as a construction; one tool moves in the world, every gate holds |
 
 These are kept verbatim, including the parts that turned out to be wrong. A taxonomy whose
 history is visible is easier to trust than one that only shows its current text.
